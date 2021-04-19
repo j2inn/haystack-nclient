@@ -18,6 +18,10 @@ npm install haystack-core haystack-units haystack-nclient
 
 Note how haystack-core must be installed as a peer dependency.
 
+## APIs
+
+Please click [here](http://j2-docs.s3-website-us-east-1.amazonaws.com/j2inn/haystack-nclient/index.html) for the API documentation.
+
 ## Servers
 
 This library is used to talk to array of different Haystack servers...

@@ -13,10 +13,12 @@ import {
 	getHaystackServiceUrl,
 	getHostServiceUrl,
 	encodeQuery,
+	addStartSlashRemoveEndSlash,
 } from '../../src/util/http'
 import { Headers as NodeHeaders } from 'node-fetch'
+import { DEFAULT_OPS_URL_TEMPLATE } from '../../src/client/Client'
 
-describe('uri', function (): void {
+describe('http', function (): void {
 	describe('encodeQuery', function (): void {
 		it('returns an empty string for an empty object', function (): void {
 			expect(encodeQuery({})).toBe('')
@@ -168,19 +170,23 @@ describe('uri', function (): void {
 	describe('#getOpUrl()', function (): void {
 		it('returns a URL', function (): void {
 			expect(
-				getOpUrl('https://localhost:8080', '', 'api', 'demo', 'ops')
+				getOpUrl(DEFAULT_OPS_URL_TEMPLATE, {
+					origin: 'https://localhost:8080',
+					pathPrefix: '',
+					project: 'demo',
+					op: 'ops',
+				})
 			).toBe('https://localhost:8080/api/demo/ops')
 		})
 
 		it('returns updated url when prefix is sent', function (): void {
 			expect(
-				getOpUrl(
-					'https://localhost:8080',
-					'/prefix/path',
-					'api',
-					'demo',
-					'ops'
-				)
+				getOpUrl(DEFAULT_OPS_URL_TEMPLATE, {
+					origin: 'https://localhost:8080',
+					pathPrefix: '/prefix/path',
+					project: 'demo',
+					op: 'ops',
+				})
 			).toBe('https://localhost:8080/prefix/path/api/demo/ops')
 		})
 	}) // #getOpUrl()
@@ -212,7 +218,7 @@ describe('uri', function (): void {
 			expect(
 				getHaystackServiceUrl(
 					'https://localhost:8080',
-					'/prefix/path/',
+					'/prefix/path',
 					'',
 					'service'
 				)
@@ -231,10 +237,28 @@ describe('uri', function (): void {
 			expect(
 				getHostServiceUrl(
 					'https://localhost:8080',
-					'path/prefix',
+					'/path/prefix',
 					'service'
 				)
 			).toBe('https://localhost:8080/path/prefix/api/host/service')
 		})
 	}) // #getHaystackServiceUrl()
+
+	describe('addStartSlashRemoveEndSlash()', function (): void {
+		it('returns an empty string', function (): void {
+			expect(addStartSlashRemoveEndSlash('')).toBe('')
+		})
+
+		it('returns an empty string for a slash', function (): void {
+			expect(addStartSlashRemoveEndSlash('/')).toBe('')
+		})
+
+		it('adds a starting slash', function (): void {
+			expect(addStartSlashRemoveEndSlash('foo/bar')).toBe('/foo/bar')
+		})
+
+		it('removes an ending slash', function (): void {
+			expect(addStartSlashRemoveEndSlash('/foo/bar/')).toBe('/foo/bar')
+		})
+	}) // addStartSlashRemoveEndSlash()
 })

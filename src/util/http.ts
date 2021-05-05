@@ -3,6 +3,7 @@
  */
 
 import { HList, HRef, Kind, valueIsKind } from 'haystack-core'
+import { replaceKeys } from './obj'
 
 /**
  * @module HTTP utility methods.
@@ -11,58 +12,59 @@ import { HList, HRef, Kind, valueIsKind } from 'haystack-core'
 /**
  * Returns the URL for an op.
  *
- * @param origin The origin for the op.
- * @param opsBase The base ops path.
- * @param project The project for the op.
- * @param op The op to create the URL for.
+ * @param opsUri The template ops URI to use.
+ * @param params.origin The origin.
+ * @param params.pathPrefix The path prefix to use.
+ * @param params.project The project name.
+ * @param params.op The op name.
  * @returns A URL.
  */
 export function getOpUrl(
-	origin: string,
-	prefix: string,
-	opsBase: string,
-	project: string,
-	op: string
+	opsUri: string,
+	params: {
+		origin: string
+		pathPrefix: string
+		project: string
+		op: string
+	}
 ): string {
-	return `${origin}${
-		prefix ? '/' + sanitizedPrefixPath(prefix) : ''
-	}/${opsBase}/${project || 'sys'}/${op}`
+	return replaceKeys(opsUri, params)
 }
 
 /**
  * Returns the URL for a Haystack REST service.
  *
  * @param origin The origin for the service.
+ * @param pathPrefix The path prefix to use.
  * @param project The project for the service.
  * @param path The service path.
  * @returns A URL.
  */
 export function getHaystackServiceUrl(
 	origin: string,
-	prefix: string,
+	pathPrefix: string,
 	project: string,
 	path: string
 ): string {
-	return `${origin}${
-		prefix ? '/' + sanitizedPrefixPath(prefix) : ''
-	}/api/haystack${project ? `/${project}` : ''}/${path}`
+	return `${origin}${pathPrefix}/api/haystack${
+		project ? `/${project}` : ''
+	}/${path}`
 }
 
 /**
  * Returns the URL for a Host REST service.
  *
  * @param origin The origin for the service.
+ * @param pathPrefix The path prefix to use.
  * @param path The service path.
  * @returns A URL.
  */
 export function getHostServiceUrl(
 	origin: string,
-	prefix: string,
+	pathPrefix: string,
 	path: string
 ): string {
-	return `${origin}${
-		prefix ? '/' + sanitizedPrefixPath(prefix) : ''
-	}/api/host/${path}`
+	return `${origin}${pathPrefix}/api/host/${path}`
 }
 
 /**
@@ -268,15 +270,21 @@ export function addHeader(
 }
 
 /**
- * Removes the slashes form the start and end of a string/path
+ * Adds a starting slash and removes any ending slash.
  *
- * @param path is the path string
- * @returns {string}
+ * @param path The path to update.
+ * @returns The updated path.
  */
-export function sanitizedPrefixPath(path?: string): string {
-	if (!path || path.trim().length < 1) {
-		return ''
+export function addStartSlashRemoveEndSlash(path: string): string {
+	path = path.trim()
+
+	if (path && !path.startsWith('/')) {
+		path = `/${path}`
 	}
 
-	return path.replace(/^\/+|\/+$/g, '')
+	if (path.endsWith('/')) {
+		path = path.substring(0, path.length - 1)
+	}
+
+	return path
 }

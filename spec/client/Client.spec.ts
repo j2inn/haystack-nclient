@@ -185,7 +185,7 @@ describe('Client', function (): void {
 						project: 'demo',
 					})
 
-					expect(client.pathPrefix).toEqual(`happy/path/of/42`)
+					expect(client.pathPrefix).toBe(`/happy/path/of/42`)
 					expect(client.getOpUrl('op')).toContain('happy/path/of/42')
 					expect(client.getHaystackServiceUrl('service')).toContain(
 						'happy/path/of/42'
@@ -320,7 +320,8 @@ describe('Client', function (): void {
 		it('encodes the client to a JSON object', function (): void {
 			expect(client.toJSON()).toEqual({
 				origin: 'http://localhost:8080',
-				opsBase: 'api',
+				opsUrlTemplate:
+					'{{origin}}{{pathPrefix}}/api/{{project}}/{{op}}',
 				project: '',
 				pathPrefix: '',
 			})

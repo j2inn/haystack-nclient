@@ -2,7 +2,7 @@
  * Copyright (c) 2020, J2 Innovations. All Rights Reserved
  */
 
-import { clear } from '../../src/util/obj'
+import { clear, replaceKeys } from '../../src/util/obj'
 
 describe('obj', function (): void {
 	describe('clear()', function (): void {
@@ -12,4 +12,18 @@ describe('obj', function (): void {
 			expect(obj).toEqual({})
 		})
 	}) // clear()
+
+	describe('replaceKeys()', function (): void {
+		it('replaces all of the keys in a string', function (): void {
+			expect(
+				replaceKeys('/{{foo}}/{{bar}}/', { foo: 'Foo', bar: 'Bar' })
+			).toBe('/Foo/Bar/')
+		})
+
+		it('skips keys that are not found', function (): void {
+			expect(replaceKeys('/{{foo}}/{{bar}}/', { foo: 'Foo' })).toBe(
+				'/Foo/{{bar}}/'
+			)
+		})
+	}) // replaceKeys()
 })

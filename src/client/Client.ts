@@ -8,7 +8,7 @@ import {
 	getOpUrl,
 	getHaystackServiceUrl,
 	getHostServiceUrl,
-	sanitizedPrefixPath,
+	addStartSlashRemoveEndSlash,
 } from '../util/http'
 import { RecordService } from './RecordService'
 import { ClientServiceConfig } from './ClientServiceConfig'
@@ -23,6 +23,17 @@ import { UserService } from './UserService'
 import { ProjectService } from './ProjectService'
 
 /**
+ * The default template to use when creating URL to make calls to ops.
+ *
+ * * `origin`: the origin for the client object (no ending slash). For example. 'https://localhost:8080'
+ * * `pathPrefix`: any possible path prefix for the API.
+ * * `project`: the project name.
+ * * `op`: the name of the op.
+ */
+export const DEFAULT_OPS_URL_TEMPLATE =
+	'{{origin}}{{pathPrefix}}/api/{{project}}/{{op}}'
+
+/**
  * A high level Haystack Client
  */
 export class Client implements ClientServiceConfig {
@@ -32,9 +43,9 @@ export class Client implements ClientServiceConfig {
 	public readonly origin: string
 
 	/**
-	 * The default base ops path.
+	 * The default templated ops URI.
 	 */
-	public readonly opsBase: string
+	public readonly opsUrlTemplate: string
 
 	/**
 	 * The project associated with this client.
@@ -120,8 +131,9 @@ export class Client implements ClientServiceConfig {
 	 * added to the `options`.
 	 * @param options.fetch An optional fetch function to use for all network requests. If not specified
 	 * the FIN CSRF fetch will be used.
-	 * @param options.opsBase An optional alternative base path for making ops calls.
 	 * @param options.pathPrefix The optional path to be appended to the base URL when making certain requests.
+	 * @param options.opsUrlTemplate A template URI string used for making ops calls. This property uses handlebar syntax
+	 * so the default URL used for ops can be replaced entirely. See {@link DEFAULT_OPS_URL_TEMPLATE}.
 	 */
 	public constructor({
 		base,
@@ -130,7 +142,7 @@ export class Client implements ClientServiceConfig {
 		options,
 		authBearer,
 		fetch,
-		opsBase,
+		opsUrlTemplate,
 		pathPrefix,
 	}: {
 		base: URL
@@ -139,7 +151,7 @@ export class Client implements ClientServiceConfig {
 		options?: RequestInit
 		authBearer?: string
 		fetch?: FetchMethod
-		opsBase?: string
+		opsUrlTemplate?: string
 		pathPrefix?: string
 	}) {
 		this.origin = base.origin
@@ -149,7 +161,10 @@ export class Client implements ClientServiceConfig {
 		this.#options = options ?? {}
 
 		this.fetch = fetch ?? finCsrfFetch
-		this.pathPrefix = sanitizedPrefixPath(pathPrefix)
+
+		this.pathPrefix = addStartSlashRemoveEndSlash(pathPrefix?.trim() ?? '')
+
+		this.opsUrlTemplate = opsUrlTemplate || DEFAULT_OPS_URL_TEMPLATE
 
 		// If there's no project specified then attempt to detect it.
 		this.project =
@@ -175,8 +190,6 @@ export class Client implements ClientServiceConfig {
 		if (typeof authBearer === 'string') {
 			addHeader(this.#options, 'Authorization', `Bearer ${authBearer}`)
 		}
-
-		this.opsBase = opsBase || 'api'
 	}
 
 	private static parseProjectFromFinMobile(path: string): string {
@@ -201,13 +214,12 @@ export class Client implements ClientServiceConfig {
 	 * @returns A URL.
 	 */
 	public getOpUrl(op: string): string {
-		return getOpUrl(
-			this.origin,
-			this.pathPrefix,
-			this.opsBase,
-			this.project,
-			op
-		)
+		return getOpUrl(this.opsUrlTemplate, {
+			origin: this.origin,
+			pathPrefix: this.pathPrefix,
+			project: this.project || 'sys',
+			op,
+		})
 	}
 
 	/**
@@ -294,13 +306,13 @@ export class Client implements ClientServiceConfig {
 	 */
 	public toJSON(): {
 		origin: string
-		opsBase: string
+		opsUrlTemplate: string
 		project: string
 		pathPrefix: string
 	} {
 		return {
 			origin: this.origin,
-			opsBase: this.opsBase,
+			opsUrlTemplate: this.opsUrlTemplate,
 			project: this.project,
 			pathPrefix: this.pathPrefix,
 		}

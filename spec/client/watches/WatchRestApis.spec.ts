@@ -15,7 +15,7 @@ import {
 	getHaystackServiceUrl,
 	getHostServiceUrl,
 } from '../../../src/util/http'
-import { Client, DEFAULT_OPS_URL_TEMPLATE } from '../../../src/client/Client'
+import { Client } from '../../../src/client/Client'
 import fetchMock from 'fetch-mock'
 import { WatchRestApis } from '../../../src/client/watches/WatchRestApis'
 import { DEFAULT_LEASE_TIME } from '../../../src/client/watches/WatchApis'
@@ -32,7 +32,7 @@ describe('WatchRestApis', function (): void {
 
 		apis = new WatchRestApis({
 			getOpUrl: (op: string): string =>
-				getOpUrl(DEFAULT_OPS_URL_TEMPLATE, {
+				getOpUrl({
 					origin: client.origin,
 					pathPrefix: '',
 					project: client.project,
@@ -42,9 +42,18 @@ describe('WatchRestApis', function (): void {
 			getDefaultOptions: (): RequestInit => ({}),
 			defs: new HNamespace(HGrid.make({})),
 			getHaystackServiceUrl: (path: string): string =>
-				getHaystackServiceUrl(client.origin, '', client.project, path),
+				getHaystackServiceUrl({
+					origin: client.origin,
+					pathPrefix: '',
+					project: client.project,
+					path,
+				}),
 			getHostServiceUrl: (path: string): string =>
-				getHostServiceUrl(client.origin, '', path),
+				getHostServiceUrl({
+					origin: client.origin,
+					pathPrefix: '',
+					path,
+				}),
 			fetch,
 		})
 	}

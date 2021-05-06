@@ -12,7 +12,12 @@ import { getHaystackServiceUrl } from '../../src/util/http'
 
 describe('Client', function (): void {
 	const base = 'http://localhost:8080'
-	const ABS_DEFS_PATH = getHaystackServiceUrl(base, '', '', 'defs')
+	const ABS_DEFS_PATH = getHaystackServiceUrl({
+		origin: base,
+		pathPrefix: '',
+		project: '',
+		path: 'defs',
+	})
 
 	let grid: HGrid
 	let client: Client
@@ -319,9 +324,9 @@ describe('Client', function (): void {
 	describe('#toJSON()', function (): void {
 		it('encodes the client to a JSON object', function (): void {
 			expect(client.toJSON()).toEqual({
-				origin: 'http://localhost:8080',
-				opsUrlTemplate:
-					'{{origin}}{{pathPrefix}}/api/{{project}}/{{op}}',
+				opUrl: 'http://localhost:8080/api/sys/',
+				haystackServiceUrl: 'http://localhost:8080/api/haystack/',
+				hostServiceUrl: 'http://localhost:8080/api/host/',
 				project: '',
 				pathPrefix: '',
 			})

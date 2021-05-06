@@ -3,32 +3,59 @@
  */
 
 import { HList, HRef, Kind, valueIsKind } from 'haystack-core'
-import { replaceKeys } from './obj'
 
 /**
  * @module HTTP utility methods.
  */
 
 /**
+ * The functional interface for getting the op url.
+ */
+export interface getOpUrlCallback {
+	({
+		origin,
+		pathPrefix,
+		project,
+		op,
+	}: {
+		origin: string
+		pathPrefix: string
+		project: string
+		op: string
+	}): string
+}
+
+/**
  * Returns the URL for an op.
  *
- * @param opsUri The template ops URI to use.
  * @param params.origin The origin.
  * @param params.pathPrefix The path prefix to use.
  * @param params.project The project name.
  * @param params.op The op name.
  * @returns A URL.
  */
-export function getOpUrl(
-	opsUri: string,
-	params: {
+export const getOpUrl: getOpUrlCallback = ({
+	origin,
+	pathPrefix,
+	project,
+	op,
+}): string => `${origin}${pathPrefix}/api/${project}/${op}`
+
+/**
+ * The functional interface for getting the op url.
+ */
+export interface getHaystackServiceUrlCallback {
+	({
+		origin,
+		pathPrefix,
+		project,
+		path,
+	}: {
 		origin: string
 		pathPrefix: string
 		project: string
-		op: string
-	}
-): string {
-	return replaceKeys(opsUri, params)
+		path: string
+	}): string
 }
 
 /**
@@ -36,19 +63,31 @@ export function getOpUrl(
  *
  * @param origin The origin for the service.
  * @param pathPrefix The path prefix to use.
- * @param project The project for the service.
+ * @param project The project for the service. May be empty and if so shouldn't be included.
  * @param path The service path.
  * @returns A URL.
  */
-export function getHaystackServiceUrl(
-	origin: string,
-	pathPrefix: string,
-	project: string,
-	path: string
-): string {
-	return `${origin}${pathPrefix}/api/haystack${
-		project ? `/${project}` : ''
-	}/${path}`
+export const getHaystackServiceUrl: getHaystackServiceUrlCallback = ({
+	origin,
+	pathPrefix,
+	project,
+	path,
+}): string =>
+	`${origin}${pathPrefix}/api/haystack${project ? `/${project}` : ''}/${path}`
+
+/**
+ * The functional interface for getting the op url.
+ */
+export interface getHostServiceUrlCallback {
+	({
+		origin,
+		pathPrefix,
+		path,
+	}: {
+		origin: string
+		pathPrefix: string
+		path: string
+	}): string
 }
 
 /**
@@ -59,13 +98,11 @@ export function getHaystackServiceUrl(
  * @param path The service path.
  * @returns A URL.
  */
-export function getHostServiceUrl(
-	origin: string,
-	pathPrefix: string,
-	path: string
-): string {
-	return `${origin}${pathPrefix}/api/host/${path}`
-}
+export const getHostServiceUrl: getHostServiceUrlCallback = ({
+	origin,
+	pathPrefix,
+	path,
+}): string => `${origin}${pathPrefix}/api/host/${path}`
 
 /**
  * Encode the object as a URI query segment.

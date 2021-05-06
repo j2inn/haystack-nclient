@@ -15,7 +15,11 @@ describe('UserService', function (): void {
 
 	function prepareMock(verb: string, resp: HDict | HGrid): void {
 		fetchMock.reset().mock(
-			`begin:${getHostServiceUrl(base, '', 'users')}`,
+			`begin:${getHostServiceUrl({
+				origin: base,
+				pathPrefix: '',
+				path: 'users',
+			})}`,
 			{
 				body: resp.toJSON(),
 				headers: { 'content-type': HAYSON_MIME_TYPE },
@@ -45,7 +49,11 @@ describe('UserService', function (): void {
 			await user.readById('foo')
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHostServiceUrl(base, '', 'users')}/foo`
+				`${getHostServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					path: 'users',
+				})}/foo`
 			)
 		})
 
@@ -70,11 +78,11 @@ describe('UserService', function (): void {
 			await user.readByFilter('site or equip')
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHostServiceUrl(
-					base,
-					'',
-					'users'
-				)}?filter=site%20or%20equip`
+				`${getHostServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					path: 'users',
+				})}?filter=site%20or%20equip`
 			)
 		})
 
@@ -86,11 +94,11 @@ describe('UserService', function (): void {
 			})
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHostServiceUrl(
-					base,
-					'',
-					'users'
-				)}?filter=site&sort=foo%7Cboo&limit=10&columns=foo%7Cboo`
+				`${getHostServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					path: 'users',
+				})}?filter=site&sort=foo%7Cboo&limit=10&columns=foo%7Cboo`
 			)
 		})
 
@@ -117,7 +125,11 @@ describe('UserService', function (): void {
 			await user.readAll()
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHostServiceUrl(base, '', 'users')}`
+				`${getHostServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					path: 'users',
+				})}`
 			)
 		})
 
@@ -129,11 +141,11 @@ describe('UserService', function (): void {
 			})
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHostServiceUrl(
-					base,
-					'',
-					'users'
-				)}?sort=foo%7Cboo&limit=10&columns=foo%7Cboo`
+				`${getHostServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					path: 'users',
+				})}?sort=foo%7Cboo&limit=10&columns=foo%7Cboo`
 			)
 		})
 
@@ -155,7 +167,11 @@ describe('UserService', function (): void {
 			await user.create([{ name: 'Fred' }])
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHostServiceUrl(base, '', 'users')}`
+				`${getHostServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					path: 'users',
+				})}`
 			)
 			expect(getLastBody()).toEqual(JSON.stringify(grid.toJSON()))
 		})
@@ -173,7 +189,11 @@ describe('UserService', function (): void {
 			await user.createUser({ name: 'Fred' })
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHostServiceUrl(base, '', 'users')}`
+				`${getHostServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					path: 'users',
+				})}`
 			)
 			expect(getLastBody()).toEqual(JSON.stringify(dict.toJSON()))
 		})
@@ -192,7 +212,11 @@ describe('UserService', function (): void {
 			await user.update(dict)
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHostServiceUrl(base, '', 'users')}/foo`
+				`${getHostServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					path: 'users',
+				})}/foo`
 			)
 		})
 
@@ -210,7 +234,11 @@ describe('UserService', function (): void {
 			await user.deleteById('foo')
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHostServiceUrl(base, '', 'users')}/foo`
+				`${getHostServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					path: 'users',
+				})}/foo`
 			)
 		})
 	}) // #deleteById()

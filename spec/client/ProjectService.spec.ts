@@ -15,7 +15,11 @@ describe('ProjectService', function (): void {
 
 	function prepareMock(verb: string, resp: HDict | HGrid): void {
 		fetchMock.reset().mock(
-			`begin:${getHostServiceUrl(base, '', 'projects')}`,
+			`begin:${getHostServiceUrl({
+				origin: base,
+				pathPrefix: '',
+				path: 'projects',
+			})}`,
 			{
 				body: resp.toJSON(),
 				headers: { 'content-type': HAYSON_MIME_TYPE },
@@ -45,7 +49,11 @@ describe('ProjectService', function (): void {
 			await project.readByName('foo')
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHostServiceUrl(base, '', 'projects')}/foo`
+				`${getHostServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					path: 'projects',
+				})}/foo`
 			)
 		})
 
@@ -70,7 +78,11 @@ describe('ProjectService', function (): void {
 			await project.readAll()
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHostServiceUrl(base, '', 'projects')}`
+				`${getHostServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					path: 'projects',
+				})}`
 			)
 		})
 
@@ -91,7 +103,11 @@ describe('ProjectService', function (): void {
 			await project.createProject({ name: 'Fred' })
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHostServiceUrl(base, '', 'projects')}`
+				`${getHostServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					path: 'projects',
+				})}`
 			)
 			expect(getLastBody()).toEqual(JSON.stringify(dict.toJSON()))
 		})
@@ -110,7 +126,11 @@ describe('ProjectService', function (): void {
 			await project.update(dict)
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHostServiceUrl(base, '', 'projects')}/foo`
+				`${getHostServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					path: 'projects',
+				})}/foo`
 			)
 		})
 

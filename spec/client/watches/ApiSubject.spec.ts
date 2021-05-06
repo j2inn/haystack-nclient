@@ -22,7 +22,6 @@ import {
 } from '../../../src/util/http'
 import { WatchApis } from '../../../src/client/watches/WatchApis'
 import { ClientServiceConfig } from '../../../src/client/ClientServiceConfig'
-import { DEFAULT_OPS_URL_TEMPLATE } from '../../../src/client/Client'
 
 jest.useFakeTimers()
 
@@ -42,16 +41,21 @@ describe('ApiSubject', function (): void {
 	beforeEach(function (): void {
 		serviceConfig = {
 			getOpUrl: (op: string): string =>
-				getOpUrl(DEFAULT_OPS_URL_TEMPLATE, {
+				getOpUrl({
 					origin,
 					pathPrefix: '',
 					project,
 					op,
 				}),
 			getHaystackServiceUrl: (path: string): string =>
-				getHaystackServiceUrl(origin, '', project, path),
+				getHaystackServiceUrl({
+					origin,
+					pathPrefix: '',
+					project,
+					path,
+				}),
 			getHostServiceUrl: (path: string): string =>
-				getHostServiceUrl(origin, '', path),
+				getHostServiceUrl({ origin, pathPrefix: '', path }),
 			getDefaultOptions: (): RequestInit => ({}),
 			defs: new HNamespace(HGrid.make({})),
 		}

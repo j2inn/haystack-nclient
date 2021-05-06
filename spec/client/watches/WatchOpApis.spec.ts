@@ -7,7 +7,7 @@ import {
 	getHaystackServiceUrl,
 	getHostServiceUrl,
 } from '../../../src/util/http'
-import { Client, DEFAULT_OPS_URL_TEMPLATE } from '../../../src/client/Client'
+import { Client } from '../../../src/client/Client'
 import fetchMock from 'fetch-mock'
 import {
 	WATCH_SUB_OP,
@@ -30,7 +30,7 @@ describe('WatchOpApis', function (): void {
 
 		watchOps = new WatchOpApis({
 			getOpUrl: (op: string): string =>
-				getOpUrl(DEFAULT_OPS_URL_TEMPLATE, {
+				getOpUrl({
 					origin: client.origin,
 					pathPrefix: '',
 					project: client.project,
@@ -40,9 +40,18 @@ describe('WatchOpApis', function (): void {
 			getDefaultOptions: (): RequestInit => ({}),
 			defs: new HNamespace(HGrid.make({})),
 			getHaystackServiceUrl: (path: string): string =>
-				getHaystackServiceUrl(client.origin, '', client.project, path),
+				getHaystackServiceUrl({
+					origin: client.origin,
+					pathPrefix: '',
+					project: client.project,
+					path,
+				}),
 			getHostServiceUrl: (path: string): string =>
-				getHostServiceUrl(client.origin, '', path),
+				getHostServiceUrl({
+					origin: client.origin,
+					pathPrefix: '',
+					path,
+				}),
 			fetch,
 		})
 	}

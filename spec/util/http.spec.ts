@@ -13,10 +13,11 @@ import {
 	getHaystackServiceUrl,
 	getHostServiceUrl,
 	encodeQuery,
+	addStartSlashRemoveEndSlash,
 } from '../../src/util/http'
 import { Headers as NodeHeaders } from 'node-fetch'
 
-describe('uri', function (): void {
+describe('http', function (): void {
 	describe('encodeQuery', function (): void {
 		it('returns an empty string for an empty object', function (): void {
 			expect(encodeQuery({})).toBe('')
@@ -168,19 +169,23 @@ describe('uri', function (): void {
 	describe('#getOpUrl()', function (): void {
 		it('returns a URL', function (): void {
 			expect(
-				getOpUrl('https://localhost:8080', '', 'api', 'demo', 'ops')
+				getOpUrl({
+					origin: 'https://localhost:8080',
+					pathPrefix: '',
+					project: 'demo',
+					op: 'ops',
+				})
 			).toBe('https://localhost:8080/api/demo/ops')
 		})
 
 		it('returns updated url when prefix is sent', function (): void {
 			expect(
-				getOpUrl(
-					'https://localhost:8080',
-					'/prefix/path',
-					'api',
-					'demo',
-					'ops'
-				)
+				getOpUrl({
+					origin: 'https://localhost:8080',
+					pathPrefix: '/prefix/path',
+					project: 'demo',
+					op: 'ops',
+				})
 			).toBe('https://localhost:8080/prefix/path/api/demo/ops')
 		})
 	}) // #getOpUrl()
@@ -188,34 +193,34 @@ describe('uri', function (): void {
 	describe('#getHaystackServiceUrl()', function (): void {
 		it('returns a URL', function (): void {
 			expect(
-				getHaystackServiceUrl(
-					'https://localhost:8080',
-					'',
-					'demo',
-					'service'
-				)
+				getHaystackServiceUrl({
+					origin: 'https://localhost:8080',
+					pathPrefix: '',
+					project: 'demo',
+					path: 'service',
+				})
 			).toBe('https://localhost:8080/api/haystack/demo/service')
 		})
 
 		it('returns a URL with no project name', function (): void {
 			expect(
-				getHaystackServiceUrl(
-					'https://localhost:8080',
-					'',
-					'',
-					'service'
-				)
+				getHaystackServiceUrl({
+					origin: 'https://localhost:8080',
+					pathPrefix: '',
+					project: '',
+					path: 'service',
+				})
 			).toBe('https://localhost:8080/api/haystack/service')
 		})
 
 		it('returns updated url when sending in a path prefix', function (): void {
 			expect(
-				getHaystackServiceUrl(
-					'https://localhost:8080',
-					'/prefix/path/',
-					'',
-					'service'
-				)
+				getHaystackServiceUrl({
+					origin: 'https://localhost:8080',
+					pathPrefix: '/prefix/path',
+					project: '',
+					path: 'service',
+				})
 			).toBe('https://localhost:8080/prefix/path/api/haystack/service')
 		})
 	}) // #getHaystackServiceUrl()
@@ -223,18 +228,40 @@ describe('uri', function (): void {
 	describe('#getHostServiceUrl()', function (): void {
 		it('returns a URL', function (): void {
 			expect(
-				getHostServiceUrl('https://localhost:8080', '', 'service')
+				getHostServiceUrl({
+					origin: 'https://localhost:8080',
+					pathPrefix: '',
+					path: 'service',
+				})
 			).toBe('https://localhost:8080/api/host/service')
 		})
 
 		it('should return updated url when path prefix is sent in', function (): void {
 			expect(
-				getHostServiceUrl(
-					'https://localhost:8080',
-					'path/prefix',
-					'service'
-				)
+				getHostServiceUrl({
+					origin: 'https://localhost:8080',
+					pathPrefix: '/path/prefix',
+					path: 'service',
+				})
 			).toBe('https://localhost:8080/path/prefix/api/host/service')
 		})
 	}) // #getHaystackServiceUrl()
+
+	describe('addStartSlashRemoveEndSlash()', function (): void {
+		it('returns an empty string', function (): void {
+			expect(addStartSlashRemoveEndSlash('')).toBe('')
+		})
+
+		it('returns an empty string for a slash', function (): void {
+			expect(addStartSlashRemoveEndSlash('/')).toBe('')
+		})
+
+		it('adds a starting slash', function (): void {
+			expect(addStartSlashRemoveEndSlash('foo/bar')).toBe('/foo/bar')
+		})
+
+		it('removes an ending slash', function (): void {
+			expect(addStartSlashRemoveEndSlash('/foo/bar/')).toBe('/foo/bar')
+		})
+	}) // addStartSlashRemoveEndSlash()
 })

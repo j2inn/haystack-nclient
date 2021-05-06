@@ -10,14 +10,12 @@
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
-const WriteFilePlugin = require('write-file-webpack-plugin')
 
-const finURL = `http://${process.env.FIN_HOST || 'localhost:8085'}`
+const finURL = `http://${process.env.FIN_HOST || 'localhost:8080'}`
 
 module.exports = {
 	mode: 'development',
 	entry: './src/globalEntry.ts',
-	devtool: 'inline-module-source-map',
 	module: {
 		rules: [
 			{
@@ -45,7 +43,6 @@ module.exports = {
 		minimize: false,
 	},
 	plugins: [
-		new WriteFilePlugin(),
 		new CopyWebpackPlugin(
 			{
 				patterns: [
@@ -53,7 +50,6 @@ module.exports = {
 						from: 'assets/*.zinc',
 						to: 'assets/',
 						force: true,
-						flatten: true,
 					},
 				],
 			},

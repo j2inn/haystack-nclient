@@ -15,7 +15,12 @@ describe('RecordService', function (): void {
 
 	function prepareMock(verb: string, resp: HDict | HGrid): void {
 		fetchMock.reset().mock(
-			`begin:${getHaystackServiceUrl(base, '', 'demo', 'records')}`,
+			`begin:${getHaystackServiceUrl({
+				origin: base,
+				pathPrefix: '',
+				project: 'demo',
+				path: 'records',
+			})}`,
 			{
 				body: resp.toJSON(),
 				headers: { 'content-type': HAYSON_MIME_TYPE },
@@ -45,7 +50,12 @@ describe('RecordService', function (): void {
 			await record.readById('foo')
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHaystackServiceUrl(base, '', 'demo', 'records')}/foo`
+				`${getHaystackServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					project: 'demo',
+					path: 'records',
+				})}/foo`
 			)
 		})
 
@@ -70,12 +80,12 @@ describe('RecordService', function (): void {
 			await record.readByIds(['foo', 'foo1'])
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHaystackServiceUrl(
-					base,
-					'',
-					'demo',
-					'records'
-				)}?ids=foo%7Cfoo1`
+				`${getHaystackServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					project: 'demo',
+					path: 'records',
+				})}?ids=foo%7Cfoo1`
 			)
 		})
 
@@ -88,12 +98,12 @@ describe('RecordService', function (): void {
 			})
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHaystackServiceUrl(
-					base,
-					'',
-					'demo',
-					'records'
-				)}?ids=foo%7Cfoo1&unique=foo%7Cboo&sort=foo%7Cboo&limit=10&columns=foo%7Cboo`
+				`${getHaystackServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					project: 'demo',
+					path: 'records',
+				})}?ids=foo%7Cfoo1&unique=foo%7Cboo&sort=foo%7Cboo&limit=10&columns=foo%7Cboo`
 			)
 		})
 
@@ -120,12 +130,12 @@ describe('RecordService', function (): void {
 			await record.readByFilter('site or equip')
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHaystackServiceUrl(
-					base,
-					'',
-					'demo',
-					'records'
-				)}?filter=site%20or%20equip`
+				`${getHaystackServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					project: 'demo',
+					path: 'records',
+				})}?filter=site%20or%20equip`
 			)
 		})
 
@@ -138,12 +148,12 @@ describe('RecordService', function (): void {
 			})
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHaystackServiceUrl(
-					base,
-					'',
-					'demo',
-					'records'
-				)}?filter=site&unique=foo%7Cboo&sort=foo%7Cboo&limit=10&columns=foo%7Cboo`
+				`${getHaystackServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					project: 'demo',
+					path: 'records',
+				})}?filter=site&unique=foo%7Cboo&sort=foo%7Cboo&limit=10&columns=foo%7Cboo`
 			)
 		})
 
@@ -163,12 +173,12 @@ describe('RecordService', function (): void {
 			await record.readCount('site or equip')
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHaystackServiceUrl(
-					base,
-					'',
-					'demo',
-					'records'
-				)}?count=site%20or%20equip`
+				`${getHaystackServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					project: 'demo',
+					path: 'records',
+				})}?count=site%20or%20equip`
 			)
 		})
 
@@ -189,7 +199,12 @@ describe('RecordService', function (): void {
 			await record.create([{ foo: 'bar' }])
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHaystackServiceUrl(base, '', 'demo', 'records')}`
+				`${getHaystackServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					project: 'demo',
+					path: 'records',
+				})}`
 			)
 			expect(getLastBody()).toEqual(JSON.stringify(grid.toJSON()))
 		})
@@ -207,7 +222,12 @@ describe('RecordService', function (): void {
 			await record.createRecord({ foo: 'bar' })
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHaystackServiceUrl(base, '', 'demo', 'records')}`
+				`${getHaystackServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					project: 'demo',
+					path: 'records',
+				})}`
 			)
 			expect(getLastBody()).toEqual(JSON.stringify(dict.toJSON()))
 		})
@@ -225,7 +245,12 @@ describe('RecordService', function (): void {
 			await record.deleteById('foo')
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHaystackServiceUrl(base, '', 'demo', 'records')}/foo`
+				`${getHaystackServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					project: 'demo',
+					path: 'records',
+				})}/foo`
 			)
 		})
 
@@ -246,12 +271,12 @@ describe('RecordService', function (): void {
 			await record.deleteByIds(['foo', 'foo1'])
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHaystackServiceUrl(
-					base,
-					'',
-					'demo',
-					'records'
-				)}?ids=foo%7Cfoo1`
+				`${getHaystackServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					project: 'demo',
+					path: 'records',
+				})}?ids=foo%7Cfoo1`
 			)
 		})
 
@@ -272,12 +297,12 @@ describe('RecordService', function (): void {
 			await record.deleteByFilter('site and equip')
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHaystackServiceUrl(
-					base,
-					'',
-					'demo',
-					'records'
-				)}?filter=site%20and%20equip`
+				`${getHaystackServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					project: 'demo',
+					path: 'records',
+				})}?filter=site%20and%20equip`
 			)
 		})
 
@@ -298,12 +323,12 @@ describe('RecordService', function (): void {
 			await record.updateByFilter('site and equip', dict)
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHaystackServiceUrl(
-					base,
-					'',
-					'demo',
-					'records'
-				)}?filter=site%20and%20equip`
+				`${getHaystackServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					project: 'demo',
+					path: 'records',
+				})}?filter=site%20and%20equip`
 			)
 
 			expect(getLastBody()).toEqual(JSON.stringify(dict.toJSON()))
@@ -328,7 +353,12 @@ describe('RecordService', function (): void {
 			await record.update([dict])
 
 			expect(fetchMock.lastUrl()).toBe(
-				`${getHaystackServiceUrl(base, '', 'demo', 'records')}`
+				`${getHaystackServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					project: 'demo',
+					path: 'records',
+				})}`
 			)
 
 			expect(getLastBody()).toEqual(

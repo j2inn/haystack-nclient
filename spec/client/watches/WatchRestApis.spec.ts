@@ -32,14 +32,28 @@ describe('WatchRestApis', function (): void {
 
 		apis = new WatchRestApis({
 			getOpUrl: (op: string): string =>
-				getOpUrl(client.origin, '', 'api', client.project, op),
+				getOpUrl({
+					origin: client.origin,
+					pathPrefix: '',
+					project: client.project,
+					op,
+				}),
 
 			getDefaultOptions: (): RequestInit => ({}),
 			defs: new HNamespace(HGrid.make({})),
 			getHaystackServiceUrl: (path: string): string =>
-				getHaystackServiceUrl(client.origin, '', client.project, path),
+				getHaystackServiceUrl({
+					origin: client.origin,
+					pathPrefix: '',
+					project: client.project,
+					path,
+				}),
 			getHostServiceUrl: (path: string): string =>
-				getHostServiceUrl(client.origin, '', path),
+				getHostServiceUrl({
+					origin: client.origin,
+					pathPrefix: '',
+					path,
+				}),
 			fetch,
 		})
 	}

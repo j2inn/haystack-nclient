@@ -13,7 +13,9 @@
 </body>
 
 <script>
-	hs.client = new hs.Client({ base: new URL(window.location.href), opsBase: 'haystack', project: 'demo' })
+	document.onload = () => {
+		hs.client = new hs.Client({ base: new URL(window.location.href), opsBase: 'haystack', project: 'demo' })
+	}
 </script>
 
 </html>

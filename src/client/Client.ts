@@ -5,10 +5,13 @@
 import { HNamespace, HGrid } from 'haystack-core'
 import {
 	addHeader,
-	getOpUrl,
-	getHaystackServiceUrl,
-	getHostServiceUrl,
-	sanitizedPrefixPath,
+	getOpUrl as defaultGetOpUrl,
+	getHaystackServiceUrl as defaultGetHaystackServiceUrl,
+	getHostServiceUrl as defaultGetHostServiceUrl,
+	addStartSlashRemoveEndSlash,
+	getOpUrlCallback,
+	getHaystackServiceUrlCallback,
+	getHostServiceUrlCallback,
 } from '../util/http'
 import { RecordService } from './RecordService'
 import { ClientServiceConfig } from './ClientServiceConfig'
@@ -32,9 +35,19 @@ export class Client implements ClientServiceConfig {
 	public readonly origin: string
 
 	/**
-	 * The default base ops path.
+	 * Fetches the Ops URL.
 	 */
-	public readonly opsBase: string
+	readonly #getOpUrl: getOpUrlCallback
+
+	/**
+	 * Fetches the haystack service URL.
+	 */
+	readonly #getHaystackServiceUrl: getHaystackServiceUrlCallback
+
+	/**
+	 * Fetches the host service URL.
+	 */
+	readonly #getHostServiceUrl: getHostServiceUrlCallback
 
 	/**
 	 * The project associated with this client.
@@ -120,8 +133,10 @@ export class Client implements ClientServiceConfig {
 	 * added to the `options`.
 	 * @param options.fetch An optional fetch function to use for all network requests. If not specified
 	 * the FIN CSRF fetch will be used.
-	 * @param options.opsBase An optional alternative base path for making ops calls.
 	 * @param options.pathPrefix The optional path to be appended to the base URL when making certain requests.
+	 * @param options.getOpsUrl Optional function that returns the ops URL to use.
+	 * @param options.getHaystackServiceUrl Optional function that returns the haystack service URL to use.
+	 * @param options.getHostServiceUrl Optional function that returns the host service URL to use.
 	 */
 	public constructor({
 		base,
@@ -130,7 +145,9 @@ export class Client implements ClientServiceConfig {
 		options,
 		authBearer,
 		fetch,
-		opsBase,
+		getOpUrl,
+		getHaystackServiceUrl,
+		getHostServiceUrl,
 		pathPrefix,
 	}: {
 		base: URL
@@ -139,7 +156,9 @@ export class Client implements ClientServiceConfig {
 		options?: RequestInit
 		authBearer?: string
 		fetch?: FetchMethod
-		opsBase?: string
+		getOpUrl?: getOpUrlCallback
+		getHaystackServiceUrl?: getHaystackServiceUrlCallback
+		getHostServiceUrl?: getHostServiceUrlCallback
 		pathPrefix?: string
 	}) {
 		this.origin = base.origin
@@ -149,7 +168,13 @@ export class Client implements ClientServiceConfig {
 		this.#options = options ?? {}
 
 		this.fetch = fetch ?? finCsrfFetch
-		this.pathPrefix = sanitizedPrefixPath(pathPrefix)
+
+		this.pathPrefix = addStartSlashRemoveEndSlash(pathPrefix?.trim() ?? '')
+
+		this.#getOpUrl = getOpUrl ?? defaultGetOpUrl
+		this.#getHaystackServiceUrl =
+			getHaystackServiceUrl ?? defaultGetHaystackServiceUrl
+		this.#getHostServiceUrl = getHostServiceUrl ?? defaultGetHostServiceUrl
 
 		// If there's no project specified then attempt to detect it.
 		this.project =
@@ -175,8 +200,6 @@ export class Client implements ClientServiceConfig {
 		if (typeof authBearer === 'string') {
 			addHeader(this.#options, 'Authorization', `Bearer ${authBearer}`)
 		}
-
-		this.opsBase = opsBase || 'api'
 	}
 
 	private static parseProjectFromFinMobile(path: string): string {
@@ -201,13 +224,12 @@ export class Client implements ClientServiceConfig {
 	 * @returns A URL.
 	 */
 	public getOpUrl(op: string): string {
-		return getOpUrl(
-			this.origin,
-			this.pathPrefix,
-			this.opsBase,
-			this.project,
-			op
-		)
+		return this.#getOpUrl({
+			origin: this.origin,
+			pathPrefix: this.pathPrefix,
+			project: this.project || 'sys',
+			op,
+		})
 	}
 
 	/**
@@ -217,12 +239,12 @@ export class Client implements ClientServiceConfig {
 	 * @returns A URL.
 	 */
 	public getHaystackServiceUrl(service: string): string {
-		return getHaystackServiceUrl(
-			this.origin,
-			this.pathPrefix,
-			this.project,
-			service
-		)
+		return this.#getHaystackServiceUrl({
+			origin: this.origin,
+			pathPrefix: this.pathPrefix,
+			project: this.project,
+			path: service,
+		})
 	}
 
 	/**
@@ -232,7 +254,11 @@ export class Client implements ClientServiceConfig {
 	 * @returns A URL.
 	 */
 	public getHostServiceUrl(path: string): string {
-		return getHostServiceUrl(this.origin, this.pathPrefix, path)
+		return this.#getHostServiceUrl({
+			origin: this.origin,
+			pathPrefix: this.pathPrefix,
+			path,
+		})
 	}
 
 	/**
@@ -276,12 +302,12 @@ export class Client implements ClientServiceConfig {
 	 */
 	private async requestDefs(): Promise<HNamespace> {
 		const grid = await fetchVal<HGrid>(
-			`${getHaystackServiceUrl(
-				this.origin,
-				this.pathPrefix,
-				'',
-				'defs'
-			)}`,
+			`${this.#getHaystackServiceUrl({
+				origin: this.origin,
+				pathPrefix: this.pathPrefix,
+				project: '',
+				path: 'defs',
+			})}`,
 			{ ...this.getDefaultOptions() },
 			this.fetch
 		)
@@ -290,17 +316,19 @@ export class Client implements ClientServiceConfig {
 	}
 
 	/**
-	 * @returns A JSON object of the Client.
+	 * @returns A JSON object of the Client that uniquely identifies it.
 	 */
 	public toJSON(): {
-		origin: string
-		opsBase: string
+		opUrl: string
+		haystackServiceUrl: string
+		hostServiceUrl: string
 		project: string
 		pathPrefix: string
 	} {
 		return {
-			origin: this.origin,
-			opsBase: this.opsBase,
+			opUrl: this.getOpUrl(''),
+			haystackServiceUrl: this.getHaystackServiceUrl(''),
+			hostServiceUrl: this.getHostServiceUrl(''),
 			project: this.project,
 			pathPrefix: this.pathPrefix,
 		}

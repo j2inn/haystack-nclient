@@ -9,61 +9,100 @@ import { HList, HRef, Kind, valueIsKind } from 'haystack-core'
  */
 
 /**
+ * The functional interface for getting the op url.
+ */
+export interface getOpUrlCallback {
+	({
+		origin,
+		pathPrefix,
+		project,
+		op,
+	}: {
+		origin: string
+		pathPrefix: string
+		project: string
+		op: string
+	}): string
+}
+
+/**
  * Returns the URL for an op.
  *
- * @param origin The origin for the op.
- * @param opsBase The base ops path.
- * @param project The project for the op.
- * @param op The op to create the URL for.
+ * @param params.origin The origin.
+ * @param params.pathPrefix The path prefix to use.
+ * @param params.project The project name.
+ * @param params.op The op name.
  * @returns A URL.
  */
-export function getOpUrl(
-	origin: string,
-	prefix: string,
-	opsBase: string,
-	project: string,
-	op: string
-): string {
-	return `${origin}${
-		prefix ? '/' + sanitizedPrefixPath(prefix) : ''
-	}/${opsBase}/${project || 'sys'}/${op}`
+export const getOpUrl: getOpUrlCallback = ({
+	origin,
+	pathPrefix,
+	project,
+	op,
+}): string => `${origin}${pathPrefix}/api/${project}/${op}`
+
+/**
+ * The functional interface for getting the op url.
+ */
+export interface getHaystackServiceUrlCallback {
+	({
+		origin,
+		pathPrefix,
+		project,
+		path,
+	}: {
+		origin: string
+		pathPrefix: string
+		project: string
+		path: string
+	}): string
 }
 
 /**
  * Returns the URL for a Haystack REST service.
  *
  * @param origin The origin for the service.
- * @param project The project for the service.
+ * @param pathPrefix The path prefix to use.
+ * @param project The project for the service. May be empty and if so shouldn't be included.
  * @param path The service path.
  * @returns A URL.
  */
-export function getHaystackServiceUrl(
-	origin: string,
-	prefix: string,
-	project: string,
-	path: string
-): string {
-	return `${origin}${
-		prefix ? '/' + sanitizedPrefixPath(prefix) : ''
-	}/api/haystack${project ? `/${project}` : ''}/${path}`
+export const getHaystackServiceUrl: getHaystackServiceUrlCallback = ({
+	origin,
+	pathPrefix,
+	project,
+	path,
+}): string =>
+	`${origin}${pathPrefix}/api/haystack${project ? `/${project}` : ''}/${path}`
+
+/**
+ * The functional interface for getting the op url.
+ */
+export interface getHostServiceUrlCallback {
+	({
+		origin,
+		pathPrefix,
+		path,
+	}: {
+		origin: string
+		pathPrefix: string
+		path: string
+	}): string
 }
 
 /**
  * Returns the URL for a Host REST service.
  *
  * @param origin The origin for the service.
+ * @param pathPrefix The path prefix to use.
  * @param path The service path.
  * @returns A URL.
  */
-export function getHostServiceUrl(
-	origin: string,
-	prefix: string,
-	path: string
-): string {
-	return `${origin}${
-		prefix ? '/' + sanitizedPrefixPath(prefix) : ''
-	}/api/host/${path}`
-}
+export const getHostServiceUrl: getHostServiceUrlCallback = ({
+	origin,
+	pathPrefix,
+	path,
+}): string => `${origin}${pathPrefix}/api/host/${path}`
 
 /**
  * Encode the object as a URI query segment.
@@ -268,15 +307,21 @@ export function addHeader(
 }
 
 /**
- * Removes the slashes form the start and end of a string/path
+ * Adds a starting slash and removes any ending slash.
  *
- * @param path is the path string
- * @returns {string}
+ * @param path The path to update.
+ * @returns The updated path.
  */
-export function sanitizedPrefixPath(path?: string): string {
-	if (!path || path.trim().length < 1) {
-		return ''
+export function addStartSlashRemoveEndSlash(path: string): string {
+	path = path.trim()
+
+	if (path && !path.startsWith('/')) {
+		path = `/${path}`
 	}
 
-	return path.replace(/^\/+|\/+$/g, '')
+	if (path.endsWith('/')) {
+		path = path.substring(0, path.length - 1)
+	}
+
+	return path
 }

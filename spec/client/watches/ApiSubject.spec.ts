@@ -41,11 +41,21 @@ describe('ApiSubject', function (): void {
 	beforeEach(function (): void {
 		serviceConfig = {
 			getOpUrl: (op: string): string =>
-				getOpUrl(origin, '', 'api', project, op),
+				getOpUrl({
+					origin,
+					pathPrefix: '',
+					project,
+					op,
+				}),
 			getHaystackServiceUrl: (path: string): string =>
-				getHaystackServiceUrl(origin, '', project, path),
+				getHaystackServiceUrl({
+					origin,
+					pathPrefix: '',
+					project,
+					path,
+				}),
 			getHostServiceUrl: (path: string): string =>
-				getHostServiceUrl(origin, '', path),
+				getHostServiceUrl({ origin, pathPrefix: '', path }),
 			getDefaultOptions: (): RequestInit => ({}),
 			defs: new HNamespace(HGrid.make({})),
 		}

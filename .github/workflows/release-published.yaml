@@ -46,3 +46,17 @@ jobs:
       env:
         # The secret is passed automatically. Nothing to configure.
         github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Configure AWS credentials for uploading docs
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_DOCS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_DOCS_SECRET_KEY }}
+        aws-region: us-east-1
+
+     # Generate all of the documentation for the default defs library
+    - run: node ./dist/index -t *all*
+
+    # Create typedoc information and upload
+    - run: npm run doc
+    - run: aws s3 sync ./docs "s3://j2-docs/$GITHUB_REPOSITORY"

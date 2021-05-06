@@ -35,6 +35,16 @@ export function clearFinCsrfTokens(): void {
 }
 
 /**
+ * Asynchronously return the CSRF token for the specified host.
+ *
+ * @param host The host.
+ * @returns Resolves to the CSRF token or an empty string if it can't be found.
+ */
+export async function getFinCsrfToken(host: string): Promise<string> {
+	return originAttestKeyPromises.get(host) ?? ''
+}
+
+/**
  * Asynchronously request the attest key from a server.
  *
  * @param origin The origin to request the attest key from.

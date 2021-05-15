@@ -2,7 +2,7 @@
  * Copyright (c) 2020, J2 Innovations. All Rights Reserved
  */
 
-import { HGrid, HDict, HFilter, Node } from 'haystack-core'
+import { HGrid, HDict, HFilter, Node, HRef } from 'haystack-core'
 import { Ids, getId, idsToArray } from '../../util/hval'
 import { Subject } from './Subject'
 import {
@@ -267,21 +267,25 @@ export class Watch {
 		let index = this.grid.length
 
 		for (const id of toAdd) {
-			let dict = this.#subject.get(id)
+			// Ignore duplicates.
+			if (this.#idsToGridIndexes[id] === undefined) {
+				addedIds.push(id)
 
-			if (dict && !dict.isEmpty()) {
-				// Ignore duplicates.
-				if (this.#idsToGridIndexes[id] === undefined) {
-					addedIds.push(id)
+				let dict = this.#subject.get(id)
 
+				if (!dict || dict.isEmpty()) {
+					// If a dict can't be found then this could be a timing issue where the dict
+					// isn't added to the subject yet. In this scenario, create a place holder dict.
+					dict = new HDict({ id: HRef.make(id) })
+				} else {
 					// Always create a new copy because we want to
 					// track the changes in our local
 					// grid when updates are made.
 					dict = dict.newCopy()
-
-					dictsToAdd.push(dict)
-					this.#idsToGridIndexes[id] = index++
 				}
+
+				dictsToAdd.push(dict)
+				this.#idsToGridIndexes[id] = index++
 			}
 		}
 

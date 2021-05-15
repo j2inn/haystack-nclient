@@ -86,22 +86,17 @@ export class BatchIds {
 	private startInvocationTimer(): void {
 		this.#timer = setTimeout(async (): Promise<void> => {
 			const deferred = this.#deferred
+			const ids = this.#ids
+			this.reset()
+
 			try {
-				if (this.#ids) {
-					await this.#method(this.#ids)
+				if (ids) {
+					await this.#method(ids)
 				}
 
-				// Reset any arguments before resolve the problem. Do this just incase
-				// resolving this promise causes any additional batching!
-				this.reset()
-				if (deferred && deferred.resolve) {
-					deferred.resolve()
-				}
+				deferred?.resolve?.()
 			} catch (err) {
-				this.reset()
-				if (deferred && deferred.reject) {
-					deferred.reject(err)
-				}
+				deferred?.reject?.(err)
 			}
 		}, BATCH_WINDOW_MS)
 	}

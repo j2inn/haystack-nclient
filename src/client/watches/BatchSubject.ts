@@ -24,9 +24,19 @@ export class BatchSubject implements Subject {
 	readonly #batchAdd: BatchIds
 
 	/**
+	 * Current batch add promise.
+	 */
+	#batchAddPromise?: Promise<void>
+
+	/**
 	 * Batch up calls to remove.
 	 */
 	readonly #batchRemove: BatchIds
+
+	/**
+	 * Current batch remove promise.
+	 */
+	#batchRemovePromise?: Promise<void>
 
 	/**
 	 * Constructs a new batch subject.
@@ -37,15 +47,11 @@ export class BatchSubject implements Subject {
 		this.#subject = subject
 
 		this.#batchAdd = new BatchIds(
-			async (ids: string[]): Promise<void> => {
-				return this.#subject.add(ids)
-			}
+			async (ids: string[]): Promise<void> => this.#subject.add(ids)
 		)
 
 		this.#batchRemove = new BatchIds(
-			async (ids: string[]): Promise<void> => {
-				return this.#subject.remove(ids)
-			}
+			async (ids: string[]): Promise<void> => this.#subject.remove(ids)
 		)
 	}
 
@@ -85,7 +91,18 @@ export class BatchSubject implements Subject {
 	 * @param ids The ids to add.
 	 */
 	public async add(ids: string[]): Promise<void> {
-		return this.#batchAdd.invoke(ids)
+		// Wait for all outstanding remove operations to complete.
+		while (this.#batchRemovePromise) {
+			try {
+				await this.#batchRemovePromise
+			} catch (ignore) {}
+		}
+
+		try {
+			await (this.#batchAddPromise = this.#batchAdd.invoke(ids))
+		} finally {
+			this.#batchAddPromise = undefined
+		}
 	}
 
 	/**
@@ -96,7 +113,18 @@ export class BatchSubject implements Subject {
 	 * @param ids The ids to remove.
 	 */
 	public async remove(ids: string[]): Promise<void> {
-		await this.#batchRemove.invoke(ids)
+		// Wait for all outstanding add operations to complete.
+		while (this.#batchAddPromise) {
+			try {
+				await this.#batchAddPromise
+			} catch (ignore) {}
+		}
+
+		try {
+			await (this.#batchRemovePromise = this.#batchRemove.invoke(ids))
+		} finally {
+			this.#batchRemovePromise = undefined
+		}
 	}
 
 	/**

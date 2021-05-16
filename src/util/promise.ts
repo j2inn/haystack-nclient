@@ -6,16 +6,16 @@
  * A deferred promise.
  */
 export interface Deferred {
-	promise?: Promise<void>
-	resolve?: () => void
-	reject?: (reason?: unknown) => void
+	promise: Promise<void>
+	resolve: () => void
+	reject: (reason?: unknown) => void
 }
 
 /**
  * @returns A new deferred promise.
  */
 export function makeDeferred(): Deferred {
-	const deferred: Deferred = {}
+	const deferred: Deferred = ({} as unknown) as Deferred
 
 	deferred.promise = new Promise(
 		(resolve: () => void, reject: (reason?: unknown) => void): void => {

@@ -34,15 +34,33 @@ describe('BatchSubject', function (): void {
 		it('invokes all add operations first', async function (): Promise<void> {
 			await Promise.all([
 				batch.add(['a']),
-				batch.remove(['b']),
+				batch.add(['b']),
 				batch.remove(['c']),
 				batch.remove(['d']),
 				batch.remove(['e']),
-				batch.add(['f']),
+				batch.remove(['f']),
 				batch.add(['g']),
+				batch.add(['h']),
 			])
 
-			expect(ops.join(',')).toBe('add:a,f,g,remove:b,c,d,e')
+			expect(ops.join(',')).toBe('add:a,b,remove:c,d,e,f,add:g,h')
+		})
+
+		it('invokes all operations in order', async function (): Promise<void> {
+			let order = ''
+
+			await Promise.all([
+				batch.add(['a']).then(() => (order += 'a')),
+				batch.add(['b']).then(() => (order += 'b')),
+				batch.remove(['c']).then(() => (order += 'c')),
+				batch.remove(['d']).then(() => (order += 'd')),
+				batch.remove(['e']).then(() => (order += 'e')),
+				batch.remove(['f']).then(() => (order += 'f')),
+				batch.add(['g']).then(() => (order += 'g')),
+				batch.add(['h']).then(() => (order += 'h')),
+			])
+
+			expect(order).toBe('abcdefgh')
 		})
 	}) // #add()
 
@@ -55,15 +73,37 @@ describe('BatchSubject', function (): void {
 		it('invokes all remove operations first', async function (): Promise<void> {
 			await Promise.all([
 				batch.remove(['a']),
-				batch.add(['b']),
-				batch.remove(['c']),
+				batch.remove(['b']),
+				batch.add(['c']),
 				batch.add(['d']),
 				batch.remove(['e']),
 				batch.remove(['f']),
-				batch.add(['g']),
+				batch.remove(['g']),
+				batch.remove(['h']),
+				batch.add(['i']),
 			])
 
-			expect(ops.join(',')).toBe('remove:a,c,e,f,add:b,d,g')
+			expect(ops.join(',')).toBe(
+				'remove:a,b,add:c,d,remove:e,f,g,h,add:i'
+			)
+		})
+
+		it('invokes all operations in order', async function (): Promise<void> {
+			let order = ''
+
+			await Promise.all([
+				batch.remove(['a']).then(() => (order += 'a')),
+				batch.remove(['b']).then(() => (order += 'b')),
+				batch.add(['c']).then(() => (order += 'c')),
+				batch.add(['d']).then(() => (order += 'd')),
+				batch.remove(['e']).then(() => (order += 'e')),
+				batch.remove(['f']).then(() => (order += 'f')),
+				batch.remove(['g']).then(() => (order += 'g')),
+				batch.remove(['h']).then(() => (order += 'h')),
+				batch.add(['i']).then(() => (order += 'i')),
+			])
+
+			expect(order).toBe('abcdefghi')
 		})
 	}) // #remove()
 })

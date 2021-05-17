@@ -137,7 +137,7 @@ export class BatchSubject implements Subject {
 			lastOp.deferred.promise.then(deferred.resolve, deferred.reject)
 		} else {
 			// Add a new op if it doesn't exist.
-			this.#batchQueue.push({ op, ids, deferred })
+			this.#batchQueue.push({ op, ids: [...ids], deferred })
 		}
 	}
 

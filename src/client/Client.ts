@@ -167,7 +167,11 @@ export class Client implements ClientServiceConfig {
 
 		this.#options = options ?? {}
 
-		this.fetch = fetch ?? (globalThis as {globalFetchAdapter?:FetchMethod}).globalFetchAdapter ?? finCsrfFetch
+		this.fetch =
+			fetch ??
+			(globalThis as { globalFetchAdapter?: FetchMethod })
+				.globalFetchAdapter ??
+			finCsrfFetch
 
 		this.pathPrefix = addStartSlashRemoveEndSlash(pathPrefix?.trim() ?? '')
 

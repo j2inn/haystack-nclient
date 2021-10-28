@@ -170,7 +170,7 @@ export class UserService<T extends User = User> {
 	 *
 	 * @param id The id of the record to delete.
 	 */
-	public async delete(id: string | HRef): Promise<void> {
+	public async deleteById(id: string | HRef): Promise<void> {
 		await fetchVal<Record>(
 			`${this.#url}/${HRef.make(id).value}`,
 			{

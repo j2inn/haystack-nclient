@@ -164,7 +164,7 @@ export class GroupService<T extends Group = Group> {
 	 *
 	 * @param id The id of the record to delete.
 	 */
-	public async delete(id: string | HRef): Promise<void> {
+	public async deleteById(id: string | HRef): Promise<void> {
 		await fetchVal<HRef>(
 			`${this.#url}/${HRef.make(id).value}`,
 			{

@@ -164,7 +164,7 @@ export class RolesService<T extends Role = Role> {
 	 *
 	 * @param id The id of the record to delete.
 	 */
-	public async delete(id: string | HRef): Promise<void> {
+	public async deleteById(id: string | HRef): Promise<void> {
 		await fetchVal<T>(
 			`${this.#url}/${HRef.make(id).value}`,
 			{

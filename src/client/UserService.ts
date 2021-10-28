@@ -4,11 +4,11 @@
 
 import { ClientServiceConfig } from './ClientServiceConfig'
 import { Record } from '../util/Record'
-import { HDict, HMarker, HRef, HStr } from 'haystack-core'
-import { HGrid, HaysonDict, HList } from 'haystack-core'
+import { HDict, HMarker, HRef, HGrid, HaysonDict, HList } from 'haystack-core'
 import { fetchVal } from './fetchVal'
 import { dictsToGrid } from '../util/hval'
 import { encodeQuery } from '../util/http'
+import { ReadOptions } from './RecordService'
 
 /**
  * A user record.
@@ -20,22 +20,7 @@ export interface User extends Record {
 	// role?: HStr
 }
 
-export interface UserReadOptions {
-	/**
-	 * If defined, specifies the name of the tag/prop by which the returned records are sorted in ascending order.
-	 */
-	sort?: string[]
-
-	/**
-	 * If defined, specifies the max number of record that will be returned by the read
-	 */
-	limit?: number
-
-	/**
-	 * If defined, limit the number of columns sent back in the response.
-	 */
-	columns?: string[]
-}
+export type UserReadOptions = Omit<ReadOptions, 'unique'>
 
 /**
  * An implementation of the FIN user service.
@@ -185,7 +170,7 @@ export class UserService<T extends User = User> {
 	 *
 	 * @param id The id of the record to delete.
 	 */
-	public async deleteById(id: string | HRef): Promise<void> {
+	public async delete(id: string | HRef): Promise<void> {
 		await fetchVal<Record>(
 			`${this.#url}/${HRef.make(id).value}`,
 			{

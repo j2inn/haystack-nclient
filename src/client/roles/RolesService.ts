@@ -2,12 +2,12 @@ import { HDict, HGrid, HMarker, HRef } from 'haystack-core'
 import { ClientServiceConfig } from '../ClientServiceConfig'
 import { fetchVal } from '../fetchVal'
 
-interface Group extends HDict {
+interface Role extends HDict {
 	id: HRef
-	userGroup: HMarker
+	userRole: HMarker
 }
 
-export class GroupService<T extends Group = Group> {
+export class RolesService<T extends Role = Role> {
 	/**
 	 * The client service configuration.
 	 */
@@ -20,11 +20,11 @@ export class GroupService<T extends Group = Group> {
 
 	public constructor(serviceConfig: ClientServiceConfig) {
 		this.#serviceConfig = serviceConfig
-		this.#url = serviceConfig.getHostServiceUrl('groups')
+		this.#url = serviceConfig.getHostServiceUrl('roles')
 	}
 
 	public async readAll(): Promise<T[]> {
-		const groups = await fetchVal<HGrid<T>>(
+		const roles = await fetchVal<HGrid<T>>(
 			`${this.#url}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -32,15 +32,15 @@ export class GroupService<T extends Group = Group> {
 			this.#serviceConfig.fetch
 		)
 
-		if (groups.isEmpty()) {
+		if (roles.isEmpty()) {
 			return []
 		}
 
-		return groups.getRows()
+		return roles.getRows()
 	}
 
-	public async readGroupById(id: string | HRef): Promise<T> {
-		const group = await fetchVal<T>(
+	public async readRoleById(id: string | HRef): Promise<T> {
+		const role = await fetchVal<T>(
 			`${this.#url}/${HRef.make(id).value}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -48,23 +48,23 @@ export class GroupService<T extends Group = Group> {
 			this.#serviceConfig.fetch
 		)
 
-		return group
+		return role
 	}
 
-	public async createGroups(groups: T | T[]): Promise<T> {
+	public async createRoles(roles: T | T[]): Promise<T> {
 		return fetchVal<T>(
 			`${this.#url}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
 				method: 'POST',
-				body: JSON.stringify(HDict.make(groups.toDict()).toJSON()),
+				body: JSON.stringify(HDict.make(roles.toDict()).toJSON()),
 			},
 			this.#serviceConfig.fetch
 		)
 	}
 
-	public async deleteGroup(id: string | HRef): Promise<void> {
-		await fetchVal<HRef>(
+	public async deleteRole(id: string | HRef): Promise<void> {
+		await fetchVal<T>(
 			`${this.#url}/${HRef.make(id).value}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -74,7 +74,7 @@ export class GroupService<T extends Group = Group> {
 		)
 	}
 
-	public async updateGroup(id: string | HRef): Promise<T> {
+	public async updateRole(id: string | HRef): Promise<T> {
 		return fetchVal<T>(
 			`${this.#url}/${HRef.make(id).value}`,
 			{

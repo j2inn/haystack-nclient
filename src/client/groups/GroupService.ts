@@ -9,8 +9,8 @@ import { ReadOptions } from '../RecordService'
  * a group record
  */
 interface Group extends HDict {
-	id: HRef
-	userGroup: HMarker
+	id?: HRef
+	userGroup?: HMarker
 }
 
 /**
@@ -18,7 +18,7 @@ interface Group extends HDict {
  */
 export type GroupsReadOptions = Omit<ReadOptions, 'unique'>
 
-export class GroupService<T extends Group = Group> {
+export class GroupsService<T extends Group = Group> {
 	/**
 	 * The client service configuration.
 	 */
@@ -45,9 +45,11 @@ export class GroupService<T extends Group = Group> {
 	 * @param options Optional options for read operation.
 	 * @returns The result of the read operation.
 	 */
-	public async readAll(): Promise<T[]> {
+	public async readAll(options?: GroupsReadOptions): Promise<T[]> {
 		const groups = await fetchVal<HGrid<T>>(
-			`${this.#url}`,
+			`${this.#url}${encodeQuery({
+				...(options ?? {}),
+			})}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
 			},
@@ -148,12 +150,15 @@ export class GroupService<T extends Group = Group> {
 	 * @returns A updated record. Please note, this record doesn't
 	 * have any group information just the `id` and `mod`.
 	 */
-	public async update(id: string | HRef): Promise<T> {
+	public async update(group: T | HaysonDict): Promise<T> {
+		const groupDict = HDict.make(group) as T
+
 		return fetchVal<T>(
-			`${this.#url}/${HRef.make(id).value}`,
+			`${this.#url}/${groupDict.id?.value ?? ''}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
 				method: 'PATCH',
+				body: JSON.stringify(groupDict.toJSON()),
 			},
 			this.#serviceConfig.fetch
 		)

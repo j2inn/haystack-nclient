@@ -9,8 +9,8 @@ import { ReadOptions } from '../RecordService'
  * a role record
  */
 interface Role extends HDict {
-	id: HRef
-	userRole: HMarker
+	id?: HRef
+	userRole?: HMarker
 }
 
 /**
@@ -45,9 +45,11 @@ export class RolesService<T extends Role = Role> {
 	 * @param options Optional options for read operation.
 	 * @returns The result of the read operation.
 	 */
-	public async readAll(): Promise<T[]> {
+	public async readAll(options?: RolesReadOptions): Promise<T[]> {
 		const roles = await fetchVal<HGrid<T>>(
-			`${this.#url}`,
+			`${this.#url}${encodeQuery({
+				...(options ?? {}),
+			})}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
 			},
@@ -148,12 +150,15 @@ export class RolesService<T extends Role = Role> {
 	 * @returns A updated record. Please note, this record doesn't
 	 * have any role information just the `id` and `mod`.
 	 */
-	public async update(id: string | HRef): Promise<T> {
+	public async update(role: T | HaysonDict): Promise<T> {
+		const roleDict = HDict.make(role) as T
+
 		return fetchVal<T>(
-			`${this.#url}/${HRef.make(id).value}`,
+			`${this.#url}/${roleDict.id?.value ?? ''}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
 				method: 'PATCH',
+				body: JSON.stringify(roleDict.toJSON()),
 			},
 			this.#serviceConfig.fetch
 		)

@@ -24,7 +24,7 @@ import { WatchService } from './watches/WatchService'
 import { WatchRestApis } from './watches/WatchRestApis'
 import { UserService } from './UserService'
 import { ProjectService } from './ProjectService'
-import { GroupService } from './groups/GroupService'
+import { GroupsService } from './groups/GroupService'
 import { RolesService } from './roles/RolesService'
 
 /**
@@ -99,7 +99,7 @@ export class Client implements ClientServiceConfig {
 	/**
 	 * The user groups service
 	 */
-	public readonly groups: GroupService
+	public readonly groups: GroupsService
 
 	/**
 	 * The user roles service
@@ -211,7 +211,7 @@ export class Client implements ClientServiceConfig {
 		this.watch = new WatchService(this, new WatchRestApis(this))
 		this.user = new UserService(this)
 		this.proj = new ProjectService(this)
-		this.groups = new GroupService(this)
+		this.groups = new GroupsService(this)
 		this.roles = new RolesService(this)
 
 		// Add the authorization bearer token if specified.

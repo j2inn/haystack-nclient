@@ -2,10 +2,18 @@
  * Copyright (c) 2020, J2 Innovations. All Rights Reserved
  */
 
-import { HGrid, HDict, HAYSON_MIME_TYPE, HSymbol, HStr } from 'haystack-core'
+import {
+	HGrid,
+	HDict,
+	HAYSON_MIME_TYPE,
+	HSymbol,
+	HStr,
+	HMarker,
+	HRef,
+} from 'haystack-core'
 import { getHostServiceUrl } from '../../src/util/http'
 import { Client } from '../../src/client/Client'
-import { UserService } from '../../src/client/UserService'
+import { UserService, User } from '../../src/client/UserService'
 import fetchMock from 'fetch-mock'
 
 describe('UserService', function (): void {
@@ -200,10 +208,13 @@ describe('UserService', function (): void {
 	}) // #createUser()
 
 	describe('#update()', function (): void {
-		let dict: HDict
+		let dict: User
 
 		beforeEach(function (): void {
-			dict = HDict.make({ id: HSymbol.make('foo') })
+			dict = HDict.make({
+				id: HRef.make('idValue'),
+				user: HMarker.make(),
+			})
 
 			prepareMock('PATCH', dict)
 		})
@@ -216,7 +227,7 @@ describe('UserService', function (): void {
 					origin: base,
 					pathPrefix: '',
 					path: 'users',
-				})}/foo`
+				})}/idValue`
 			)
 		})
 

@@ -8,9 +8,9 @@ import { ReadOptions } from '../RecordService'
 /**
  * a group record
  */
-interface Group extends HDict {
+export interface Group extends HDict {
 	id?: HRef
-	userGroup?: HMarker
+	userGroup: HMarker
 }
 
 /**

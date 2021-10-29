@@ -13,10 +13,11 @@ import { ReadOptions } from './RecordService'
 /**
  * A user record.
  */
-export interface User extends Record {
+export interface User extends HDict {
 	// name?: HStr
 	// dis?: HStr
-	user?: HMarker
+	id?: HRef
+	user: HMarker
 	// role?: HStr
 }
 
@@ -151,10 +152,10 @@ export class UserService<T extends User = User> {
 	 * @returns A updated record. Please note, this record doesn't
 	 * have any user information just the `id` and `mod`.
 	 */
-	public async update(user: T | HaysonDict): Promise<Record> {
-		const userDict = HDict.make(user) as Record
+	public async update(user: T | HaysonDict): Promise<T> {
+		const userDict = HDict.make(user) as T
 
-		return fetchVal<Record>(
+		return fetchVal<T>(
 			`${this.#url}/${userDict.id?.value ?? ''}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),

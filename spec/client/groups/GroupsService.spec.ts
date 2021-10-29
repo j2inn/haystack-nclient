@@ -2,10 +2,17 @@
  * Copyright (c) 2020, J2 Innovations. All Rights Reserved
  */
 
-import { HGrid, HDict, HAYSON_MIME_TYPE, HSymbol, HStr } from 'haystack-core'
+import {
+	HGrid,
+	HDict,
+	HAYSON_MIME_TYPE,
+	HSymbol,
+	HStr,
+	HRef,
+} from 'haystack-core'
 import { getHostServiceUrl } from '../../../src/util/http'
 import { Client } from '../../../src/client/Client'
-import { GroupsService } from '../../../src/client/groups/GroupService'
+import { GroupsService, Group } from '../../../src/client/groups/GroupService'
 import fetchMock from 'fetch-mock'
 
 describe('GroupsService', function (): void {
@@ -202,11 +209,11 @@ describe('GroupsService', function (): void {
 	}) // #createUser()
 
 	describe('#update()', function (): void {
-		let dict: HDict
+		let dict: Group
 
 		beforeEach(function (): void {
 			dict = HDict.make({
-				id: HSymbol.make('foo'),
+				id: HRef.make('foo'),
 				userGroup: HStr.make('bar'),
 			})
 

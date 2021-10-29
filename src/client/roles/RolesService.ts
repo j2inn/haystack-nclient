@@ -8,9 +8,9 @@ import { ReadOptions } from '../RecordService'
 /**
  * a role record
  */
-interface Role extends HDict {
+export interface Role extends HDict {
 	id?: HRef
-	userRole?: HMarker
+	userRole: HMarker
 }
 
 /**

@@ -2,10 +2,17 @@
  * Copyright (c) 2020, J2 Innovations. All Rights Reserved
  */
 
-import { HGrid, HDict, HAYSON_MIME_TYPE, HSymbol, HStr } from 'haystack-core'
+import {
+	HGrid,
+	HDict,
+	HAYSON_MIME_TYPE,
+	HSymbol,
+	HStr,
+	HRef,
+} from 'haystack-core'
 import { getHostServiceUrl } from '../../../src/util/http'
 import { Client } from '../../../src/client/Client'
-import { RolesService } from '../../../src/client/roles/RolesService'
+import { RolesService, Role } from '../../../src/client/roles/RolesService'
 import fetchMock from 'fetch-mock'
 
 describe('rolesService', function (): void {
@@ -202,11 +209,11 @@ describe('rolesService', function (): void {
 	}) // #createUser()
 
 	describe('#update()', function (): void {
-		let dict: HDict
+		let dict: Role
 
 		beforeEach(function (): void {
 			dict = HDict.make({
-				id: HSymbol.make('foo'),
+				id: HRef.make('foo'),
 				userRole: HStr.make('bar'),
 			})
 

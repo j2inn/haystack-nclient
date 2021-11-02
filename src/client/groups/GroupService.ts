@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2021, J2 Innovations. All Rights Reserved
+ */
+
 import { HDict, HGrid, HMarker, HRef, HaysonDict, HList } from 'haystack-core'
 import { ClientServiceConfig } from '../ClientServiceConfig'
 import { fetchVal } from '../fetchVal'
@@ -6,7 +10,7 @@ import { encodeQuery } from '../../util/http'
 import { ReadOptions } from '../RecordService'
 
 /**
- * a group record
+ * A group record
  */
 export interface Group extends HDict {
 	id?: HRef
@@ -14,10 +18,13 @@ export interface Group extends HDict {
 }
 
 /**
- * optional parameters available to readByFilter query
+ * Optional parameters available to readByFilter query
  */
 export type GroupsReadOptions = Omit<ReadOptions, 'unique'>
 
+/**
+ * An implementation of the FIN Groups service.
+ */
 export class GroupsService<T extends Group = Group> {
 	/**
 	 * The client service configuration.

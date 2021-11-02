@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, J2 Innovations. All Rights Reserved
+ * Copyright (c) 2021, J2 Innovations. All Rights Reserved
  */
 
 import {

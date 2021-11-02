@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2021, J2 Innovations. All Rights Reserved
+ */
+
 import { HaysonDict, HDict, HGrid, HMarker, HRef } from 'haystack-core'
 import { ClientServiceConfig } from '../ClientServiceConfig'
 import { fetchVal } from '../fetchVal'
@@ -6,7 +10,7 @@ import { encodeQuery } from '../../util/http'
 import { ReadOptions } from '../RecordService'
 
 /**
- * a role record
+ * A role record
  */
 export interface Role extends HDict {
 	id?: HRef
@@ -14,10 +18,13 @@ export interface Role extends HDict {
 }
 
 /**
- * optional parameters available to readByFilter query
+ * Optional parameters available to readByFilter query
  */
 export type RolesReadOptions = Omit<ReadOptions, 'unique'>
 
+/**
+ * An implementation of the FIN Roles service.
+ */
 export class RolesService<T extends Role = Role> {
 	/**
 	 * The client service configuration.

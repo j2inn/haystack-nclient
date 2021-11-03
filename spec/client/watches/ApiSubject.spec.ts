@@ -23,8 +23,6 @@ import {
 import { WatchApis } from '../../../src/client/watches/WatchApis'
 import { ClientServiceConfig } from '../../../src/client/ClientServiceConfig'
 
-jest.useFakeTimers()
-
 describe('ApiSubject', function (): void {
 	let subject: ApiSubject
 	let apis: WatchApis
@@ -39,6 +37,8 @@ describe('ApiSubject', function (): void {
 	const project = 'demo'
 
 	beforeEach(function (): void {
+		jest.useFakeTimers('legacy')
+
 		serviceConfig = {
 			getOpUrl: (op: string): string =>
 				getOpUrl({

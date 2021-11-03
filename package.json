@@ -19,7 +19,7 @@
 		"format": "prettier-eslint \"./**/*.ts\" --write",
 		"test": "npm run lint && jest",
 		"coverage": "npm run lint && jest --coverage",
-		"doc": "npx rimraf ./docs && npx rimraf ./coreDocs && typedoc ./src --excludePrivate && typedoc ./node_modules/haystack-core/src --out coreDocs --excludePrivate",
+		"doc": "npx rimraf ./docs && typedoc ./src --excludePrivate",
 		"build": "rimraf ./dist && rimraf ./build && tsc --project ./tsconfig.build.json && npx rollup --file=dist/index.es.js -- build/index.js && npx rollup --format=cjs --file=dist/index.js -- build/index.js && npx copyfiles -u 1 \"./build/**/*.d.ts\" ./dist",
 		"bundle": "webpack",
 		"export": "webpack --config webpack.config.nointernal.js",

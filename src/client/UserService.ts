@@ -4,43 +4,29 @@
 
 import { ClientServiceConfig } from './ClientServiceConfig'
 import { Record } from '../util/Record'
-import { HDict, HMarker, HRef, HStr } from 'haystack-core'
-import { HGrid, HaysonDict, HList } from 'haystack-core'
+import { HDict, HMarker, HRef, HGrid, HaysonDict, HList } from 'haystack-core'
 import { fetchVal } from './fetchVal'
 import { dictsToGrid } from '../util/hval'
 import { encodeQuery } from '../util/http'
+import { ReadOptions } from './RecordService'
 
 /**
  * A user record.
  */
-export interface User extends Record {
-	name?: HStr
-	dis?: HStr
-	user?: HMarker
-	role?: HStr
+export interface User extends HDict {
+	// name?: HStr
+	// dis?: HStr
+	id?: HRef
+	user: HMarker
+	// role?: HStr
 }
 
-export interface UserReadOptions {
-	/**
-	 * If defined, specifies the name of the tag/prop by which the returned records are sorted in ascending order.
-	 */
-	sort?: string[]
-
-	/**
-	 * If defined, specifies the max number of record that will be returned by the read
-	 */
-	limit?: number
-
-	/**
-	 * If defined, limit the number of columns sent back in the response.
-	 */
-	columns?: string[]
-}
+export type UserReadOptions = Omit<ReadOptions, 'unique'>
 
 /**
  * An implementation of the FIN user service.
  */
-export class UserService {
+export class UserService<T extends User = User> {
 	/**
 	 * The client service configuration.
 	 */
@@ -68,8 +54,8 @@ export class UserService {
 	 * @returns The user record.
 	 * @throws An error if the user can't be found.
 	 */
-	public async readById(id: string | HRef): Promise<User> {
-		const user = await fetchVal<User>(
+	public async readById(id: string | HRef): Promise<T> {
+		const user = await fetchVal<T>(
 			`${this.#url}/${HRef.make(id).value}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -77,7 +63,7 @@ export class UserService {
 			this.#serviceConfig.fetch
 		)
 
-		return user as User
+		return user
 	}
 
 	/**
@@ -90,8 +76,8 @@ export class UserService {
 	public async readByFilter(
 		filter: string,
 		options?: UserReadOptions
-	): Promise<HGrid<User>> {
-		return fetchVal<HGrid<User>>(
+	): Promise<HGrid<T>> {
+		return fetchVal<HGrid<T>>(
 			`${this.#url}${encodeQuery({
 				filter,
 				...(options ?? {}),
@@ -109,8 +95,8 @@ export class UserService {
 	 * @param options Optional options for read operation.
 	 * @returns The result of the read operation.
 	 */
-	public async readAll(options?: UserReadOptions): Promise<HGrid<User>> {
-		return fetchVal<HGrid<User>>(
+	public async readAll(options?: UserReadOptions): Promise<HGrid<T>> {
+		return fetchVal<HGrid<T>>(
 			`${this.#url}${encodeQuery({
 				...(options ?? {}),
 			})}`,
@@ -128,9 +114,9 @@ export class UserService {
 	 * @returns A grid of users.
 	 */
 	public async create(
-		users: User[] | HaysonDict[] | HGrid<User> | HList<User>
-	): Promise<HGrid<User>> {
-		return fetchVal<HGrid<User>>(
+		users: T[] | HaysonDict[] | HGrid<T> | HList<T>
+	): Promise<HGrid<T>> {
+		return fetchVal<HGrid<T>>(
 			this.#url,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -147,8 +133,8 @@ export class UserService {
 	 * @param user The user record to create.
 	 * @returns The created user record.
 	 */
-	public async createUser(user: User | HaysonDict): Promise<User> {
-		return fetchVal<User>(
+	public async createUser(user: T | HaysonDict): Promise<T> {
+		return fetchVal<T>(
 			this.#url,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -166,10 +152,10 @@ export class UserService {
 	 * @returns A updated record. Please note, this record doesn't
 	 * have any user information just the `id` and `mod`.
 	 */
-	public async update(user: User | HaysonDict): Promise<Record> {
-		const userDict = HDict.make(user) as User
+	public async update(user: T | HaysonDict): Promise<T> {
+		const userDict = HDict.make(user) as T
 
-		return fetchVal<Record>(
+		return fetchVal<T>(
 			`${this.#url}/${userDict.id?.value ?? ''}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),

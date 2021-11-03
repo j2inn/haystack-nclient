@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, J2 Innovations. All Rights Reserved
+ * Copyright (c) 2021, J2 Innovations. All Rights Reserved
  */
 
 import {
@@ -8,25 +8,24 @@ import {
 	HAYSON_MIME_TYPE,
 	HSymbol,
 	HStr,
-	HMarker,
 	HRef,
 } from 'haystack-core'
-import { getHostServiceUrl } from '../../src/util/http'
-import { Client } from '../../src/client/Client'
-import { UserService, User } from '../../src/client/UserService'
+import { getHostServiceUrl } from '../../../src/util/http'
+import { Client } from '../../../src/client/Client'
+import { RolesService, Role } from '../../../src/client/roles/RolesService'
 import fetchMock from 'fetch-mock'
 
-describe('UserService', function (): void {
+describe('rolesService', function (): void {
 	const base = 'http://localhost:8080'
 
-	let user: UserService
+	let role: RolesService
 
 	function prepareMock(verb: string, resp: HDict | HGrid): void {
 		fetchMock.reset().mock(
 			`begin:${getHostServiceUrl({
 				origin: base,
 				pathPrefix: '',
-				path: 'users',
+				path: 'roles',
 			})}`,
 			{
 				body: resp.toJSON(),
@@ -35,7 +34,7 @@ describe('UserService', function (): void {
 			{ method: verb }
 		)
 
-		user = new UserService(
+		role = new RolesService(
 			new Client({ base: new URL(base), project: 'demo', fetch })
 		)
 	}
@@ -53,20 +52,20 @@ describe('UserService', function (): void {
 			prepareMock('GET', dict)
 		})
 
-		it('encodes a GET for a user', async function (): Promise<void> {
-			await user.readById('foo')
+		it('encodes a GET for a role', async function (): Promise<void> {
+			await role.readById('foo')
 
 			expect(fetchMock.lastUrl()).toBe(
 				`${getHostServiceUrl({
 					origin: base,
 					pathPrefix: '',
-					path: 'users',
+					path: 'roles',
 				})}/foo`
 			)
 		})
 
-		it('returns a user found', async function (): Promise<void> {
-			expect(await user.readById('foo')).toEqual(dict)
+		it('returns a role found', async function (): Promise<void> {
+			expect(await role.readById('foo')).toEqual(dict)
 		})
 	}) // #readById()
 
@@ -82,20 +81,20 @@ describe('UserService', function (): void {
 			prepareMock('GET', HGrid.make({ rows: dicts }))
 		})
 
-		it('encodes a GET for some users', async function (): Promise<void> {
-			await user.readByFilter('site or equip')
+		it('encodes a GET for some roles', async function (): Promise<void> {
+			await role.readByFilter('site or equip')
 
 			expect(fetchMock.lastUrl()).toBe(
 				`${getHostServiceUrl({
 					origin: base,
 					pathPrefix: '',
-					path: 'users',
+					path: 'roles',
 				})}?filter=site%20or%20equip`
 			)
 		})
 
-		it('encodes a GET for users with options', async function (): Promise<void> {
-			await user.readByFilter('site', {
+		it('encodes a GET for roles with options', async function (): Promise<void> {
+			await role.readByFilter('site', {
 				sort: ['foo', 'boo'],
 				limit: 10,
 				columns: ['foo', 'boo'],
@@ -105,13 +104,13 @@ describe('UserService', function (): void {
 				`${getHostServiceUrl({
 					origin: base,
 					pathPrefix: '',
-					path: 'users',
+					path: 'roles',
 				})}?filter=site&sort=foo%7Cboo&limit=10&columns=foo%7Cboo`
 			)
 		})
 
-		it('returns some users', async function (): Promise<void> {
-			expect(await user.readByFilter('site')).toEqual(
+		it('returns some roles', async function (): Promise<void> {
+			expect(await role.readByFilter('site')).toEqual(
 				HGrid.make({ rows: dicts })
 			)
 		})
@@ -129,20 +128,20 @@ describe('UserService', function (): void {
 			prepareMock('GET', HGrid.make({ rows: dicts }))
 		})
 
-		it('encodes a GET for some users', async function (): Promise<void> {
-			await user.readAll()
+		it('encodes a GET for some roles', async function (): Promise<void> {
+			await role.readAll()
 
 			expect(fetchMock.lastUrl()).toBe(
 				`${getHostServiceUrl({
 					origin: base,
 					pathPrefix: '',
-					path: 'users',
+					path: 'roles',
 				})}`
 			)
 		})
 
-		it('encodes a GET for users with options', async function (): Promise<void> {
-			await user.readAll({
+		it('encodes a GET for roles with options', async function (): Promise<void> {
+			await role.readAll({
 				sort: ['foo', 'boo'],
 				limit: 10,
 				columns: ['foo', 'boo'],
@@ -152,55 +151,57 @@ describe('UserService', function (): void {
 				`${getHostServiceUrl({
 					origin: base,
 					pathPrefix: '',
-					path: 'users',
+					path: 'roles',
 				})}?sort=foo%7Cboo&limit=10&columns=foo%7Cboo`
 			)
 		})
 
-		it('returns some users', async function (): Promise<void> {
-			expect(await user.readAll()).toEqual(HGrid.make({ rows: dicts }))
+		it('returns some roles', async function (): Promise<void> {
+			expect(await role.readAll()).toEqual(
+				HGrid.make({ rows: dicts }).getRows()
+			)
 		})
-	}) // #readAll()
+	})
 
 	describe('#create()', function (): void {
 		let grid: HGrid
 
 		beforeEach(function (): void {
-			const rows = [HDict.make({ name: HStr.make('Fred') })]
+			const rows = [HDict.make({ name: HStr.make('role') })]
 			grid = HGrid.make({ rows })
 			prepareMock('POST', grid)
 		})
 
-		it('encodes a POST to create some users', async function (): Promise<void> {
-			await user.create([{ name: 'Fred' }])
+		it('encodes a POST to create some roles', async function (): Promise<void> {
+			await role.create([{ name: 'role' }])
 
 			expect(fetchMock.lastUrl()).toBe(
 				`${getHostServiceUrl({
 					origin: base,
 					pathPrefix: '',
-					path: 'users',
+					path: 'roles',
 				})}`
 			)
 			expect(getLastBody()).toEqual(JSON.stringify(grid.toJSON()))
 		})
 	}) // #create()
 
-	describe('#createUser()', function (): void {
+	describe('#createrole()', function (): void {
 		let dict: HDict
 
 		beforeEach(function (): void {
-			dict = HDict.make({ name: HStr.make('Fred') })
+			dict = HDict.make({ name: HStr.make('role') })
 			prepareMock('POST', dict)
 		})
 
-		it('encodes a POST to create some users', async function (): Promise<void> {
-			await user.createUser({ name: 'Fred' })
+		it('encodes a POST to create some roles', async function (): Promise<void> {
+			await role.createRole({ name: 'role' })
 
 			expect(fetchMock.lastUrl()).toBe(
 				`${getHostServiceUrl({
 					origin: base,
 					pathPrefix: '',
-					path: 'users',
+					path: 'roles',
 				})}`
 			)
 			expect(getLastBody()).toEqual(JSON.stringify(dict.toJSON()))
@@ -208,31 +209,31 @@ describe('UserService', function (): void {
 	}) // #createUser()
 
 	describe('#update()', function (): void {
-		let dict: User
+		let dict: Role
 
 		beforeEach(function (): void {
 			dict = HDict.make({
-				id: HRef.make('idValue'),
-				user: HMarker.make(),
+				id: HRef.make('foo'),
+				userRole: HStr.make('bar'),
 			})
 
 			prepareMock('PATCH', dict)
 		})
 
-		it('encodes a PATCH for a user', async function (): Promise<void> {
-			await user.update(dict)
+		it('encodes a PATCH for a role', async function (): Promise<void> {
+			await role.update(dict)
 
 			expect(fetchMock.lastUrl()).toBe(
 				`${getHostServiceUrl({
 					origin: base,
 					pathPrefix: '',
-					path: 'users',
-				})}/idValue`
+					path: 'roles',
+				})}/foo`
 			)
 		})
 
 		it('returns a record found', async function (): Promise<void> {
-			expect(await user.update(dict)).toEqual(dict)
+			expect(await role.update(dict)).toEqual(dict)
 		})
 	}) // #update()
 
@@ -241,14 +242,14 @@ describe('UserService', function (): void {
 			prepareMock('DELETE', HDict.make({}))
 		})
 
-		it('encodes a DELETE for a user', async function (): Promise<void> {
-			await user.deleteById('foo')
+		it('encodes a DELETE for a role', async function (): Promise<void> {
+			await role.deleteById('foo')
 
 			expect(fetchMock.lastUrl()).toBe(
 				`${getHostServiceUrl({
 					origin: base,
 					pathPrefix: '',
-					path: 'users',
+					path: 'roles',
 				})}/foo`
 			)
 		})

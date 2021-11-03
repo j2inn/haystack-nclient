@@ -24,6 +24,8 @@ import { WatchService } from './watches/WatchService'
 import { WatchRestApis } from './watches/WatchRestApis'
 import { UserService } from './UserService'
 import { ProjectService } from './ProjectService'
+import { GroupsService } from './groups/GroupService'
+import { RolesService } from './roles/RolesService'
 
 /**
  * A high level Haystack Client
@@ -93,6 +95,16 @@ export class Client implements ClientServiceConfig {
 	 * The user service.
 	 */
 	public readonly user: UserService
+
+	/**
+	 * The user groups service
+	 */
+	public readonly groups: GroupsService
+
+	/**
+	 * The user roles service
+	 */
+	public readonly roles: RolesService
 
 	/**
 	 * The project service.
@@ -199,6 +211,8 @@ export class Client implements ClientServiceConfig {
 		this.watch = new WatchService(this, new WatchRestApis(this))
 		this.user = new UserService(this)
 		this.proj = new ProjectService(this)
+		this.groups = new GroupsService(this)
+		this.roles = new RolesService(this)
 
 		// Add the authorization bearer token if specified.
 		if (typeof authBearer === 'string') {

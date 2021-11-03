@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, J2 Innovations. All Rights Reserved
+ * Copyright (c) 2021, J2 Innovations. All Rights Reserved
  */
 
 import {
@@ -8,25 +8,24 @@ import {
 	HAYSON_MIME_TYPE,
 	HSymbol,
 	HStr,
-	HMarker,
 	HRef,
 } from 'haystack-core'
-import { getHostServiceUrl } from '../../src/util/http'
-import { Client } from '../../src/client/Client'
-import { UserService, User } from '../../src/client/UserService'
+import { getHostServiceUrl } from '../../../src/util/http'
+import { Client } from '../../../src/client/Client'
+import { GroupsService, Group } from '../../../src/client/groups/GroupService'
 import fetchMock from 'fetch-mock'
 
-describe('UserService', function (): void {
+describe('GroupsService', function (): void {
 	const base = 'http://localhost:8080'
 
-	let user: UserService
+	let group: GroupsService
 
 	function prepareMock(verb: string, resp: HDict | HGrid): void {
 		fetchMock.reset().mock(
 			`begin:${getHostServiceUrl({
 				origin: base,
 				pathPrefix: '',
-				path: 'users',
+				path: 'groups',
 			})}`,
 			{
 				body: resp.toJSON(),
@@ -35,7 +34,7 @@ describe('UserService', function (): void {
 			{ method: verb }
 		)
 
-		user = new UserService(
+		group = new GroupsService(
 			new Client({ base: new URL(base), project: 'demo', fetch })
 		)
 	}
@@ -53,20 +52,20 @@ describe('UserService', function (): void {
 			prepareMock('GET', dict)
 		})
 
-		it('encodes a GET for a user', async function (): Promise<void> {
-			await user.readById('foo')
+		it('encodes a GET for a group', async function (): Promise<void> {
+			await group.readById('foo')
 
 			expect(fetchMock.lastUrl()).toBe(
 				`${getHostServiceUrl({
 					origin: base,
 					pathPrefix: '',
-					path: 'users',
+					path: 'groups',
 				})}/foo`
 			)
 		})
 
-		it('returns a user found', async function (): Promise<void> {
-			expect(await user.readById('foo')).toEqual(dict)
+		it('returns a group found', async function (): Promise<void> {
+			expect(await group.readById('foo')).toEqual(dict)
 		})
 	}) // #readById()
 
@@ -82,20 +81,20 @@ describe('UserService', function (): void {
 			prepareMock('GET', HGrid.make({ rows: dicts }))
 		})
 
-		it('encodes a GET for some users', async function (): Promise<void> {
-			await user.readByFilter('site or equip')
+		it('encodes a GET for some groups', async function (): Promise<void> {
+			await group.readByFilter('site or equip')
 
 			expect(fetchMock.lastUrl()).toBe(
 				`${getHostServiceUrl({
 					origin: base,
 					pathPrefix: '',
-					path: 'users',
+					path: 'groups',
 				})}?filter=site%20or%20equip`
 			)
 		})
 
-		it('encodes a GET for users with options', async function (): Promise<void> {
-			await user.readByFilter('site', {
+		it('encodes a GET for groups with options', async function (): Promise<void> {
+			await group.readByFilter('site', {
 				sort: ['foo', 'boo'],
 				limit: 10,
 				columns: ['foo', 'boo'],
@@ -105,13 +104,13 @@ describe('UserService', function (): void {
 				`${getHostServiceUrl({
 					origin: base,
 					pathPrefix: '',
-					path: 'users',
+					path: 'groups',
 				})}?filter=site&sort=foo%7Cboo&limit=10&columns=foo%7Cboo`
 			)
 		})
 
-		it('returns some users', async function (): Promise<void> {
-			expect(await user.readByFilter('site')).toEqual(
+		it('returns some groups', async function (): Promise<void> {
+			expect(await group.readByFilter('site')).toEqual(
 				HGrid.make({ rows: dicts })
 			)
 		})
@@ -129,20 +128,20 @@ describe('UserService', function (): void {
 			prepareMock('GET', HGrid.make({ rows: dicts }))
 		})
 
-		it('encodes a GET for some users', async function (): Promise<void> {
-			await user.readAll()
+		it('encodes a GET for some groups', async function (): Promise<void> {
+			await group.readAll()
 
 			expect(fetchMock.lastUrl()).toBe(
 				`${getHostServiceUrl({
 					origin: base,
 					pathPrefix: '',
-					path: 'users',
+					path: 'groups',
 				})}`
 			)
 		})
 
-		it('encodes a GET for users with options', async function (): Promise<void> {
-			await user.readAll({
+		it('encodes a GET for groups with options', async function (): Promise<void> {
+			await group.readAll({
 				sort: ['foo', 'boo'],
 				limit: 10,
 				columns: ['foo', 'boo'],
@@ -152,55 +151,57 @@ describe('UserService', function (): void {
 				`${getHostServiceUrl({
 					origin: base,
 					pathPrefix: '',
-					path: 'users',
+					path: 'groups',
 				})}?sort=foo%7Cboo&limit=10&columns=foo%7Cboo`
 			)
 		})
 
-		it('returns some users', async function (): Promise<void> {
-			expect(await user.readAll()).toEqual(HGrid.make({ rows: dicts }))
+		it('returns some groups', async function (): Promise<void> {
+			expect(await group.readAll()).toEqual(
+				HGrid.make({ rows: dicts }).getRows()
+			)
 		})
-	}) // #readAll()
+	})
 
 	describe('#create()', function (): void {
 		let grid: HGrid
 
 		beforeEach(function (): void {
-			const rows = [HDict.make({ name: HStr.make('Fred') })]
+			const rows = [HDict.make({ name: HStr.make('group') })]
 			grid = HGrid.make({ rows })
 			prepareMock('POST', grid)
 		})
 
-		it('encodes a POST to create some users', async function (): Promise<void> {
-			await user.create([{ name: 'Fred' }])
+		it('encodes a POST to create some groups', async function (): Promise<void> {
+			await group.create([{ name: 'group' }])
 
 			expect(fetchMock.lastUrl()).toBe(
 				`${getHostServiceUrl({
 					origin: base,
 					pathPrefix: '',
-					path: 'users',
+					path: 'groups',
 				})}`
 			)
 			expect(getLastBody()).toEqual(JSON.stringify(grid.toJSON()))
 		})
 	}) // #create()
 
-	describe('#createUser()', function (): void {
+	describe('#createGroup()', function (): void {
 		let dict: HDict
 
 		beforeEach(function (): void {
-			dict = HDict.make({ name: HStr.make('Fred') })
+			dict = HDict.make({ name: HStr.make('group') })
 			prepareMock('POST', dict)
 		})
 
-		it('encodes a POST to create some users', async function (): Promise<void> {
-			await user.createUser({ name: 'Fred' })
+		it('encodes a POST to create some groups', async function (): Promise<void> {
+			await group.createGroup({ name: 'group' })
 
 			expect(fetchMock.lastUrl()).toBe(
 				`${getHostServiceUrl({
 					origin: base,
 					pathPrefix: '',
-					path: 'users',
+					path: 'groups',
 				})}`
 			)
 			expect(getLastBody()).toEqual(JSON.stringify(dict.toJSON()))
@@ -208,31 +209,31 @@ describe('UserService', function (): void {
 	}) // #createUser()
 
 	describe('#update()', function (): void {
-		let dict: User
+		let dict: Group
 
 		beforeEach(function (): void {
 			dict = HDict.make({
-				id: HRef.make('idValue'),
-				user: HMarker.make(),
+				id: HRef.make('foo'),
+				userGroup: HStr.make('bar'),
 			})
 
 			prepareMock('PATCH', dict)
 		})
 
-		it('encodes a PATCH for a user', async function (): Promise<void> {
-			await user.update(dict)
+		it('encodes a PATCH for a group', async function (): Promise<void> {
+			await group.update(dict)
 
 			expect(fetchMock.lastUrl()).toBe(
 				`${getHostServiceUrl({
 					origin: base,
 					pathPrefix: '',
-					path: 'users',
-				})}/idValue`
+					path: 'groups',
+				})}/foo`
 			)
 		})
 
 		it('returns a record found', async function (): Promise<void> {
-			expect(await user.update(dict)).toEqual(dict)
+			expect(await group.update(dict)).toEqual(dict)
 		})
 	}) // #update()
 
@@ -241,14 +242,14 @@ describe('UserService', function (): void {
 			prepareMock('DELETE', HDict.make({}))
 		})
 
-		it('encodes a DELETE for a user', async function (): Promise<void> {
-			await user.deleteById('foo')
+		it('encodes a DELETE for a group', async function (): Promise<void> {
+			await group.deleteById('foo')
 
 			expect(fetchMock.lastUrl()).toBe(
 				`${getHostServiceUrl({
 					origin: base,
 					pathPrefix: '',
-					path: 'users',
+					path: 'groups',
 				})}/foo`
 			)
 		})

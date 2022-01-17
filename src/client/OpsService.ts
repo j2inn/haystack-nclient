@@ -18,7 +18,6 @@ import {
 	makeValue,
 	Kind,
 	valueIsKind,
-	HUri,
 } from 'haystack-core'
 import { fetchVal } from './fetchVal'
 import { dictsToGrid } from '../util/hval'
@@ -320,7 +319,7 @@ export class OpsService {
 	 * @returns The navigation.
 	 */
 	public async nav(
-		navId?: string | HUri | HaysonDict | HDict | HGrid
+		navId?: string | HRef | HaysonDict | HDict | HGrid
 	): Promise<HGrid> {
 		let grid: HGrid
 
@@ -330,13 +329,13 @@ export class OpsService {
 			} else if (typeof navId === 'string') {
 				grid = HGrid.make([
 					HDict.make({
-						navId: HUri.make(navId),
+						navId: HRef.make(navId),
 					}),
 				])
-			} else if (valueIsKind<HUri>(navId, Kind.Uri)) {
+			} else if (valueIsKind<HRef>(navId, Kind.Ref)) {
 				grid = HGrid.make([
 					HDict.make({
-						navId: navId,
+						navId,
 					}),
 				])
 			} else {

@@ -2,7 +2,7 @@
  * Copyright (c) 2020, J2 Innovations. All Rights Reserved
  */
 
-import { HNamespace, HGrid } from 'haystack-core'
+import { HNamespace, HGrid, HVal, HaysonVal } from 'haystack-core'
 import {
 	addHeader,
 	getOpUrl as defaultGetOpUrl,
@@ -350,5 +350,32 @@ export class Client implements ClientServiceConfig {
 			project: this.project,
 			pathPrefix: this.pathPrefix,
 		}
+	}
+
+	/**
+	 * Fetch a haystack value from the server.
+	 *
+	 * @param resource The resource to request.
+	 * @param body Optional haystack value used for the request's body.
+	 * @param options Optional object containing any custom settings.
+	 * @returns A promise that resolves to a value.
+	 * @throws A fetch or grid error.
+	 */
+	public async fetchVal<T extends HVal>(
+		resource: RequestInfo,
+		body?: HVal | HaysonVal,
+		options?: RequestInit
+	): Promise<T> {
+		const fetchValOptions = { ...this.getDefaultOptions(), ...options }
+
+		if (body !== undefined) {
+			fetchValOptions.body = JSON.stringify(body)
+
+			if (!fetchValOptions.method) {
+				fetchValOptions.method = 'POST'
+			}
+		}
+
+		return fetchVal<T>(resource, fetchValOptions, this.fetch)
 	}
 }

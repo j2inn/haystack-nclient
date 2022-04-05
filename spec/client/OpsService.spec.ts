@@ -8,7 +8,6 @@ import {
 	HGrid,
 	HDict,
 	Kind,
-	HUri,
 	HRef,
 	HNum,
 	HStr,
@@ -402,7 +401,7 @@ describe('OpsService', function (): void {
 			preparePostOp('nav')
 
 			navIdZinc = HGrid.make([
-				HDict.make({ navId: HUri.make('navId') }),
+				HDict.make({ navId: HRef.make('navId') }),
 			]).toZinc()
 		})
 
@@ -430,24 +429,24 @@ describe('OpsService', function (): void {
 			verifyZincNavId()
 		})
 
-		it('encodes a navId from a URI', async function (): Promise<void> {
-			await ops.nav(HUri.make('navId'))
+		it('encodes a navId from a Ref', async function (): Promise<void> {
+			await ops.nav(HRef.make('navId'))
 			verifyZincNavId()
 		})
 
 		it('encodes a navId from a Hayson dict', async function (): Promise<void> {
-			await ops.nav({ navId: { _kind: Kind.Uri, val: 'navId' } })
+			await ops.nav({ navId: { _kind: Kind.Ref, val: 'navId' } })
 			verifyZincNavId()
 		})
 
 		it('encodes a navId from a dict', async function (): Promise<void> {
-			await ops.nav(HDict.make({ navId: HUri.make('navId') }))
+			await ops.nav(HDict.make({ navId: HRef.make('navId') }))
 			verifyZincNavId()
 		})
 
 		it('encodes a navId from a grid', async function (): Promise<void> {
 			await ops.nav(
-				HGrid.make([HDict.make({ navId: HUri.make('navId') })])
+				HGrid.make([HDict.make({ navId: HRef.make('navId') })])
 			)
 			verifyZincNavId()
 		})

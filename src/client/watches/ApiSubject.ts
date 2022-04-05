@@ -161,39 +161,37 @@ export class ApiSubject implements Subject {
 	 * @param ids The ids to add.
 	 */
 	private async addIds(ids: string[]): Promise<void> {
-		return this.#mutex.runSequential(
-			async (): Promise<void> => {
-				try {
-					this.stopLingerTimer()
+		return this.#mutex.runSequential(async (): Promise<void> => {
+			try {
+				this.stopLingerTimer()
 
-					// Only add dicts to the server that aren't already added.
-					const toAddToServer = ids.filter(
-						(id: string): boolean => !this.#dictCache[id]
+				// Only add dicts to the server that aren't already added.
+				const toAddToServer = ids.filter(
+					(id: string): boolean => !this.#dictCache[id]
+				)
+
+				// Keep track of what is not being added to the server
+				// to keep track of the reference count.
+				const notToAddToServer = ids.filter(
+					(id: string): boolean => !!this.#dictCache[id]
+				)
+
+				if (toAddToServer.length) {
+					const addedToServer = await this.#apis.add(
+						this.watchId,
+						toAddToServer
 					)
 
-					// Keep track of what is not being added to the server
-					// to keep track of the reference count.
-					const notToAddToServer = ids.filter(
-						(id: string): boolean => !!this.#dictCache[id]
-					)
+					this.addDictsToGrid(addedToServer)
+				}
 
-					if (toAddToServer.length) {
-						const addedToServer = await this.#apis.add(
-							this.watchId,
-							toAddToServer
-						)
-
-						this.addDictsToGrid(addedToServer)
-					}
-
-					this.incrementDictsCount(notToAddToServer)
-				} finally {
-					if (this.grid.isEmpty()) {
-						this.restartLingerTimer()
-					}
+				this.incrementDictsCount(notToAddToServer)
+			} finally {
+				if (this.grid.isEmpty()) {
+					this.restartLingerTimer()
 				}
 			}
-		)
+		})
 	}
 
 	/**
@@ -235,42 +233,40 @@ export class ApiSubject implements Subject {
 	 * @returns The grid from the watch open response.
 	 */
 	private async open(ids: string[]): Promise<HGrid> {
-		return this.#mutex.runSequential(
-			async (): Promise<HGrid> => {
-				try {
-					this.stopLingerTimer()
+		return this.#mutex.runSequential(async (): Promise<HGrid> => {
+			try {
+				this.stopLingerTimer()
 
-					// Keep track of the promise to open a watch so we don't have
-					// clashes between a watch trying to open and close at the same time.
-					const { id, records } = await this.#apis.open(ids)
+				// Keep track of the promise to open a watch so we don't have
+				// clashes between a watch trying to open and close at the same time.
+				const { id, records } = await this.#apis.open(ids)
 
-					this.#id = id
+				this.#id = id
 
-					this.#grid = HGrid.make({
-						meta: HDict.make({ watchId: id }),
-						rows: records,
-					})
+				this.#grid = HGrid.make({
+					meta: HDict.make({ watchId: id }),
+					rows: records,
+				})
 
-					this.#open = true
+				this.#open = true
 
-					// Create a map of dicts for quick look up.
-					clear(this.#dictCache)
+				// Create a map of dicts for quick look up.
+				clear(this.#dictCache)
 
-					for (const dict of this.grid) {
-						this.#dictCache[getId(dict)] = { count: 1, dict }
-					}
-
-					this.restartPollTimer()
-				} finally {
-					// If the grid is empty then wait for it to be added to otherwise
-					// close it.
-					if (this.grid.isEmpty()) {
-						this.restartLingerTimer()
-					}
+				for (const dict of this.grid) {
+					this.#dictCache[getId(dict)] = { count: 1, dict }
 				}
-				return this.#grid
+
+				this.restartPollTimer()
+			} finally {
+				// If the grid is empty then wait for it to be added to otherwise
+				// close it.
+				if (this.grid.isEmpty()) {
+					this.restartLingerTimer()
+				}
 			}
-		)
+			return this.#grid
+		})
 	}
 
 	/**
@@ -304,34 +300,28 @@ export class ApiSubject implements Subject {
 	 * @param ids The ids to remove.
 	 */
 	public async remove(ids: string[]): Promise<void> {
-		await this.#mutex.runSequential(
-			async (): Promise<void> => {
-				try {
-					if (!this.isOpen()) {
-						return
-					}
+		await this.#mutex.runSequential(async (): Promise<void> => {
+			try {
+				if (!this.isOpen()) {
+					return
+				}
 
-					const toRemoveFromServer = ids.filter(
-						(id: string): boolean =>
-							this.#dictCache[id]?.count === 1
-					)
+				const toRemoveFromServer = ids.filter(
+					(id: string): boolean => this.#dictCache[id]?.count === 1
+				)
 
-					if (toRemoveFromServer.length) {
-						await this.#apis.remove(
-							this.watchId,
-							toRemoveFromServer
-						)
-					}
+				if (toRemoveFromServer.length) {
+					await this.#apis.remove(this.watchId, toRemoveFromServer)
+				}
 
-					this.decrementAndRemoveDictsFromGrid(ids)
-				} finally {
-					// If there's nothing left to watch then start the linger.
-					if (this.grid.isEmpty()) {
-						this.restartLingerTimer()
-					}
+				this.decrementAndRemoveDictsFromGrid(ids)
+			} finally {
+				// If there's nothing left to watch then start the linger.
+				if (this.grid.isEmpty()) {
+					this.restartLingerTimer()
 				}
 			}
-		)
+		})
 	}
 
 	/**
@@ -552,25 +542,23 @@ export class ApiSubject implements Subject {
 	 * Close the watch.
 	 */
 	private async close(): Promise<void> {
-		return this.#mutex.runSequential(
-			async (): Promise<void> => {
-				const open = this.isOpen()
-				this.#open = false
+		return this.#mutex.runSequential(async (): Promise<void> => {
+			const open = this.isOpen()
+			this.#open = false
 
-				this.stopPollTimer()
-				this.stopLingerTimer()
+			this.stopPollTimer()
+			this.stopLingerTimer()
 
-				try {
-					if (open) {
-						await this.#apis.close(this.watchId)
-					}
-				} finally {
-					clear(this.#dictCache)
-					this.grid.meta.clear()
-					this.grid.clear()
+			try {
+				if (open) {
+					await this.#apis.close(this.watchId)
 				}
+			} finally {
+				clear(this.#dictCache)
+				this.grid.meta.clear()
+				this.grid.clear()
 			}
-		)
+		})
 	}
 
 	/**

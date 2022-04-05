@@ -4,15 +4,15 @@
 
 import { ClientServiceConfig } from './ClientServiceConfig'
 import { HDict, HStr } from 'haystack-core'
-import { HGrid, HaysonDict } from 'haystack-core'
+import { HGrid, HaysonDict, HMarker } from 'haystack-core'
 import { fetchVal } from './fetchVal'
 
 /**
  * A project record.
  */
 export interface Project extends HDict {
-	name?: HStr
-	meta?: HDict
+	proj: HMarker
+	projName: HStr
 }
 
 /**

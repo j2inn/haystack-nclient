@@ -88,7 +88,7 @@ describe('hval', function (): void {
 
 		it('throws an error if the ids are not recognized', function (): void {
 			expect((): void => {
-				idsToArray(true as unknown as string)
+				idsToArray((true as unknown) as string)
 			}).toThrow()
 		})
 	}) // #idsToArray()

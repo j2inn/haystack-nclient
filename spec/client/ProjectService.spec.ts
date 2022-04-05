@@ -2,10 +2,10 @@
  * Copyright (c) 2020, J2 Innovations. All Rights Reserved
  */
 
-import { HGrid, HDict, HAYSON_MIME_TYPE, HStr } from 'haystack-core'
+import { HGrid, HDict, HAYSON_MIME_TYPE, HStr, HMarker } from 'haystack-core'
 import { getHostServiceUrl } from '../../src/util/http'
 import { Client } from '../../src/client/Client'
-import { ProjectService } from '../../src/client/ProjectService'
+import { Project, ProjectService } from '../../src/client/ProjectService'
 import fetchMock from 'fetch-mock'
 
 describe('ProjectService', function (): void {
@@ -40,7 +40,10 @@ describe('ProjectService', function (): void {
 		let dict: HDict
 
 		beforeEach(function (): void {
-			dict = HDict.make({ projName: HStr.make('foo') })
+			dict = HDict.make({
+				projName: HStr.make('foo'),
+				proj: HMarker.make(),
+			})
 
 			prepareMock('GET', dict)
 		})
@@ -63,12 +66,18 @@ describe('ProjectService', function (): void {
 	}) // #readByName()
 
 	describe('#readAll()', function (): void {
-		let dicts: HDict[]
+		let dicts: Project[]
 
 		beforeEach(function (): void {
 			dicts = [
-				HDict.make({ projName: HStr.make('foo') }),
-				HDict.make({ projName: HStr.make('foo1') }),
+				HDict.make({
+					projName: HStr.make('foo'),
+					proj: HMarker.make(),
+				}),
+				HDict.make({
+					projName: HStr.make('foo1'),
+					proj: HMarker.make(),
+				}),
 			]
 
 			prepareMock('GET', HGrid.make({ rows: dicts }))
@@ -92,15 +101,19 @@ describe('ProjectService', function (): void {
 	}) // #readAll()
 
 	describe('#createProject()', function (): void {
-		let dict: HDict
+		let dict: Project
 
 		beforeEach(function (): void {
-			dict = HDict.make({ projName: HStr.make('Fred') })
+			dict = HDict.make({
+				projName: HStr.make('Fred'),
+			})
 			prepareMock('POST', dict)
 		})
 
 		it('encodes a POST to create some projects', async function (): Promise<void> {
-			await project.createProject({ projName: 'Fred' })
+			await project.createProject({
+				projName: 'Fred',
+			})
 
 			expect(fetchMock.lastUrl()).toBe(
 				`${getHostServiceUrl({
@@ -114,10 +127,13 @@ describe('ProjectService', function (): void {
 	}) // #createProject()
 
 	describe('#update()', function (): void {
-		let dict: HDict
+		let dict: Project
 
 		beforeEach(function (): void {
-			dict = HDict.make({ projName: HStr.make('foo') })
+			dict = HDict.make({
+				projName: HStr.make('foo'),
+				proj: HMarker.make(),
+			}) as Project
 
 			prepareMock('PATCH', dict)
 		})

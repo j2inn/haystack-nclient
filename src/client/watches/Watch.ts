@@ -70,8 +70,10 @@ export class Watch {
 	/**
 	 * Watch event callbacks.
 	 */
-	readonly #callbacks: Map<WatchEventType, Set<WatchEventCallback>> =
-		new Map()
+	readonly #callbacks: Map<
+		WatchEventType,
+		Set<WatchEventCallback>
+	> = new Map()
 
 	/**
 	 * Constructs a new watch.

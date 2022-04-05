@@ -40,7 +40,7 @@ describe('ProjectService', function (): void {
 		let dict: HDict
 
 		beforeEach(function (): void {
-			dict = HDict.make({ proj: HStr.make('foo') })
+			dict = HDict.make({ projName: HStr.make('foo') })
 
 			prepareMock('GET', dict)
 		})
@@ -67,8 +67,8 @@ describe('ProjectService', function (): void {
 
 		beforeEach(function (): void {
 			dicts = [
-				HDict.make({ name: HStr.make('foo') }),
-				HDict.make({ name: HStr.make('foo1') }),
+				HDict.make({ projName: HStr.make('foo') }),
+				HDict.make({ projName: HStr.make('foo1') }),
 			]
 
 			prepareMock('GET', HGrid.make({ rows: dicts }))
@@ -95,12 +95,12 @@ describe('ProjectService', function (): void {
 		let dict: HDict
 
 		beforeEach(function (): void {
-			dict = HDict.make({ name: HStr.make('Fred') })
+			dict = HDict.make({ projName: HStr.make('Fred') })
 			prepareMock('POST', dict)
 		})
 
 		it('encodes a POST to create some projects', async function (): Promise<void> {
-			await project.createProject({ name: 'Fred' })
+			await project.createProject({ projName: 'Fred' })
 
 			expect(fetchMock.lastUrl()).toBe(
 				`${getHostServiceUrl({
@@ -117,7 +117,7 @@ describe('ProjectService', function (): void {
 		let dict: HDict
 
 		beforeEach(function (): void {
-			dict = HDict.make({ name: HStr.make('foo') })
+			dict = HDict.make({ projName: HStr.make('foo') })
 
 			prepareMock('PATCH', dict)
 		})

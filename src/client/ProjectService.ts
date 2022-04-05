@@ -18,7 +18,7 @@ export interface Project extends HDict {
 /**
  * An implementation of the FIN project service.
  */
-export class ProjectService {
+export class ProjectService<T extends Project = Project> {
 	/**
 	 * The client service configuration.
 	 */
@@ -46,8 +46,8 @@ export class ProjectService {
 	 * @returns The project record.
 	 * @throws An error if the project can't be found.
 	 */
-	public async readByName(name: string): Promise<Project> {
-		const project = await fetchVal<Project>(
+	public async readByName(name: string): Promise<T> {
+		const project = await fetchVal<T>(
 			`${this.#url}/${name}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -55,7 +55,7 @@ export class ProjectService {
 			this.#serviceConfig.fetch
 		)
 
-		return project as Project
+		return project as T
 	}
 
 	/**
@@ -63,8 +63,8 @@ export class ProjectService {
 	 *
 	 * @returns The result of the read operation.
 	 */
-	public async readAll(): Promise<HGrid<Project>> {
-		return fetchVal<HGrid<Project>>(
+	public async readAll(): Promise<HGrid<T>> {
+		return fetchVal<HGrid<T>>(
 			this.#url,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -79,10 +79,8 @@ export class ProjectService {
 	 * @params project The project to create.
 	 * @returns The created project. Please note, the record only contains the name.
 	 */
-	public async createProject(
-		project: Project | HaysonDict
-	): Promise<Project> {
-		return await fetchVal<Project>(
+	public async createProject(project: T | HaysonDict): Promise<T> {
+		return await fetchVal<T>(
 			this.#url,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -99,11 +97,11 @@ export class ProjectService {
 	 * @param project The project record to update.
 	 * @returns A updated project record.
 	 */
-	public async update(project: Project | HaysonDict): Promise<Project> {
-		const projectDict = HDict.make(project) as Project
+	public async update(project: T | HaysonDict): Promise<T> {
+		const projectDict = HDict.make(project) as T
 
-		return fetchVal<Project>(
-			`${this.#url}/${projectDict.get<HStr>('name')?.value ?? ''}`,
+		return fetchVal<T>(
+			`${this.#url}/${projectDict.get<HStr>('projName')?.value ?? ''}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
 				method: 'PATCH',

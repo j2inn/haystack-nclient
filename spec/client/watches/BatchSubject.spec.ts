@@ -13,14 +13,14 @@ describe('BatchSubject', function (): void {
 	beforeEach(function (): void {
 		ops = []
 
-		subject = {
+		subject = ({
 			add: jest.fn().mockImplementation(async (ids: string[]) => {
 				ops.push('add:' + ids.join(','))
 			}),
 			remove: jest.fn().mockImplementation(async (ids: string[]) => {
 				ops.push('remove:' + ids.join(','))
 			}),
-		} as unknown as Subject
+		} as unknown) as Subject
 
 		batch = new BatchSubject(subject)
 	})

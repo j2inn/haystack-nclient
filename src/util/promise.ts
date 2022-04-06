@@ -15,7 +15,7 @@ export interface Deferred {
  * @returns A new deferred promise.
  */
 export function makeDeferred(): Deferred {
-	const deferred: Deferred = {} as unknown as Deferred
+	const deferred: Deferred = ({} as unknown) as Deferred
 
 	deferred.promise = new Promise(
 		(resolve: () => void, reject: (reason?: unknown) => void): void => {

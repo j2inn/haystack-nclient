@@ -69,7 +69,7 @@ describe('http', function (): void {
 	}) // encodeQuery
 
 	function makeHeaders(headers: { [prop: string]: string }): Headers {
-		return new NodeHeaders(headers) as unknown as Headers
+		return (new NodeHeaders(headers) as unknown) as Headers
 	}
 
 	describe('getOrigin()', function (): void {

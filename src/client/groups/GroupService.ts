@@ -25,7 +25,7 @@ export type GroupsReadOptions = Omit<ReadOptions, 'unique'>
 /**
  * An implementation of the FIN Groups service.
  */
-export class GroupsService<T extends Group = Group> {
+export class GroupsService<GroupType extends Group = Group> {
 	/**
 	 * The client service configuration.
 	 */
@@ -52,8 +52,8 @@ export class GroupsService<T extends Group = Group> {
 	 * @param options Optional options for read operation.
 	 * @returns The result of the read operation.
 	 */
-	public async readAll(options?: GroupsReadOptions): Promise<T[]> {
-		const groups = await fetchVal<HGrid<T>>(
+	public async readAll(options?: GroupsReadOptions): Promise<GroupType[]> {
+		const groups = await fetchVal<HGrid<GroupType>>(
 			`${this.#url}${encodeQuery({
 				...(options ?? {}),
 			})}`,
@@ -77,8 +77,8 @@ export class GroupsService<T extends Group = Group> {
 	 * @returns The group record.
 	 * @throws An error if the group can't be found.
 	 */
-	public async readById(id: string | HRef): Promise<T> {
-		const group = await fetchVal<T>(
+	public async readById(id: string | HRef): Promise<GroupType> {
+		const group = await fetchVal<GroupType>(
 			`${this.#url}/${HRef.make(id).value}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -99,8 +99,8 @@ export class GroupsService<T extends Group = Group> {
 	public async readByFilter(
 		filter: string,
 		options?: GroupsReadOptions
-	): Promise<HGrid<T>> {
-		return fetchVal<HGrid<T>>(
+	): Promise<HGrid<GroupType>> {
+		return fetchVal<HGrid<GroupType>>(
 			`${this.#url}${encodeQuery({
 				filter,
 				...(options ?? {}),
@@ -119,9 +119,9 @@ export class GroupsService<T extends Group = Group> {
 	 * @returns A grid of groups.
 	 */
 	public async create(
-		groups: T[] | HaysonDict[] | HGrid<T> | HList<T>
-	): Promise<HGrid<T>> {
-		return fetchVal<HGrid<T>>(
+		groups: GroupType[] | HaysonDict[] | HGrid<GroupType> | HList<GroupType>
+	): Promise<HGrid<GroupType>> {
+		return fetchVal<HGrid<GroupType>>(
 			`${this.#url}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -138,8 +138,10 @@ export class GroupsService<T extends Group = Group> {
 	 * @param group The group record to create.
 	 * @returns The created group record.
 	 */
-	public async createGroup(group: T | HaysonDict): Promise<T> {
-		return fetchVal<T>(
+	public async createGroup(
+		group: GroupType | HaysonDict
+	): Promise<GroupType> {
+		return fetchVal<GroupType>(
 			this.#url,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -157,10 +159,10 @@ export class GroupsService<T extends Group = Group> {
 	 * @returns A updated record. Please note, this record doesn't
 	 * have any group information just the `id` and `mod`.
 	 */
-	public async update(group: T | HaysonDict): Promise<T> {
-		const groupDict = HDict.make(group) as T
+	public async update(group: GroupType | HaysonDict): Promise<GroupType> {
+		const groupDict = HDict.make(group) as GroupType
 
-		return fetchVal<T>(
+		return fetchVal<GroupType>(
 			`${this.#url}/${groupDict.id?.value ?? ''}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),

@@ -4,21 +4,21 @@
 
 import { ClientServiceConfig } from './ClientServiceConfig'
 import { HDict, HStr } from 'haystack-core'
-import { HGrid, HaysonDict } from 'haystack-core'
+import { HGrid, HaysonDict, HMarker } from 'haystack-core'
 import { fetchVal } from './fetchVal'
 
 /**
  * A project record.
  */
 export interface Project extends HDict {
-	name?: HStr
-	meta?: HDict
+	proj: HMarker
+	projName: HStr
 }
 
 /**
  * An implementation of the FIN project service.
  */
-export class ProjectService {
+export class ProjectService<ProjectType extends Project = Project> {
 	/**
 	 * The client service configuration.
 	 */
@@ -46,8 +46,8 @@ export class ProjectService {
 	 * @returns The project record.
 	 * @throws An error if the project can't be found.
 	 */
-	public async readByName(name: string): Promise<Project> {
-		const project = await fetchVal<Project>(
+	public async readByName(name: string): Promise<ProjectType> {
+		const project = await fetchVal<ProjectType>(
 			`${this.#url}/${name}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -55,7 +55,7 @@ export class ProjectService {
 			this.#serviceConfig.fetch
 		)
 
-		return project as Project
+		return project as ProjectType
 	}
 
 	/**
@@ -63,8 +63,8 @@ export class ProjectService {
 	 *
 	 * @returns The result of the read operation.
 	 */
-	public async readAll(): Promise<HGrid<Project>> {
-		return fetchVal<HGrid<Project>>(
+	public async readAll(): Promise<HGrid<ProjectType>> {
+		return fetchVal<HGrid<ProjectType>>(
 			this.#url,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -80,9 +80,9 @@ export class ProjectService {
 	 * @returns The created project. Please note, the record only contains the name.
 	 */
 	public async createProject(
-		project: Project | HaysonDict
-	): Promise<Project> {
-		return await fetchVal<Project>(
+		project: ProjectType | HaysonDict
+	): Promise<ProjectType> {
+		return await fetchVal<ProjectType>(
 			this.#url,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -99,11 +99,13 @@ export class ProjectService {
 	 * @param project The project record to update.
 	 * @returns A updated project record.
 	 */
-	public async update(project: Project | HaysonDict): Promise<Project> {
-		const projectDict = HDict.make(project) as Project
+	public async update(
+		project: ProjectType | HaysonDict
+	): Promise<ProjectType> {
+		const projectDict = HDict.make(project) as ProjectType
 
-		return fetchVal<Project>(
-			`${this.#url}/${projectDict.get<HStr>('name')?.value ?? ''}`,
+		return fetchVal<ProjectType>(
+			`${this.#url}/${projectDict.get<HStr>('projName')?.value ?? ''}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
 				method: 'PATCH',

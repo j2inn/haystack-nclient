@@ -25,7 +25,7 @@ export type RolesReadOptions = Omit<ReadOptions, 'unique'>
 /**
  * An implementation of the FIN Roles service.
  */
-export class RolesService<T extends Role = Role> {
+export class RolesService<RoleType extends Role = Role> {
 	/**
 	 * The client service configuration.
 	 */
@@ -52,8 +52,8 @@ export class RolesService<T extends Role = Role> {
 	 * @param options Optional options for read operation.
 	 * @returns The result of the read operation.
 	 */
-	public async readAll(options?: RolesReadOptions): Promise<T[]> {
-		const roles = await fetchVal<HGrid<T>>(
+	public async readAll(options?: RolesReadOptions): Promise<RoleType[]> {
+		const roles = await fetchVal<HGrid<RoleType>>(
 			`${this.#url}${encodeQuery({
 				...(options ?? {}),
 			})}`,
@@ -77,8 +77,8 @@ export class RolesService<T extends Role = Role> {
 	 * @returns The role record.
 	 * @throws An error if the role can't be found.
 	 */
-	public async readById(id: string | HRef): Promise<T> {
-		const role = await fetchVal<T>(
+	public async readById(id: string | HRef): Promise<RoleType> {
+		const role = await fetchVal<RoleType>(
 			`${this.#url}/${HRef.make(id).value}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -99,8 +99,8 @@ export class RolesService<T extends Role = Role> {
 	public async readByFilter(
 		filter: string,
 		options?: RolesReadOptions
-	): Promise<HGrid<T>> {
-		return fetchVal<HGrid<T>>(
+	): Promise<HGrid<RoleType>> {
+		return fetchVal<HGrid<RoleType>>(
 			`${this.#url}${encodeQuery({
 				filter,
 				...(options ?? {}),
@@ -119,9 +119,9 @@ export class RolesService<T extends Role = Role> {
 	 * @returns A grid of roles.
 	 */
 	public async create(
-		roles: T[] | HaysonDict[] | HGrid<T>
-	): Promise<HGrid<T>> {
-		return fetchVal<HGrid<T>>(
+		roles: RoleType[] | HaysonDict[] | HGrid<RoleType>
+	): Promise<HGrid<RoleType>> {
+		return fetchVal<HGrid<RoleType>>(
 			`${this.#url}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -138,8 +138,8 @@ export class RolesService<T extends Role = Role> {
 	 * @param role The role record to create.
 	 * @returns The created role record.
 	 */
-	public async createRole(role: T | HaysonDict): Promise<T> {
-		return fetchVal<T>(
+	public async createRole(role: RoleType | HaysonDict): Promise<RoleType> {
+		return fetchVal<RoleType>(
 			this.#url,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -157,10 +157,10 @@ export class RolesService<T extends Role = Role> {
 	 * @returns A updated record. Please note, this record doesn't
 	 * have any role information just the `id` and `mod`.
 	 */
-	public async update(role: T | HaysonDict): Promise<T> {
-		const roleDict = HDict.make(role) as T
+	public async update(role: RoleType | HaysonDict): Promise<RoleType> {
+		const roleDict = HDict.make(role) as RoleType
 
-		return fetchVal<T>(
+		return fetchVal<RoleType>(
 			`${this.#url}/${roleDict.id?.value ?? ''}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -177,7 +177,7 @@ export class RolesService<T extends Role = Role> {
 	 * @param id The id of the record to delete.
 	 */
 	public async deleteById(id: string | HRef): Promise<void> {
-		await fetchVal<T>(
+		await fetchVal<RoleType>(
 			`${this.#url}/${HRef.make(id).value}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),

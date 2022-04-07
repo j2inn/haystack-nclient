@@ -127,11 +127,6 @@ export class Client implements ClientServiceConfig {
 	#loadDefsPromise?: Promise<HNamespace>
 
 	/**
-	 * Internal flag used for loading defs.
-	 */
-	#defsLoaded = false
-
-	/**
 	 * Constructs a new client.
 	 *
 	 * @param options.base The base URL.
@@ -294,12 +289,10 @@ export class Client implements ClientServiceConfig {
 	 * @returns A promise that's resolved once the defs have been loaded.
 	 */
 	public async loadDefs(): Promise<void> {
-		if (!this.#defsLoaded) {
+		if (!this.isDefsLoaded()) {
 			try {
 				this.defs = await (this.#loadDefsPromise ??
 					(this.#loadDefsPromise = this.requestDefs()))
-
-				this.#defsLoaded = true
 			} catch (err) {
 				// If there's an error then don't cache the promise so it can be retried.
 				this.#loadDefsPromise = undefined
@@ -312,7 +305,7 @@ export class Client implements ClientServiceConfig {
 	 * @returns True if the defs have been loaded using this service.
 	 */
 	public isDefsLoaded(): boolean {
-		return this.#defsLoaded
+		return !this.defs.grid.isEmpty()
 	}
 
 	/**

@@ -32,11 +32,6 @@ export class ExtOpsService {
 	#loadDefsPromise?: Promise<HNamespace>
 
 	/**
-	 * Internal flag used for loading defs.
-	 */
-	#defsLoaded = false
-
-	/**
 	 * Constructs a service object.
 	 *
 	 * @param serviceConfig Service configuration.
@@ -53,13 +48,12 @@ export class ExtOpsService {
 	 * @returns A promise that's resolved once the defs have been loaded.
 	 */
 	public async loadDefs(): Promise<void> {
-		if (!this.#defsLoaded) {
+		if (!this.isDefsLoaded()) {
 			try {
 				const defs = await (this.#loadDefsPromise ??
 					(this.#loadDefsPromise = this.requestDefs()))
 
 				this.#serviceConfig.defs = defs
-				this.#defsLoaded = true
 			} catch (err) {
 				// If there's an error then don't cache the promise so it can be retried.
 				this.#loadDefsPromise = undefined
@@ -72,7 +66,7 @@ export class ExtOpsService {
 	 * @returns True if the defs have been loaded using this service.
 	 */
 	public isDefsLoaded(): boolean {
-		return this.#defsLoaded
+		return !this.#serviceConfig.defs.grid.isEmpty()
 	}
 
 	/**

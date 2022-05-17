@@ -130,7 +130,7 @@ describe('OpsService', function (): void {
 		it('encodes the list of ids to a grid', async function (): Promise<void> {
 			preparePostOp('read')
 
-			await ops.read(['@id1', '@id2', '@id3'])
+			await ops.read(['id1', 'id2', 'id3'])
 
 			const argsZinc = HGrid.make([
 				HDict.make({ id: HRef.make('id1') }),

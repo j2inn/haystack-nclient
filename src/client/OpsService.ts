@@ -33,6 +33,8 @@ export enum HisRange {
 	Yesterday = 'yesterday',
 }
 
+type ReadParams = string | string[] | HRef[]
+
 /**
  * A service used for calling standard Haystack Ops.
  */
@@ -131,7 +133,21 @@ export class OpsService {
 	}
 
 	/**
-	 * @returns Reads a set of records from the server.
+	 * @returns Reads a set of records from the server by id.
+	 *
+	 * ```typescript
+	 * const result = await client.read(['@id1', '@id2', '@id3'])
+	 * ```
+	 *
+	 * https://project-haystack.org/doc/Ops#read
+	 *
+	 * @param ids list of ids as HRef or string
+	 * @returns A grid with the resolved query.
+	 */
+	public async read(ids: string[] | HRef[]): Promise<HGrid>
+
+	/**
+	 * @returns Reads a set of records from the server by filter.
 	 *
 	 * Please note, to help build a Haystack filter you can use HFilterBuilder available in
 	 * Haystack Core.
@@ -146,33 +162,27 @@ export class OpsService {
 	 * const result = await client.read(filter)
 	 * ```
 	 *
-	 * You can also read by ids by passing a list of Refs or strings as the first arguement
-	 * ```typescript
-	 * const result = await client.read(['@id1', '@id2', '@id3'])
-	 * ```
-	 *
 	 * https://project-haystack.org/doc/Ops#read
 	 *
 	 * @param filter The required haystack filter.
 	 * @param limit Optional limit on the number of records sent back.
 	 * @returns A grid with the resolved query.
 	 */
-	public async read(ids: (string | HRef)[], limit?: number): Promise<HGrid>
 	public async read(filter: string, limit?: number): Promise<HGrid>
-	public async read(params: unknown, limit?: number): Promise<HGrid> {
+
+	// Read Implementation
+	public async read(params: ReadParams, limit?: number): Promise<HGrid> {
 		let requestGrid: HGrid | undefined
 
-		if (params instanceof Array) {
+		if (Array.isArray(params)) {
 			requestGrid = HGrid.make(
 				params.map((param) =>
 					HDict.make({
-						id: valueIsKind<HRef>(param, Kind.Ref)
-							? param
-							: HRef.make(param),
+						id: HRef.make(param),
 					})
 				)
 			)
-		} else if (typeof params === 'string') {
+		} else {
 			requestGrid = HDict.make(
 				typeof limit === 'number'
 					? { filter: params, limit }

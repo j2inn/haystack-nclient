@@ -127,16 +127,15 @@ describe('OpsService', function (): void {
 			)
 		})
 
-		// TODO: Create test case for this
 		it('encodes the list of ids to a grid', async function (): Promise<void> {
 			preparePostOp('read')
 
 			await ops.read(['@id1', '@id2', '@id3'])
 
 			const argsZinc = HGrid.make([
-				HDict.make({ id: HRef.make('@id1') }),
-				HDict.make({ id: HRef.make('@id2') }),
-				HDict.make({ id: HRef.make('@id3') }),
+				HDict.make({ id: HRef.make('id1') }),
+				HDict.make({ id: HRef.make('id2') }),
+				HDict.make({ id: HRef.make('id3') }),
 			]).toZinc()
 
 			expect(fetchMock.lastCall(getOpUrl('read'))?.[1]?.body).toBe(

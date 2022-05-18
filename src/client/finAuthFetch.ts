@@ -97,7 +97,7 @@ export interface RequestInitAuth extends RequestInit {
 	authenticator?: RequestAuthenticator
 
 	/**
-	 * Pluggable fetch API implementation
+	 * Pluggable fetch API function
 	 *
 	 * @link https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch
 	 *

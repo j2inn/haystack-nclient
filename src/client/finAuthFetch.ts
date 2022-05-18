@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2022, J2 Innovations. All Rights Reserved
+ */
+
 import { finCsrfFetch } from './finCsrfFetch'
 
 /**
@@ -38,33 +42,28 @@ export async function finAuthFetch(
 		const authenticator = options.authenticator as RequestAuthenticator
 
 		// Pre authenticate if suppprted by authenticator
-		if (authenticator.preauthenticate) {
-			resource = await authenticator.preauthenticate(resource)
+		if (authenticator.preAuthenticate) {
+			resource = await authenticator.preAuthenticate(resource, options)
 		}
 
+		const fetchMethod = options.fetchMethod ?? finCsrfFetch
+
 		// Pipe request to the csrf fetch function
-		resp = await finCsrfFetch(resource, options)
+		resp = await fetchMethod(resource, options)
 
 		// Check if response is an authentication fault
 		if (!(await authenticator.isAuthenticated?.(resp))) {
 			const maxTries = authenticator.maxTries ?? 3
-			let authCount = 0
 			let authSuccessful = false
 
-			// Authentication generator to generate an authentication call
-			// while we are under the max try threshold
-			const tryAuthentication = async function* () {
-				while (authCount < maxTries) {
-					authCount++
-					yield await authenticator.authenticate(resp as Response)
-				}
+			// Attempt to authenticate until' we have reached the max try threshold
+			for (let i = 0; i < maxTries; i++) {
+				const result = await authenticator.authenticate(
+					resp as Response,
+					options
+				)
 
-				return false
-			}
-
-			// Attempt to authenticate until' generator has reached the max try threshold
-			for await (const didAuthenticate of tryAuthentication()) {
-				if (didAuthenticate) {
+				if (result) {
 					authSuccessful = true
 					break
 				}
@@ -77,10 +76,11 @@ export async function finAuthFetch(
 			}
 
 			// Replay request
-			resp = await finCsrfFetch(resource, options)
+			resp = await fetchMethod(resource, options)
 		}
 	} else {
-		// If request doesn't contain an authenticator, continue has normal
+		// If request doesn't contain an authenticator, continue as normal
+		// Default to finCsrfFetch as fetch method has not been passed
 		resp = await finCsrfFetch(resource, options)
 	}
 
@@ -91,7 +91,24 @@ export async function finAuthFetch(
  * Request Init with Authenticator
  */
 export interface RequestInitAuth extends RequestInit {
+	/**
+	 * Request Authenticator
+	 */
 	authenticator?: RequestAuthenticator
+
+	/**
+	 * Pluggable fetch API implementation
+	 *
+	 * @link https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch
+	 *
+	 * @param resource The resource to request.
+	 * @param options Optional object containing any custom settings.
+	 * @returns A promise that resolves to a response object.
+	 */
+	fetchMethod?: (
+		resource: RequestInfo,
+		options?: RequestInit
+	) => Promise<Response>
 }
 
 /**
@@ -118,7 +135,10 @@ export interface RequestAuthenticator {
 	 * @param request to pre authenticate
 	 * @returns Pre authenticated Request Object
 	 */
-	preauthenticate?: (request: RequestInfo) => Promise<Request>
+	preAuthenticate?: (
+		request: RequestInfo,
+		options?: RequestInit
+	) => Promise<Request>
 
 	/**
 	 * Authenticate
@@ -128,7 +148,10 @@ export interface RequestAuthenticator {
 	 * @param Response to authenticate
 	 * @returns true if authentication was successful
 	 */
-	authenticate: (response: Response) => Promise<boolean>
+	authenticate: (
+		response: Response,
+		options?: RequestInit
+	) => Promise<boolean>
 
 	/**
 	 * Maximum Tries

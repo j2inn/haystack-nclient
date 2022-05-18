@@ -81,11 +81,6 @@ describe('finAuthFetch', function (): void {
 			expect(fetchMock.called(READ)).toBe(true)
 		})
 
-		it('fetches a CSRF token', async function (): Promise<void> {
-			await finAuthFetch(READ)
-			expect(fetchMock.called(FIN_AUTH_PATH)).toBe(true)
-		})
-
 		it('is authenticated', async function (): Promise<void> {
 			let triedAuth = false
 
@@ -143,7 +138,7 @@ describe('finAuthFetch', function (): void {
 
 			await finAuthFetch(READ, {
 				authenticator: {
-					preauthenticate: async (request: RequestInfo) => {
+					preAuthenticate: async (request: RequestInfo) => {
 						return new NodeRequest(request as NodeRequestInfo, {
 							headers: new Headers({ auth: '1234' }),
 						}) as unknown as Request

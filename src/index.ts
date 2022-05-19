@@ -9,6 +9,7 @@
  */
 
 export * from './client/finCsrfFetch'
+export * from './client/finAuthFetch'
 export * from './client/fetchVal'
 export * from './client/fetchAllGrids'
 export * from './client/Client'

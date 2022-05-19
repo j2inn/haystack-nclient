@@ -3,6 +3,7 @@
  */
 
 import { finCsrfFetch } from './finCsrfFetch'
+import { FetchMethod } from './fetchVal'
 
 /**
  * An enhanced fetch API for a pluggable authentication mechanism
@@ -46,7 +47,7 @@ export async function finAuthFetch(
 			resource = await authenticator.preAuthenticate(resource, options)
 		}
 
-		const fetchMethod = options.fetchMethod ?? finCsrfFetch
+		const fetchMethod = options.fetch ?? finCsrfFetch
 
 		// Pipe request to the csrf fetch function
 		resp = await fetchMethod(resource, options)
@@ -105,10 +106,7 @@ export interface RequestInitAuth extends RequestInit {
 	 * @param options Optional object containing any custom settings.
 	 * @returns A promise that resolves to a response object.
 	 */
-	fetchMethod?: (
-		resource: RequestInfo,
-		options?: RequestInit
-	) => Promise<Response>
+	fetch?: FetchMethod
 }
 
 /**

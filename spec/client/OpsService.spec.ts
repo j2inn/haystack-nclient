@@ -445,6 +445,11 @@ describe('OpsService', function (): void {
 			verifyZincNavId()
 		})
 
+		it('encodes a navId from a Str', async function (): Promise<void> {
+			await ops.nav(HStr.make('navId'))
+			verifyZincNavId()
+		})
+
 		it('encodes a navId from a Ref', async function (): Promise<void> {
 			await ops.nav(HRef.make('navId'))
 			verifyZincNavId()

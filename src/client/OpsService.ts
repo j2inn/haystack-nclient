@@ -350,19 +350,22 @@ export class OpsService {
 	 *
 	 * https://project-haystack.org/doc/Ops#nav
 	 *
-	 * @param navId Optional navId string, ref, dict or grid. If a dict or grid, the id
+	 * @param navId Optional navId string, str, ref, dict or grid. If a dict or grid, the id
 	 * must be specified via a navId property.
 	 * @returns The navigation.
 	 */
 	public async nav(
-		navId?: string | HRef | HaysonDict | HDict | HGrid
+		navId?: string | HStr | HRef | HaysonDict | HDict | HGrid
 	): Promise<HGrid> {
 		let grid: HGrid
 
 		if (navId) {
 			if (valueIsKind<HGrid>(navId, Kind.Grid)) {
 				grid = navId
-			} else if (typeof navId === 'string') {
+			} else if (
+				typeof navId === 'string' ||
+				valueIsKind<HStr>(navId, Kind.Str)
+			) {
 				grid = HGrid.make([
 					HDict.make({
 						navId: HRef.make(navId),

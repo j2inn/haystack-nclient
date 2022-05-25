@@ -371,4 +371,14 @@ export class Client implements ClientServiceConfig {
 
 		return fetchVal<T>(resource, fetchValOptions, this.fetch)
 	}
+
+	/**
+	 * Closes the client.
+	 *
+	 * Warning: this will close any watches associated with this client. Any
+	 * watches may throw an error if they are used after being closed.
+	 */
+	public async close(): Promise<void> {
+		await Promise.all([this.watch.close(), this.ops.watch.close()])
+	}
 }

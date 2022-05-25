@@ -6,16 +6,21 @@ import { finCsrfFetch } from './finCsrfFetch'
 import { FetchMethod } from './fetchVal'
 
 /**
- * An enhanced fetch API for a pluggable authentication mechanism
+ * The default fallback fetch method.
+ */
+const defaultFetch = finCsrfFetch
+
+/**
+ * An enhanced fetch API for a pluggable authentication mechanism.
  *
  * Transparently handles pre-authentication, authentication fault detection, authentication, and
  * will replay the requested resource upon successful authentication.
  *
- * This fetch function will utilize the finCsrfFetch function internally to execute the request
+ * By default, this fetch function will utilize the finCsrfFetch function internally to execute the request.
  *
- * Example
+ * For example...
+ *
  * ```typescript
- *
  * const result = finAuthFetch(request, {
  * 		authenticator: {
  * 			isAuthenticated: (response: Response) => response.status !== 401,
@@ -47,7 +52,7 @@ export async function finAuthFetch(
 			resource = await authenticator.preAuthenticate(resource, options)
 		}
 
-		const fetchMethod = options.fetch ?? finCsrfFetch
+		const fetchMethod = options.fetch ?? defaultFetch
 
 		// Pipe request to the csrf fetch function
 		resp = await fetchMethod(resource, options)
@@ -57,7 +62,7 @@ export async function finAuthFetch(
 			const maxTries = authenticator.maxTries ?? 3
 			let authSuccessful = false
 
-			// Attempt to authenticate until' we have reached the max try threshold
+			// Attempt to authenticate until we have reached the max try threshold
 			for (let i = 0; i < maxTries; i++) {
 				const result = await authenticator.authenticate(
 					resp as Response,
@@ -80,9 +85,8 @@ export async function finAuthFetch(
 			resp = await fetchMethod(resource, options)
 		}
 	} else {
-		// If request doesn't contain an authenticator, continue as normal
-		// Default to finCsrfFetch as fetch method has not been passed
-		resp = await finCsrfFetch(resource, options)
+		// If request doesn't contain an authenticator, continue as normal.
+		resp = await defaultFetch(resource, options)
 	}
 
 	return resp

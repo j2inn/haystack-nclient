@@ -178,7 +178,7 @@ export class BatchSubject implements Subject {
 							)
 						break
 					default:
-						throw new Error(`Invalid op: ${batchedOp.op}`)
+						console.error(`Invalid op: ${batchedOp.op}`)
 				}
 			}
 		}, BATCH_WINDOW_MS)

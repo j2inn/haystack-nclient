@@ -565,10 +565,14 @@ export class ApiSubject implements Subject {
 	 * Close the server side watch if nothing is being observed.
 	 */
 	public checkClose = async (): Promise<void> => {
-		await this.#mutex.wait()
+		try {
+			await this.#mutex.wait()
 
-		if (this.grid.isEmpty()) {
-			await this.close()
+			if (this.grid.isEmpty()) {
+				await this.close()
+			}
+		} catch (error) {
+			console.error(error)
 		}
 	}
 
@@ -616,8 +620,13 @@ export class ApiSubject implements Subject {
 	 */
 	private restartPollTimer(): void {
 		this.stopPollTimer()
-		this.#pollTimerId = setTimeout((): void => {
-			this.poll()
+
+		this.#pollTimerId = setTimeout(async () => {
+			try {
+				await this.poll()
+			} catch (error) {
+				console.error(error)
+			}
 		}, this.#pollRate * 1000)
 	}
 

@@ -59,4 +59,11 @@ export class WatchService {
 			grid,
 		})
 	}
+
+	/**
+	 * Closes any open watches for this watch service.
+	 */
+	public async close(): Promise<void> {
+		await Watch.close(this.#subject)
+	}
 }

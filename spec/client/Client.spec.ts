@@ -332,4 +332,16 @@ describe('Client', function (): void {
 			})
 		})
 	}) // #toJSON()
+
+	describe('#close()', function (): void {
+		it('closes all watches', async function (): Promise<void> {
+			jest.spyOn(client.watch, 'close')
+			jest.spyOn(client.ops.watch, 'close')
+
+			await client.close()
+
+			expect(client.watch.close).toBeCalled()
+			expect(client.ops.watch.close).toBeCalled()
+		})
+	}) // #close()
 })

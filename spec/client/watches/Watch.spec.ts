@@ -103,6 +103,28 @@ describe('Watch', function (): void {
 		})
 	}) // .open()
 
+	describe('.close()', function (): void {
+		let openedWatch: Watch
+
+		beforeEach(async function (): Promise<void> {
+			asMock(subject.get).mockReturnValue(fooDict)
+
+			openedWatch = await Watch.open({
+				subject,
+				ids: 'foo',
+				display: 'display',
+			})
+		})
+
+		it('closes all watches for the subject', async function (): Promise<void> {
+			expect(openedWatch.isClosed()).toBe(false)
+
+			await Watch.close(subject)
+
+			expect(openedWatch.isClosed()).toBe(true)
+		})
+	}) // .close()
+
 	describe('#add()', function (): void {
 		it('rejects if the watch is already closed', async function (): Promise<void> {
 			await watch.close()

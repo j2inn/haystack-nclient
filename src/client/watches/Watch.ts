@@ -221,6 +221,23 @@ export class Watch {
 	}
 
 	/**
+	 * Close all watches for the given subject.
+	 *
+	 * Please note, this method doesn't normally need to be called
+	 * and is designed to be used internally. If you want
+	 * to close a watch then please just call `Watch.#close()` instead.
+	 *
+	 * @param subject The subject to close watches for.
+	 */
+	public static async close(subject: Subject): Promise<void> {
+		await Promise.all(
+			[...watches]
+				.filter((watch) => watch.#subject === subject)
+				.map((watch) => watch.close())
+		)
+	}
+
+	/**
 	 * Add records to watch.
 	 *
 	 * ```typescript

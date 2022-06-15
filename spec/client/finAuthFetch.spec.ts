@@ -14,6 +14,7 @@ import {
 	Request as NodeRequest,
 	RequestInfo as NodeRequestInfo,
 } from 'node-fetch'
+import { AuthenticationError } from '../../src/errors/AuthenticationError'
 
 describe('finAuthFetch', function (): void {
 	const READ = '/read'
@@ -125,6 +126,7 @@ describe('finAuthFetch', function (): void {
 					},
 				})
 			} catch (error) {
+				expect(error).toBeInstanceOf(AuthenticationError)
 				authFailed = true
 			}
 
@@ -139,9 +141,9 @@ describe('finAuthFetch', function (): void {
 			await finAuthFetch(READ, {
 				authenticator: {
 					preAuthenticate: async (request: RequestInfo) => {
-						return new NodeRequest(request as NodeRequestInfo, {
+						return (new NodeRequest(request as NodeRequestInfo, {
 							headers: new Headers({ auth: '1234' }),
-						}) as unknown as Request
+						}) as unknown) as Request
 					},
 					isAuthenticated: async () => true,
 					authenticate: async () => (triedAuth = true),
@@ -151,11 +153,39 @@ describe('finAuthFetch', function (): void {
 			expect(triedAuth).toBe(false)
 			expect(fetchMock.calls(READ).length).toBe(1)
 			expect(
-				(
-					fetchMock.calls(READ)[0].request
-						?.headers as unknown as Headers
-				).get('auth')
+				((fetchMock.calls(READ)[0].request
+					?.headers as unknown) as Headers).get('auth')
 			).toBe('1234')
+		})
+
+		it('auth error with CSRF failure', async function (): Promise<void> {
+			// Kill fetching the CSRF token.
+			fetchMock.reset().post(FIN_AUTH_PATH, 'na').get(READ, zinc)
+
+			let authFailed = false
+			let triedAuth = false
+
+			try {
+				await finAuthFetch(READ, {
+					authenticator: {
+						// Is authenticated returns true to make a clear distinction
+						// that an incoming AuthenticationError from the fetch function
+						// starts the authentication process
+						isAuthenticated: async () => true,
+						authenticate: async () => {
+							triedAuth = true
+							return false
+						},
+						maxTries: 4,
+					},
+				})
+			} catch (error) {
+				expect(error).toBeInstanceOf(AuthenticationError)
+				authFailed = true
+			}
+
+			expect(triedAuth).toBe(true)
+			expect(authFailed).toBe(true)
 		})
 	}) // finAuthFetch()
 })

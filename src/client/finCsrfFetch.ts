@@ -4,6 +4,7 @@
 
 /* eslint @typescript-eslint/no-explicit-any: "off" */
 
+import { AuthenticationError } from '../errors/AuthenticationError'
 import {
 	getHeader,
 	hasHeader,
@@ -98,7 +99,7 @@ async function getAttestKey(
 	} catch (err) {
 		// If the promise fails then clear the entry from the cache so it can be requested again in future.
 		originAttestKeyPromises.delete(host)
-		throw err
+		throw new AuthenticationError(err as Error)
 	}
 }
 

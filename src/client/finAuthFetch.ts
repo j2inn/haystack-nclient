@@ -4,6 +4,7 @@
 
 import { finCsrfFetch } from './finCsrfFetch'
 import { FetchMethod } from './fetchVal'
+import { AuthenticationError } from '../errors/AuthenticationError'
 
 /**
  * The default fallback fetch method.
@@ -44,6 +45,8 @@ export async function finAuthFetch(
 ): Promise<Response> {
 	let resp: Response | undefined
 
+	let fetchMethod = defaultFetch
+
 	if (options && isAuthInit(options)) {
 		const authenticator = options.authenticator as RequestAuthenticator
 
@@ -52,44 +55,71 @@ export async function finAuthFetch(
 			resource = await authenticator.preAuthenticate(resource, options)
 		}
 
-		const fetchMethod = options.fetch ?? defaultFetch
+		fetchMethod = options.fetch ?? defaultFetch
 
-		// Pipe request to the csrf fetch function
-		resp = await fetchMethod(resource, options)
+		// Pipe request to the fetch method
+		try {
+			resp = await fetchMethod(resource, options)
 
-		// Check if response is an authentication fault
-		if (!(await authenticator.isAuthenticated?.(resp))) {
-			const maxTries = authenticator.maxTries ?? 3
-			let authSuccessful = false
+			// Check if response is an authentication fault
+			if (!(await authenticator.isAuthenticated?.(resp))) {
+				throw new AuthenticationError(
+					new Error('Request not authenticated')
+				)
+			}
 
-			// Attempt to authenticate until we have reached the max try threshold
-			for (let i = 0; i < maxTries; i++) {
-				const result = await authenticator.authenticate(
+			// Response was authenticated, return response
+			return resp
+		} catch (error) {
+			if (error instanceof AuthenticationError) {
+				// An authentication error was thrown, attempt to authenticate
+				const authSuccessful = await authenticateResponse(
 					resp as Response,
 					options
 				)
 
-				if (result) {
-					authSuccessful = true
-					break
+				// if authentication failed, throw authentication error
+				if (!authSuccessful) {
+					throw new AuthenticationError(
+						new Error('Authentication Failed')
+					)
 				}
+			} else {
+				throw error
 			}
-
-			// If we reached the max try threshold and authentication was still unsuccessful
-			// throw an exception
-			if (!authSuccessful) {
-				throw new Error('Authentication Failed')
-			}
-
-			// Replay request
-			resp = await fetchMethod(resource, options)
 		}
-	} else {
-		// If request doesn't contain an authenticator, continue as normal.
-		resp = await defaultFetch(resource, options)
 	}
 
+	// If request doesn't contain an authenticator or authentication was successful, play request.
+	resp = await fetchMethod(resource, options)
+
 	return resp
+}
+
+async function authenticateResponse(
+	response: Response,
+	options?: RequestInitAuth
+): Promise<boolean> {
+	const authenticator = options?.authenticator
+
+	if (!authenticator) {
+		return false
+	}
+
+	const maxTries = authenticator.maxTries ?? 3
+	let authSuccessful = false
+
+	// Attempt to authenticate until we have reached the max try threshold
+	for (let i = 0; i < maxTries; i++) {
+		const result = await authenticator.authenticate(response, options)
+
+		if (result) {
+			authSuccessful = true
+			break
+		}
+	}
+
+	return authSuccessful
 }
 
 /**

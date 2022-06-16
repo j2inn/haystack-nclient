@@ -4,7 +4,7 @@
 
 /* eslint @typescript-eslint/no-explicit-any: "off" */
 
-import { AuthenticationError } from '../errors/AuthenticationError'
+import { HttpError } from '../errors/HttpError'
 import {
 	getHeader,
 	hasHeader,
@@ -67,7 +67,7 @@ async function requestFinAttestKey(
 	const auth = getHeader(resp.headers, FIN_AUTH_KEY)
 
 	if (!auth) {
-		throw new Error('Cannot acquire attest key')
+		throw new HttpError(resp, 'Cannot acquire atttest key', true)
 	}
 
 	return auth
@@ -99,7 +99,7 @@ async function getAttestKey(
 	} catch (err) {
 		// If the promise fails then clear the entry from the cache so it can be requested again in future.
 		originAttestKeyPromises.delete(host)
-		throw new AuthenticationError(err as Error)
+		throw err
 	}
 }
 

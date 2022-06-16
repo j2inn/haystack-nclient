@@ -4,7 +4,11 @@
 
 import { finCsrfFetch } from './finCsrfFetch'
 import { FetchMethod } from './fetchVal'
-import { AuthenticationError } from '../errors/AuthenticationError'
+import {
+	AuthenticationError,
+	isAuthenticationError,
+} from '../errors/AuthenticationError'
+import { isHttpError } from '../errors/HttpError'
 
 /**
  * The default fallback fetch method.
@@ -68,11 +72,14 @@ export async function finAuthFetch(
 				)
 			}
 
-			// Response was authenticated, return response
+			// Response was already authenticated, return response
 			return resp
 		} catch (error) {
-			if (error instanceof AuthenticationError) {
-				// An authentication error was thrown, attempt to authenticate
+			if (
+				(isHttpError(error) && error.isAuthenticationError) ||
+				isAuthenticationError(error)
+			) {
+				// An http error was thrown, attempt to authenticate
 				const authSuccessful = await authenticateResponse(
 					resp as Response,
 					options

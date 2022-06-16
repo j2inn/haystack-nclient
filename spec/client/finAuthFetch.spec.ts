@@ -141,9 +141,9 @@ describe('finAuthFetch', function (): void {
 			await finAuthFetch(READ, {
 				authenticator: {
 					preAuthenticate: async (request: RequestInfo) => {
-						return (new NodeRequest(request as NodeRequestInfo, {
+						return new NodeRequest(request as NodeRequestInfo, {
 							headers: new Headers({ auth: '1234' }),
-						}) as unknown) as Request
+						}) as unknown as Request
 					},
 					isAuthenticated: async () => true,
 					authenticate: async () => (triedAuth = true),
@@ -153,8 +153,10 @@ describe('finAuthFetch', function (): void {
 			expect(triedAuth).toBe(false)
 			expect(fetchMock.calls(READ).length).toBe(1)
 			expect(
-				((fetchMock.calls(READ)[0].request
-					?.headers as unknown) as Headers).get('auth')
+				(
+					fetchMock.calls(READ)[0].request
+						?.headers as unknown as Headers
+				).get('auth')
 			).toBe('1234')
 		})
 

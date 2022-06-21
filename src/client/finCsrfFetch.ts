@@ -4,7 +4,6 @@
 
 /* eslint @typescript-eslint/no-explicit-any: "off" */
 
-import { HttpError } from '../errors/HttpError'
 import {
 	getHeader,
 	hasHeader,
@@ -25,6 +24,36 @@ const INVALID_ATTEST_KEY_STATUS = 400
  * in any potential HTTP requests.
  */
 const originAttestKeyPromises: Map<string, Promise<string>> = new Map()
+
+/**
+ * Represents a CSRF error.
+ */
+export class CsrfError extends Error {
+	/**
+	 * Used for a type guard check.
+	 */
+	readonly _isCsrfError = true
+
+	/**
+	 * HTTP response code.
+	 */
+	readonly status: number
+
+	constructor(response: Response, message?: string) {
+		super(message || response.statusText)
+		this.status = response.status
+	}
+}
+
+/**
+ * A type guard for an CSRF error.
+ *
+ * @param value The value to check.
+ * @returns The result of the type guard check.
+ */
+export function isCsrfError(value: unknown): value is CsrfError {
+	return !!(value as CsrfError)?._isCsrfError
+}
 
 /**
  * Clear any cached CSRF tokens.
@@ -67,7 +96,7 @@ async function requestFinAttestKey(
 	const auth = getHeader(resp.headers, FIN_AUTH_KEY)
 
 	if (!auth) {
-		throw new HttpError(resp, 'Cannot acquire atttest key', true)
+		throw new CsrfError(resp, 'Cannot acquire attest key')
 	}
 
 	return auth

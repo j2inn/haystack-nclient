@@ -5,7 +5,11 @@
 /* eslint @typescript-eslint/no-explicit-any: "off" */
 
 import { clearFinCsrfTokens } from '../../src/client/finCsrfFetch'
-import { finAuthFetch } from '../../src/client/finAuthFetch'
+import {
+	finAuthFetch,
+	AuthenticationError,
+	isAuthenticationError,
+} from '../../src/client/finAuthFetch'
 import { FIN_AUTH_PATH, FIN_AUTH_KEY } from '../../src/util/http'
 import fetchMock from 'fetch-mock'
 import { HGrid, HDict } from 'haystack-core'
@@ -14,7 +18,6 @@ import {
 	Request as NodeRequest,
 	RequestInfo as NodeRequestInfo,
 } from 'node-fetch'
-import { AuthenticationError } from '../../src/errors/AuthenticationError'
 
 describe('finAuthFetch', function (): void {
 	const READ = '/read'
@@ -190,4 +193,20 @@ describe('finAuthFetch', function (): void {
 			expect(authFailed).toBe(true)
 		})
 	}) // finAuthFetch()
+
+	describe('AuthenticationError', function (): void {
+		describe('isAuthenticationError()', function (): void {
+			it('returns true if the error is an authentication error', function (): void {
+				expect(
+					isAuthenticationError(
+						new AuthenticationError(new Error('test'))
+					)
+				).toBe(true)
+			})
+
+			it('returns false if the error is not an authentication error', function (): void {
+				expect(isAuthenticationError(new Error('test'))).toBe(false)
+			})
+		}) // isAuthenticationError
+	})
 })

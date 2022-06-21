@@ -8,6 +8,8 @@ import {
 	finCsrfFetch,
 	clearFinCsrfTokens,
 	getFinCsrfToken,
+	CsrfError,
+	isCsrfError,
 } from '../../src/client/finCsrfFetch'
 import {
 	FIN_AUTH_PATH,
@@ -196,4 +198,19 @@ describe('finCsrfFetch', function (): void {
 			expect(await getFinCsrfToken(ABS_URL)).toBe('')
 		})
 	}) // getFinCsrfToken()
+
+	describe('CsrfError', function (): void {
+		describe('isCsrfError()', function (): void {
+			it('returns true if the error is an Csrf error', function (): void {
+				const response = { status: 401 }
+				expect(
+					isCsrfError(new CsrfError(response as unknown as Response))
+				).toBe(true)
+			})
+
+			it('returns false if the error is not an Csrf error', function (): void {
+				expect(isCsrfError(new Error('test'))).toBe(false)
+			})
+		}) // isCsrfError
+	})
 })

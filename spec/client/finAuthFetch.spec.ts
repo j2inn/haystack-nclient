@@ -5,7 +5,11 @@
 /* eslint @typescript-eslint/no-explicit-any: "off" */
 
 import { clearFinCsrfTokens } from '../../src/client/finCsrfFetch'
-import { finAuthFetch } from '../../src/client/finAuthFetch'
+import {
+	finAuthFetch,
+	AuthenticationError,
+	isAuthenticationError,
+} from '../../src/client/finAuthFetch'
 import { FIN_AUTH_PATH, FIN_AUTH_KEY } from '../../src/util/http'
 import fetchMock from 'fetch-mock'
 import { HGrid, HDict } from 'haystack-core'
@@ -125,6 +129,7 @@ describe('finAuthFetch', function (): void {
 					},
 				})
 			} catch (error) {
+				expect(error).toBeInstanceOf(AuthenticationError)
 				authFailed = true
 			}
 
@@ -157,5 +162,51 @@ describe('finAuthFetch', function (): void {
 				).get('auth')
 			).toBe('1234')
 		})
+
+		it('auth error with CSRF failure', async function (): Promise<void> {
+			// Kill fetching the CSRF token.
+			fetchMock.reset().post(FIN_AUTH_PATH, 'na').get(READ, zinc)
+
+			let authFailed = false
+			let triedAuth = false
+
+			try {
+				await finAuthFetch(READ, {
+					authenticator: {
+						// Is authenticated returns true to make a clear distinction
+						// that an incoming AuthenticationError from the fetch function
+						// starts the authentication process
+						isAuthenticated: async () => true,
+						authenticate: async () => {
+							triedAuth = true
+							return false
+						},
+						maxTries: 4,
+					},
+				})
+			} catch (error) {
+				expect(error).toBeInstanceOf(AuthenticationError)
+				authFailed = true
+			}
+
+			expect(triedAuth).toBe(true)
+			expect(authFailed).toBe(true)
+		})
 	}) // finAuthFetch()
+
+	describe('AuthenticationError', function (): void {
+		describe('isAuthenticationError()', function (): void {
+			it('returns true if the error is an authentication error', function (): void {
+				expect(
+					isAuthenticationError(
+						new AuthenticationError(new Error('test'))
+					)
+				).toBe(true)
+			})
+
+			it('returns false if the error is not an authentication error', function (): void {
+				expect(isAuthenticationError(new Error('test'))).toBe(false)
+			})
+		}) // isAuthenticationError
+	})
 })

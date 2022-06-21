@@ -2,8 +2,40 @@
  * Copyright (c) 2022, J2 Innovations. All Rights Reserved
  */
 
-import { finCsrfFetch } from './finCsrfFetch'
+import { finCsrfFetch, isCsrfError } from './finCsrfFetch'
 import { FetchMethod } from './fetchVal'
+
+/**
+ * A general authentication error.
+ */
+export class AuthenticationError extends Error {
+	/**
+	 * Used for a type guard check.
+	 */
+	readonly _isAuthenticationError = true
+
+	/**
+	 * Error that caused this authentication error to occur
+	 */
+	readonly cause: Error | undefined
+
+	constructor(cause?: Error, message?: string) {
+		super(message ?? cause?.message)
+		this.cause = cause
+	}
+}
+
+/**
+ * A type guard for an authentication error.
+ *
+ * @param value The value to check.
+ * @returns The result of the type guard check.
+ */
+export function isAuthenticationError(
+	value: unknown
+): value is AuthenticationError {
+	return !!(value as AuthenticationError)?._isAuthenticationError
+}
 
 /**
  * The default fallback fetch method.
@@ -44,6 +76,8 @@ export async function finAuthFetch(
 ): Promise<Response> {
 	let resp: Response | undefined
 
+	let fetchMethod = defaultFetch
+
 	if (options && isAuthInit(options)) {
 		const authenticator = options.authenticator as RequestAuthenticator
 
@@ -52,44 +86,71 @@ export async function finAuthFetch(
 			resource = await authenticator.preAuthenticate(resource, options)
 		}
 
-		const fetchMethod = options.fetch ?? defaultFetch
+		fetchMethod = options.fetch ?? defaultFetch
 
-		// Pipe request to the csrf fetch function
-		resp = await fetchMethod(resource, options)
+		// Pipe request to the fetch method
+		try {
+			resp = await fetchMethod(resource, options)
 
-		// Check if response is an authentication fault
-		if (!(await authenticator.isAuthenticated?.(resp))) {
-			const maxTries = authenticator.maxTries ?? 3
-			let authSuccessful = false
+			// Check if response is an authentication fault
+			if (!(await authenticator.isAuthenticated?.(resp))) {
+				throw new AuthenticationError(
+					new Error('Request not authenticated')
+				)
+			}
 
-			// Attempt to authenticate until we have reached the max try threshold
-			for (let i = 0; i < maxTries; i++) {
-				const result = await authenticator.authenticate(
+			// Response was already authenticated, return response
+			return resp
+		} catch (error) {
+			if (isCsrfError(error) || isAuthenticationError(error)) {
+				// An http error was thrown, attempt to authenticate
+				const authSuccessful = await authenticateResponse(
 					resp as Response,
 					options
 				)
 
-				if (result) {
-					authSuccessful = true
-					break
+				// if authentication failed, throw authentication error
+				if (!authSuccessful) {
+					throw new AuthenticationError(
+						new Error('Authentication failed')
+					)
 				}
+			} else {
+				throw error
 			}
-
-			// If we reached the max try threshold and authentication was still unsuccessful
-			// throw an exception
-			if (!authSuccessful) {
-				throw new Error('Authentication Failed')
-			}
-
-			// Replay request
-			resp = await fetchMethod(resource, options)
 		}
-	} else {
-		// If request doesn't contain an authenticator, continue as normal.
-		resp = await defaultFetch(resource, options)
 	}
 
+	// If request doesn't contain an authenticator or authentication was successful, play request.
+	resp = await fetchMethod(resource, options)
+
 	return resp
+}
+
+async function authenticateResponse(
+	response: Response,
+	options?: RequestInitAuth
+): Promise<boolean> {
+	const authenticator = options?.authenticator
+
+	if (!authenticator) {
+		return false
+	}
+
+	const maxTries = authenticator.maxTries ?? 3
+	let authSuccessful = false
+
+	// Attempt to authenticate until we have reached the max try threshold
+	for (let i = 0; i < maxTries; i++) {
+		const result = await authenticator.authenticate(response, options)
+
+		if (result) {
+			authSuccessful = true
+			break
+		}
+	}
+
+	return authSuccessful
 }
 
 /**

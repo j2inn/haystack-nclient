@@ -105,7 +105,8 @@ export async function finAuthFetch(
 			if (isCsrfError(error) || isAuthenticationError(error)) {
 				// An http error was thrown, attempt to authenticate
 				const authSuccessful = await authenticateResponse(
-					resp as Response,
+					resource,
+					resp,
 					options
 				)
 
@@ -128,7 +129,8 @@ export async function finAuthFetch(
 }
 
 async function authenticateResponse(
-	response: Response,
+	request: RequestInfo,
+	response?: Response,
 	options?: RequestInitAuth
 ): Promise<boolean> {
 	const authenticator = options?.authenticator
@@ -142,7 +144,11 @@ async function authenticateResponse(
 
 	// Attempt to authenticate until we have reached the max try threshold
 	for (let i = 0; i < maxTries; i++) {
-		const result = await authenticator.authenticate(response, options)
+		const result = await authenticator.authenticate(
+			request,
+			response,
+			options
+		)
 
 		if (result) {
 			authSuccessful = true
@@ -212,7 +218,8 @@ export interface RequestAuthenticator {
 	 * @returns true if authentication was successful
 	 */
 	authenticate: (
-		response: Response,
+		request: RequestInfo,
+		response?: Response,
 		options?: RequestInit
 	) => Promise<boolean>
 

@@ -105,7 +105,14 @@ describe('finAuthFetch', function (): void {
 			await finAuthFetch(READ, {
 				authenticator: {
 					isAuthenticated: async () => false,
-					authenticate: async () => (triedAuth = true),
+					authenticate: async (request: RequestInfo) => {
+						if (!request) {
+							throw new Error('Request is undefined')
+						}
+
+						triedAuth = true
+						return true
+					},
 				},
 			})
 

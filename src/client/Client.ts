@@ -12,6 +12,8 @@ import {
 	getOpUrlCallback,
 	getHaystackServiceUrlCallback,
 	getHostServiceUrlCallback,
+	getOriginApiUrl as defaultGetOriginApiUrl,
+	getOriginApiUrlCallback,
 } from '../util/http'
 import { RecordService } from './RecordService'
 import { ClientServiceConfig } from './ClientServiceConfig'
@@ -37,6 +39,12 @@ export class Client implements ClientServiceConfig {
 	 * The origin of the client.
 	 */
 	public readonly origin: string
+
+	/**
+	 * Fetches the API url
+	 */
+
+	readonly #getOriginApiUrl: getOriginApiUrlCallback
 
 	/**
 	 * Fetches the Ops URL.
@@ -164,6 +172,7 @@ export class Client implements ClientServiceConfig {
 		options,
 		authBearer,
 		fetch,
+		getOriginApiUrl,
 		getOpUrl,
 		getHaystackServiceUrl,
 		getHostServiceUrl,
@@ -175,6 +184,7 @@ export class Client implements ClientServiceConfig {
 		options?: RequestInit
 		authBearer?: string
 		fetch?: FetchMethod
+		getOriginApiUrl?: getOriginApiUrlCallback
 		getOpUrl?: getOpUrlCallback
 		getHaystackServiceUrl?: getHaystackServiceUrlCallback
 		getHostServiceUrl?: getHostServiceUrlCallback
@@ -194,6 +204,7 @@ export class Client implements ClientServiceConfig {
 
 		this.pathPrefix = addStartSlashRemoveEndSlash(pathPrefix?.trim() ?? '')
 
+		this.#getOriginApiUrl = getOriginApiUrl ?? defaultGetOriginApiUrl
 		this.#getOpUrl = getOpUrl ?? defaultGetOpUrl
 		this.#getHaystackServiceUrl =
 			getHaystackServiceUrl ?? defaultGetHaystackServiceUrl
@@ -242,6 +253,19 @@ export class Client implements ClientServiceConfig {
 	private static parseProjectFromProjects(path: string): string {
 		const res = /\/projects\/([^/?#]+)/.exec(path)
 		return (res && res[1]) ?? ''
+	}
+
+	/**
+	 * Returns the origin API Url
+	 *
+	 * @param apiName Name of the API
+	 * @returns A URL.
+	 */
+	public getOriginApiUrl(apiName: string) {
+		return this.#getOriginApiUrl({
+			origin: this.origin,
+			apiName,
+		})
 	}
 
 	/**

@@ -49,7 +49,7 @@ export class NotificationService<
 	 */
 	public constructor(serviceConfig: ClientServiceConfig) {
 		this.#serviceConfig = serviceConfig
-		this.#url = `/api/notifications`
+		this.#url = serviceConfig.getOriginApiUrl('notifications')
 	}
 
 	/**

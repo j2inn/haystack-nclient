@@ -44,7 +44,7 @@ export class NotificationSettingsService {
 	 */
 	public constructor(serviceConfig: ClientServiceConfig) {
 		this.#serviceConfig = serviceConfig
-		this.#url = `/api/notifications/settings`
+		this.#url = serviceConfig.getOriginApiUrl('notifications/settings')
 	}
 
 	/**
@@ -95,7 +95,7 @@ export class NotificationSettingsService {
 	 */
 	public async readUserViews<T extends HVal>(): Promise<T[]> {
 		const views = await fetchVal<HList<T>>(
-			`${this.#url}/views`,
+			`${this.#url}/view`,
 			{
 				method: 'GET',
 				...this.#serviceConfig.getDefaultOptions(),
@@ -115,7 +115,7 @@ export class NotificationSettingsService {
 		viewSetting: UserViewSetting
 	): Promise<HRef> {
 		const updatedViewSetting = await fetchVal<HRef>(
-			`${this.#url}/views`,
+			`${this.#url}/view`,
 			{
 				method: 'POST',
 				...this.#serviceConfig.getDefaultOptions(),

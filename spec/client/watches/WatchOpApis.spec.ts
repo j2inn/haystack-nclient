@@ -6,6 +6,7 @@ import { HGrid, HRef, HDict, HMarker, HStr, HNamespace } from 'haystack-core'
 import {
 	getHaystackServiceUrl,
 	getHostServiceUrl,
+	getOriginApiUrl,
 } from '../../../src/util/http'
 import { Client } from '../../../src/client/Client'
 import fetchMock from 'fetch-mock'
@@ -29,6 +30,11 @@ describe('WatchOpApis', function (): void {
 		client = new Client({ base: new URL(base), project: 'demo', fetch })
 
 		watchOps = new WatchOpApis({
+			getOriginApiUrl: (apiName: string) =>
+				getOriginApiUrl({
+					origin,
+					apiName,
+				}),
 			getOpUrl: (op: string): string =>
 				getOpUrl({
 					origin: client.origin,

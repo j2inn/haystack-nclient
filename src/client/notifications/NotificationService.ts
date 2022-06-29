@@ -144,7 +144,7 @@ export class NotificationService<
 	 * notification `targetApp` and to the project the notification is stored in.
 	 * Super users are allowed to post any notification, including system ones.
 	 *
-	 * @param notification NotificationType
+	 * @param notification The notification object
 	 * @returns The filtered notifications.
 	 */
 	public async create(notification: NotificationType): Promise<HRef> {

@@ -44,9 +44,7 @@ export class NotificationSettingsService {
 	 */
 	public constructor(serviceConfig: ClientServiceConfig) {
 		this.#serviceConfig = serviceConfig
-		this.#url = serviceConfig.getHaystackServiceUrl(
-			'notifications/settings'
-		)
+		this.#url = `/api/notifications/settings`
 	}
 
 	/**

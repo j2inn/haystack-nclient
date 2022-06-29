@@ -49,7 +49,7 @@ export class NotificationService<
 	 */
 	public constructor(serviceConfig: ClientServiceConfig) {
 		this.#serviceConfig = serviceConfig
-		this.#url = serviceConfig.getHaystackServiceUrl('notifications')
+		this.#url = `/api/notifications`
 	}
 
 	/**

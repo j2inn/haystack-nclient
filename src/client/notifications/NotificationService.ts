@@ -49,7 +49,7 @@ export class NotificationService<
 	 */
 	public constructor(serviceConfig: ClientServiceConfig) {
 		this.#serviceConfig = serviceConfig
-		this.#url = serviceConfig.getOriginApiUrl('notifications')
+		this.#url = serviceConfig.getServiceUrl('notifications')
 	}
 
 	/**
@@ -66,10 +66,6 @@ export class NotificationService<
 			},
 			this.#serviceConfig.fetch
 		)
-
-		if (notifications.isEmpty()) {
-			return []
-		}
 
 		return notifications.toArray()
 	}
@@ -89,10 +85,6 @@ export class NotificationService<
 			this.#serviceConfig.fetch
 		)
 
-		if (notifications.isEmpty()) {
-			return []
-		}
-
 		return notifications.toArray()
 	}
 
@@ -111,10 +103,6 @@ export class NotificationService<
 			},
 			this.#serviceConfig.fetch
 		)
-
-		if (notifications.isEmpty()) {
-			return []
-		}
 
 		return notifications.toArray()
 	}
@@ -152,7 +140,7 @@ export class NotificationService<
 			`${this.#url}`,
 			{
 				method: 'POST',
-				body: JSON.stringify(HDict.make(notification).toJSON()),
+				body: JSON.stringify(notification),
 				...this.#serviceConfig.getDefaultOptions(),
 			},
 			this.#serviceConfig.fetch
@@ -172,7 +160,7 @@ export class NotificationService<
 			`${this.#url}`,
 			{
 				method: 'POST',
-				body: JSON.stringify(HDateTime.make(timeOfLastMod).toJSON()),
+				body: JSON.stringify(timeOfLastMod),
 				...this.#serviceConfig.getDefaultOptions(),
 			},
 			this.#serviceConfig.fetch

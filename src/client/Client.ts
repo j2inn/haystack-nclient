@@ -12,8 +12,8 @@ import {
 	getOpUrlCallback,
 	getHaystackServiceUrlCallback,
 	getHostServiceUrlCallback,
-	getOriginApiUrl as defaultGetOriginApiUrl,
-	getOriginApiUrlCallback,
+	getServiceUrl as defaultgetServiceUrl,
+	getServiceUrlCallback,
 } from '../util/http'
 import { RecordService } from './RecordService'
 import { ClientServiceConfig } from './ClientServiceConfig'
@@ -44,7 +44,7 @@ export class Client implements ClientServiceConfig {
 	 * Fetches the API url
 	 */
 
-	readonly #getOriginApiUrl: getOriginApiUrlCallback
+	readonly #getServiceUrl: getServiceUrlCallback
 
 	/**
 	 * Fetches the Ops URL.
@@ -172,7 +172,7 @@ export class Client implements ClientServiceConfig {
 		options,
 		authBearer,
 		fetch,
-		getOriginApiUrl,
+		getServiceUrl,
 		getOpUrl,
 		getHaystackServiceUrl,
 		getHostServiceUrl,
@@ -184,7 +184,7 @@ export class Client implements ClientServiceConfig {
 		options?: RequestInit
 		authBearer?: string
 		fetch?: FetchMethod
-		getOriginApiUrl?: getOriginApiUrlCallback
+		getServiceUrl?: getServiceUrlCallback
 		getOpUrl?: getOpUrlCallback
 		getHaystackServiceUrl?: getHaystackServiceUrlCallback
 		getHostServiceUrl?: getHostServiceUrlCallback
@@ -204,7 +204,7 @@ export class Client implements ClientServiceConfig {
 
 		this.pathPrefix = addStartSlashRemoveEndSlash(pathPrefix?.trim() ?? '')
 
-		this.#getOriginApiUrl = getOriginApiUrl ?? defaultGetOriginApiUrl
+		this.#getServiceUrl = getServiceUrl ?? defaultgetServiceUrl
 		this.#getOpUrl = getOpUrl ?? defaultGetOpUrl
 		this.#getHaystackServiceUrl =
 			getHaystackServiceUrl ?? defaultGetHaystackServiceUrl
@@ -258,13 +258,13 @@ export class Client implements ClientServiceConfig {
 	/**
 	 * Returns the origin API Url
 	 *
-	 * @param apiName Name of the API
+	 * @param path Name of the API
 	 * @returns A URL.
 	 */
-	public getOriginApiUrl(apiName: string) {
-		return this.#getOriginApiUrl({
+	public getServiceUrl(path: string) {
+		return this.#getServiceUrl({
 			origin: this.origin,
-			apiName,
+			path,
 		})
 	}
 

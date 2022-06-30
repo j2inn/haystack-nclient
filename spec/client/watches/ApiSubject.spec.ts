@@ -19,7 +19,7 @@ import {
 	getOpUrl,
 	getHaystackServiceUrl,
 	getHostServiceUrl,
-	getOriginApiUrl,
+	getServiceUrl,
 } from '../../../src/util/http'
 import { WatchApis } from '../../../src/client/watches/WatchApis'
 import { ClientServiceConfig } from '../../../src/client/ClientServiceConfig'
@@ -41,10 +41,10 @@ describe('ApiSubject', function (): void {
 		jest.useFakeTimers('legacy')
 
 		serviceConfig = {
-			getOriginApiUrl: (apiName: string) =>
-				getOriginApiUrl({
+			getServiceUrl: (path: string) =>
+				getServiceUrl({
 					origin,
-					apiName,
+					path,
 				}),
 			getOpUrl: (op: string): string =>
 				getOpUrl({

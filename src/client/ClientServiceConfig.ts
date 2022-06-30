@@ -10,12 +10,12 @@ import { FetchMethod } from './fetchVal'
  */
 export interface ClientServiceConfig {
 	/**
-	 * Return the URL for a general REST service/
+	 * Return the URL for a general REST service.
 	 *
 	 * @param path The API path.
 	 * @return The services URL.
 	 */
-	getOriginApiUrl(path: string): string
+	getServiceUrl(path: string): string
 
 	/**
 	 * Return the URL for the op.

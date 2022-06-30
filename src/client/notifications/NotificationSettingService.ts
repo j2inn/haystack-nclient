@@ -2,11 +2,11 @@
  * Copyright (c) 2022, J2 Innovations. All Rights Reserved
  */
 
-import { HDict, HList, HNum, HRef, HStr, HVal } from 'haystack-core'
+import { HDict, HList, HNum, HRef, HStr } from 'haystack-core'
 import { ClientServiceConfig } from '../ClientServiceConfig'
 import { fetchVal } from '../fetchVal'
 
-export interface TopicDescription extends HDict {
+export interface TopicSetting extends HDict {
 	topic: HStr
 	dis?: HStr
 	description?: HStr
@@ -44,7 +44,7 @@ export class NotificationSettingsService {
 	 */
 	public constructor(serviceConfig: ClientServiceConfig) {
 		this.#serviceConfig = serviceConfig
-		this.#url = serviceConfig.getOriginApiUrl('notifications/settings')
+		this.#url = serviceConfig.getServiceUrl('notifications/settings')
 	}
 
 	/**
@@ -52,8 +52,8 @@ export class NotificationSettingsService {
 	 *
 	 * @returns The result of the read operation.
 	 */
-	public async readTopics<T extends HVal>(): Promise<T[]> {
-		const topics = await fetchVal<HList<T>>(
+	public async readTopics(): Promise<TopicSetting[]> {
+		const topics = await fetchVal<HList<TopicSetting>>(
 			`${this.#url}/topics`,
 			{
 				method: 'GET',
@@ -72,8 +72,8 @@ export class NotificationSettingsService {
 	 * @param topicDescription The topic description object
 	 * @returns Returns the id of the topic description that was either created or updated.
 	 */
-	public async setTopicDescription(
-		topicDescription: TopicDescription
+	public async setTopicSetting(
+		topicDescription: TopicSetting
 	): Promise<HRef> {
 		const updatedTopicId = await fetchVal<HRef>(
 			`${this.#url}/topics`,
@@ -93,8 +93,8 @@ export class NotificationSettingsService {
 	 *
 	 * @returns Returns the view settings for the current users.
 	 */
-	public async readUserViews<T extends HVal>(): Promise<T[]> {
-		const views = await fetchVal<HList<T>>(
+	public async readUserViews(): Promise<UserViewSetting[]> {
+		const views = await fetchVal<HList<UserViewSetting>>(
 			`${this.#url}/view`,
 			{
 				method: 'GET',

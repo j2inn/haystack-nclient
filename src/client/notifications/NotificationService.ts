@@ -75,8 +75,8 @@ export class NotificationService<
 	 *
 	 * @returns The result of the read operation.
 	 */
-	public async readAllTopics(): Promise<NotificationType[]> {
-		const notifications = await fetchVal<HList<NotificationType>>(
+	public async readAllTopics(): Promise<HStr[]> {
+		const topics = await fetchVal<HList<HStr>>(
 			`${this.#url}/topics`,
 			{
 				method: 'GET',
@@ -85,7 +85,7 @@ export class NotificationService<
 			this.#serviceConfig.fetch
 		)
 
-		return notifications.toArray()
+		return topics.toArray()
 	}
 
 	/**

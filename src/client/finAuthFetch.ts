@@ -2,7 +2,7 @@
  * Copyright (c) 2022, J2 Innovations. All Rights Reserved
  */
 
-import { finCsrfFetch, isCsrfError } from './finCsrfFetch'
+import { CsrfRequestInit, finCsrfFetch, isCsrfError } from './finCsrfFetch'
 import { FetchMethod } from './fetchVal'
 
 /**
@@ -162,7 +162,7 @@ async function authenticateResponse(
 /**
  * Request Init with Authenticator
  */
-export interface RequestInitAuth extends RequestInit {
+export interface RequestInitAuth extends CsrfRequestInit {
 	/**
 	 * Request Authenticator
 	 */

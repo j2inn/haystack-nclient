@@ -92,8 +92,16 @@ async function requestFinAttestKey(
 		credentials: 'include',
 	}
 
-	const resp = await fetch(`${origin}${FIN_AUTH_PATH}`, opt)
-	const auth = getHeader(resp.headers, FIN_AUTH_KEY)
+	const attestRequestUri = isCsrfRequestInit(options)
+		? options.attestRequestUri ?? FIN_AUTH_PATH
+		: FIN_AUTH_PATH
+
+	const attestResponseHeaderName = isCsrfRequestInit(options)
+		? options.attestResponseHeaderName ?? FIN_AUTH_KEY
+		: FIN_AUTH_KEY
+
+	const resp = await fetch(`${origin}${attestRequestUri}`, opt)
+	const auth = getHeader(resp.headers, attestResponseHeaderName)
 
 	if (!auth) {
 		throw new CsrfError(resp, 'Cannot acquire attest key')
@@ -158,24 +166,28 @@ export async function finCsrfFetch(
 	options?: RequestInit
 ): Promise<Response> {
 	const hsOptions: RequestInit = options ?? {}
+	const attestHeaderName = isCsrfRequestInit(options)
+		? options.attestHeaderName ?? SKYARC_ATTEST_KEY
+		: SKYARC_ATTEST_KEY
 
-	let addedAttest = false
 	async function addAttestKeyHeader(): Promise<boolean> {
 		const attestKey = await getAttestKey(String(resource), hsOptions)
 
 		// Only add the attest key if we have one. Some haystack servers may not use this key.
 		if (attestKey) {
-			addHeader(hsOptions, SKYARC_ATTEST_KEY, attestKey)
+			addHeader(hsOptions, attestHeaderName, attestKey)
 			return true
 		} else {
 			return false
 		}
 	}
 
+	let hasAttestKey = hasHeader(hsOptions.headers, attestHeaderName)
+
 	// Lazily add the attest key to this request if not already specified.
-	if (!hasHeader(hsOptions.headers, SKYARC_ATTEST_KEY)) {
-		addedAttest = true
+	if (!hasAttestKey) {
 		await addAttestKeyHeader()
+		hasAttestKey = true
 	}
 
 	let resp = await fetch(resource, hsOptions)
@@ -183,7 +195,7 @@ export async function finCsrfFetch(
 	// If we get a 400 response back then it's likely the attest key is no longer
 	// valid. Perhaps the server has restarted. In this case, clear the attest key
 	// and attempt to re-request it.
-	if (resp.status === INVALID_ATTEST_KEY_STATUS && addedAttest) {
+	if (resp.status === INVALID_ATTEST_KEY_STATUS && hasAttestKey) {
 		clearAttestKey(String(resource))
 
 		if (await addAttestKeyHeader()) {
@@ -192,4 +204,16 @@ export async function finCsrfFetch(
 	}
 
 	return resp
+}
+
+export interface CsrfRequestInit extends RequestInit {
+	attestHeaderName?: string
+	attestRequestUri?: string
+	attestResponseHeaderName?: string
+}
+
+export function isCsrfRequestInit(
+	value?: RequestInit
+): value is CsrfRequestInit {
+	return !!value && 'attestHeaderName' in value
 }

@@ -171,6 +171,21 @@ export async function finCsrfFetch(
 		: SKYARC_ATTEST_KEY
 
 	async function addAttestKeyHeader(): Promise<boolean> {
+		if (hsOptions.headers) {
+			if (isHeaders(hsOptions.headers)) {
+				hsOptions.headers.delete(attestHeaderName)
+			} else if (Array.isArray(hsOptions.headers)) {
+				const index = hsOptions.headers.findIndex(
+					(item) => item[0] === attestHeaderName
+				)
+
+				if (index > -1) {
+					hsOptions.headers.splice(index, 1)
+				}
+			} else {
+				delete hsOptions.headers[attestHeaderName]
+			}
+		}
 		const attestKey = await getAttestKey(String(resource), hsOptions)
 
 		// Only add the attest key if we have one. Some haystack servers may not use this key.
@@ -216,4 +231,9 @@ export function isCsrfRequestInit(
 	value?: RequestInit
 ): value is CsrfRequestInit {
 	return !!value && 'attestHeaderName' in value
+}
+
+const HEADERS_PROPS = ['set', 'get', 'delete', 'has']
+function isHeaders(value?: HeadersInit): value is Headers {
+	return !!value && HEADERS_PROPS.every((item) => item in value)
 }

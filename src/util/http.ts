@@ -307,6 +307,49 @@ export function addHeader(
 }
 
 /**
+ * Remove the header value from the headers object by name.
+ *
+ * @param headers The headers object.
+ * @param headerName The headers name to look for.
+ * @returns The headers object
+ */
+export function removeHeader(
+	headers: HeadersInit | undefined,
+	headerName: string
+): HeadersInit | undefined {
+	if (!headers) {
+		return headers
+	}
+
+	// Handle Headers object.
+	if (isHeaders(headers)) {
+		headers.delete(headerName)
+		return headers
+	}
+
+	// Handle Array Case
+	if (Array.isArray(headers)) {
+		const index = headers.findIndex((item) => item[0] === headerName)
+
+		if (index > -1) {
+			headers.splice(index, 1)
+			return headers
+		}
+	} else {
+		// Handle object literal.
+		const header = headerName.toLowerCase()
+		for (const name in headers) {
+			if (name.toLowerCase() === header) {
+				delete headers[name]
+				return headers
+			}
+		}
+	}
+
+	return headers
+}
+
+/**
  * Adds a starting slash and removes any ending slash.
  *
  * @param path The path to update.

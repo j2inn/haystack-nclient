@@ -14,6 +14,7 @@ import {
 	getHostServiceUrl,
 	encodeQuery,
 	addStartSlashRemoveEndSlash,
+	removeHeader,
 } from '../../src/util/http'
 import { Headers as NodeHeaders } from 'node-fetch'
 
@@ -165,6 +166,34 @@ describe('http', function (): void {
 			expect(obj.headers?.foo).toBe('val')
 		})
 	}) // addHeader()
+
+	describe('removeHeader()', function (): void {
+		it('sets a value in an existing headers object then remove', function (): void {
+			const headers = makeHeaders({})
+			addHeader({ headers }, 'foo', 'val')
+			expect(headers.get('foo')).toBe('val')
+			removeHeader(headers, 'foo')
+			expect(headers.get('foo')).toBeNull()
+		})
+
+		it('adds to an existing headers object literal with a new value then remove', function (): void {
+			const headers: HeadersObj = {}
+			const obj = { headers }
+			addHeader(obj, 'foo', 'val')
+			expect(obj.headers).toBe(headers)
+			expect(obj.headers.foo).toBe('val')
+			removeHeader(obj.headers, 'foo')
+			expect(obj.headers.foo).toBeUndefined()
+		})
+
+		it('creates an new headers object literal with the new value then remove', function (): void {
+			const obj: { headers?: { [prop: string]: string } } = {}
+			addHeader(obj, 'foo', 'val')
+			expect(obj.headers?.foo).toBe('val')
+			removeHeader(obj.headers, 'foo')
+			expect(obj.headers?.foo).toBeUndefined()
+		})
+	}) // removeHeader()
 
 	describe('#getOpUrl()', function (): void {
 		it('returns a URL', function (): void {

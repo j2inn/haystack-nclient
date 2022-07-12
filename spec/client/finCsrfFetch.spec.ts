@@ -68,11 +68,21 @@ describe('finCsrfFetch', function (): void {
 		zinc = respGrid.toZinc()
 		fetchMock
 			.reset()
-			.post(FIN_AUTH_PATH, (): unknown => authResponse)
+			.post(FIN_AUTH_PATH, (request, options): unknown => {
+				if (options.headers && SKYARC_ATTEST_KEY in options.headers) {
+					throw new Error('Attest key exists in attest request')
+				}
+				return authResponse
+			})
 			.get(READ, zinc)
 			.post(ABS_FIN_AUTH_PATH, (): unknown => authResponse)
 			.get(ABS_READ, zinc)
-			.post(ABS_ALT_AUTH_PATH, (): unknown => altAuthResponse)
+			.post(ABS_ALT_AUTH_PATH, (request, options): unknown => {
+				if (options.headers && ALT_AUTH_HEADER in options.headers) {
+					throw new Error('Attest key exists in attest request')
+				}
+				return altAuthResponse
+			})
 	}
 
 	beforeEach(function (): void {

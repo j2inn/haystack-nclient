@@ -12,6 +12,7 @@ import {
 	FIN_AUTH_PATH,
 	FIN_AUTH_KEY,
 	SKYARC_ATTEST_KEY,
+	removeHeader,
 } from '../util/http'
 
 /**
@@ -171,6 +172,8 @@ export async function finCsrfFetch(
 		: SKYARC_ATTEST_KEY
 
 	async function addAttestKeyHeader(): Promise<boolean> {
+		removeHeader(hsOptions.headers, attestHeaderName)
+
 		const attestKey = await getAttestKey(String(resource), hsOptions)
 
 		// Only add the attest key if we have one. Some haystack servers may not use this key.

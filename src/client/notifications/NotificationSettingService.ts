@@ -72,15 +72,13 @@ export class NotificationSettingsService {
 	 * @param topicDescription The topic description object
 	 * @returns Returns the id of the topic description that was either created or updated.
 	 */
-	public async setTopicSetting(
-		topicDescription: TopicSetting
-	): Promise<HRef> {
+	public async setTopicSetting(topicSetting: TopicSetting): Promise<HRef> {
 		const updatedTopicId = await fetchVal<HRef>(
 			`${this.#url}/topics`,
 			{
 				method: 'POST',
 				...this.#serviceConfig.getDefaultOptions(),
-				body: JSON.stringify(topicDescription.toJSON()),
+				body: JSON.stringify(topicSetting.toJSON()),
 			},
 			this.#serviceConfig.fetch
 		)
@@ -112,14 +110,14 @@ export class NotificationSettingsService {
 	 * @returns Returns the id of the setting that was either created or updated.
 	 */
 	public async setUserViewSetting(
-		viewSetting: UserViewSetting
+		userViewSetting: UserViewSetting
 	): Promise<HRef> {
 		const updatedViewSetting = await fetchVal<HRef>(
 			`${this.#url}/view`,
 			{
 				method: 'POST',
 				...this.#serviceConfig.getDefaultOptions(),
-				body: JSON.stringify(viewSetting.toJSON()),
+				body: JSON.stringify(userViewSetting.toJSON()),
 			},
 			this.#serviceConfig.fetch
 		)
@@ -151,14 +149,14 @@ export class NotificationSettingsService {
 	 * @returns Returns the id of the setting that was either created or updated.
 	 */
 	public async setPurgeSettings(
-		purgeSetting: SystemPurgeSetting
+		systemPurgeSetting: SystemPurgeSetting
 	): Promise<HRef> {
 		const updatedPurgeSetting = await fetchVal<HRef>(
 			`${this.#url}/purge`,
 			{
 				method: 'POST',
 				...this.#serviceConfig.getDefaultOptions(),
-				body: JSON.stringify(purgeSetting.toJSON()),
+				body: JSON.stringify(systemPurgeSetting.toJSON()),
 			},
 			this.#serviceConfig.fetch
 		)

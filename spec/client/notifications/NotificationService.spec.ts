@@ -1,15 +1,14 @@
 /*
- * Copyright (c) 2021, J2 Innovations. All Rights Reserved
+ * Copyright (c) 2022, J2 Innovations. All Rights Reserved
  */
 
 import {
-	HGrid,
 	HDict,
 	HAYSON_MIME_TYPE,
-	HSymbol,
 	HStr,
 	HRef,
 	HList,
+	HDateTime,
 } from 'haystack-core'
 import { getServiceUrl } from '../../../src/util/http'
 import { Client } from '../../../src/client/Client'
@@ -22,7 +21,7 @@ import fetchMock from 'fetch-mock'
 describe('NotificationService', function (): void {
 	const base = 'http://localhost:8080'
 
-	let notification: NotificationService
+	let notificationService: NotificationService
 
 	const mockNotification = {
 		targetApp: HStr.make('code'),
@@ -31,7 +30,7 @@ describe('NotificationService', function (): void {
 		state: 'active',
 	} as Notification
 
-	function prepareMock(verb: string, resp: HDict | HList): void {
+	function prepareMock(verb: string, resp: HDict | HList | HRef): void {
 		fetchMock.reset().mock(
 			`begin:${getServiceUrl({
 				origin: base,
@@ -44,26 +43,22 @@ describe('NotificationService', function (): void {
 			{ method: verb }
 		)
 
-		notification = new NotificationService<Notification>(
+		notificationService = new NotificationService<Notification>(
 			new Client({ base: new URL(base), project: 'demo', fetch })
 		)
 	}
 
-	// function getLastBody(): string {
-	// 	return (fetchMock.lastCall()?.[1]?.body as string) ?? ''
-	// }
+	function getLastBody(): string {
+		return (fetchMock.lastCall()?.[1]?.body as string) ?? ''
+	}
 
 	describe('#readAll()', function (): void {
-		let dicts: Notification[]
-
 		beforeEach(function (): void {
-			dicts = [mockNotification]
-
-			prepareMock('GET', HList.make(dicts))
+			prepareMock('GET', HList.make(mockNotification))
 		})
 
 		it('encodes a GET for a notification', async function (): Promise<void> {
-			await notification.readAll()
+			await notificationService.readAll()
 
 			expect(fetchMock.lastUrl()).toBe(
 				`${getServiceUrl({
@@ -74,21 +69,21 @@ describe('NotificationService', function (): void {
 		})
 
 		it('returns a notification found', async function (): Promise<void> {
-			expect(await notification.readAll()).toEqual(
-				HList.make(dicts).toArray()
+			expect(await notificationService.readAll()).toEqual(
+				HList.make(mockNotification).toArray()
 			)
 		})
 	}) // #readAll()
 
 	describe('#readAllTopics()', function (): void {
-		const topics = ['test', 'core', 'host']
+		const topics = [HStr.make('test'), HStr.make('foo'), HStr.make('bar')]
 
 		beforeEach(function (): void {
-			prepareMock('GET', HList.make(...topics))
+			prepareMock('GET', HList.make(topics))
 		})
 
 		it('encodes a GET for a notification', async function (): Promise<void> {
-			await notification.readAll()
+			await notificationService.readAll()
 
 			expect(fetchMock.lastUrl()).toBe(
 				`${getServiceUrl({
@@ -98,10 +93,133 @@ describe('NotificationService', function (): void {
 			)
 		})
 
-		it('returns a notification found', async function (): Promise<void> {
-			expect(await notification.readAll()).toEqual(
+		it('returns a notifications found', async function (): Promise<void> {
+			expect(await notificationService.readAll()).toEqual(
 				HList.make(topics).toArray()
 			)
 		})
 	}) // #readAllTopics()
+
+	describe('#readAllCurrentFiltered()', function (): void {
+		beforeEach(function (): void {
+			prepareMock('GET', HList.make(mockNotification))
+		})
+
+		it('encodes a GET for current notifications', async function (): Promise<void> {
+			await notificationService.readAllCurrentFiltered()
+
+			expect(fetchMock.lastUrl()).toBe(
+				`${getServiceUrl({
+					origin: base,
+					path: 'notifications/current',
+				})}?filter=`
+			)
+		})
+
+		it('encodes a GET for current notifications with a filter', async function (): Promise<void> {
+			await notificationService.readAllCurrentFiltered('site')
+
+			expect(fetchMock.lastUrl()).toBe(
+				`${getServiceUrl({
+					origin: base,
+					path: 'notifications/current',
+				})}?filter=site`
+			)
+		})
+
+		it('returns a notification found', async function (): Promise<void> {
+			expect(await notificationService.readAll()).toEqual(
+				HList.make(mockNotification).toArray()
+			)
+		})
+	}) // #readAllCurrentFiltered()
+
+	describe('#readByTopicFilter()', function (): void {
+		beforeEach(function (): void {
+			prepareMock('GET', HDict.make(mockNotification))
+		})
+
+		it('encodes a GET for topics', async function (): Promise<void> {
+			await notificationService.readByTopicFilter()
+
+			expect(fetchMock.lastUrl()).toBe(
+				`${getServiceUrl({
+					origin: base,
+					path: 'notifications/topics',
+				})}?filter=`
+			)
+		})
+
+		it('encodes a GET for topics with a filter', async function (): Promise<void> {
+			await notificationService.readByTopicFilter('topic')
+
+			expect(fetchMock.lastUrl()).toBe(
+				`${getServiceUrl({
+					origin: base,
+					path: 'notifications/topics',
+				})}?filter=topic`
+			)
+		})
+	}) // #readByTopicFilter()
+
+	describe('#create()', function (): void {
+		const notification = HDict.make(mockNotification)
+
+		beforeEach(function (): void {
+			prepareMock('POST', HRef.make('id'))
+		})
+
+		it('encodes a POST to create an notification', async function (): Promise<void> {
+			await notificationService.create(mockNotification)
+
+			expect(fetchMock.lastUrl()).toBe(
+				`${getServiceUrl({
+					origin: base,
+					path: 'notifications',
+				})}`
+			)
+
+			expect(getLastBody()).toEqual(JSON.stringify(notification.toJSON()))
+		})
+	}) // #create()
+
+	describe('#poll()', function (): void {
+		const date = HDateTime.make(new Date())
+
+		beforeEach(function (): void {
+			prepareMock('POST', HList.make(mockNotification))
+		})
+
+		it('encodes a POST to poll an notification', async function (): Promise<void> {
+			await notificationService.poll(date)
+
+			expect(fetchMock.lastUrl()).toBe(
+				`${getServiceUrl({
+					origin: base,
+					path: 'notifications/poll',
+				})}`
+			)
+
+			expect(getLastBody()).toEqual(JSON.stringify(date.toJSON()))
+		})
+	}) // #poll()
+
+	describe('#resolve()', function (): void {
+		const id = HRef.make('foo')
+
+		beforeEach(function (): void {
+			prepareMock('PATCH', HDict.make(id))
+		})
+
+		it('encodes a PATCH to resolve an notification', async function (): Promise<void> {
+			await notificationService.resolve('foo')
+
+			expect(fetchMock.lastUrl()).toBe(
+				`${getServiceUrl({
+					origin: base,
+					path: 'notifications/resolve',
+				})}/foo`
+			)
+		})
+	}) // #poll()
 })

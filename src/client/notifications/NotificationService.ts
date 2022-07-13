@@ -92,11 +92,16 @@ export class NotificationService<
 	 * Get all notifications in the system for the current user filtered
 	 * according to the user notification settings.
 	 *
+	 * @param filter A haystack filter
 	 * @returns The result of the read operation.
 	 */
-	public async readAllCurrentFiltered(): Promise<NotificationType[]> {
+	public async readAllCurrentFiltered(
+		filter?: string
+	): Promise<NotificationType[]> {
+		const currentFilter = filter ?? ''
+
 		const notifications = await fetchVal<HList<NotificationType>>(
-			`${this.#url}/current`,
+			`${this.#url}/current?filter=${currentFilter}`,
 			{
 				method: 'GET',
 				...this.#serviceConfig.getDefaultOptions(),
@@ -114,9 +119,11 @@ export class NotificationService<
 	 * @param filter A haystack filter
 	 * @returns The filtered notifications.
 	 */
-	public async readByTopicFilter(filter: string): Promise<NotificationType> {
+	public async readByTopicFilter(filter?: string): Promise<NotificationType> {
+		const topicFilter = filter ?? ''
+
 		const topicFilteredNotifications = await fetchVal<NotificationType>(
-			`${this.#url}/topics?filter=${filter}`,
+			`${this.#url}/topics?filter=${topicFilter}`,
 			{
 				method: 'GET',
 				...this.#serviceConfig.getDefaultOptions(),
@@ -157,7 +164,7 @@ export class NotificationService<
 	 */
 	public async poll(timeOfLastMod: HDateTime): Promise<NotificationType[]> {
 		const notifications = await fetchVal<HList<NotificationType>>(
-			`${this.#url}`,
+			`${this.#url}/poll`,
 			{
 				method: 'POST',
 				body: JSON.stringify(timeOfLastMod),

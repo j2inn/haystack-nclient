@@ -3,18 +3,15 @@
  */
 
 import { makeValue, HDateTime } from 'haystack-core'
-import { Notification, NotificationService } from './NotificationService'
+import {
+	Notification,
+	NotificationService,
+	NotificationEventHandler,
+} from './NotificationService'
 
 const NOTIFICATIONS_POLL_TIMER_MS = 5000
 
-/**
- * The subject changed event callback handler.
- */
-export interface NotificationEventHandler {
-	(notification: Notification): void
-}
-
-export class NotificationWatchService {
+export class NotificationsHandler {
 	#opened = false
 
 	/**
@@ -72,12 +69,15 @@ export class NotificationWatchService {
 	 * @param client Client - The Haystack Client
 	 */
 	private async start() {
+		const notifications = await this.#notificationService.readAll()
+		this.setLastNotificationUpdateTime(notifications)
+
 		this.#eventSource = new EventSource('/api/notifications/push', {
 			withCredentials: true,
 		})
 
 		this.#eventSource.onmessage = this.onNotificationReceived
-		this.#eventSource.onerror = this.onNotificationPushError
+		this.#eventSource.onerror = () => this.onNotificationPushError()
 	}
 
 	/**
@@ -89,21 +89,22 @@ export class NotificationWatchService {
 		const data = JSON.parse(event.data)
 		const notification = makeValue(data) as Notification
 
-		this.triggerHandlers(notification)
+		// TODO: Convert this to accept array
+		this.triggerHandlers([notification])
 	}
 
-	private triggerHandlers(notification: Notification) {
+	private triggerHandlers(notifications: Notification[]) {
 		// TODO: fire off event handlers. Ensure that if event handler throws error it
 		// doesn't stop the other event handlers from being called.
 
 		for (const handler of this.#callbacks) {
 			try {
-				handler(notification)
+				handler(notifications)
 			} catch (error) {
 				console.error(
 					`Error processing notification event`,
 					error,
-					notification
+					notifications
 				)
 			}
 		}
@@ -130,8 +131,6 @@ export class NotificationWatchService {
 	 */
 	private async initializePoll() {
 		try {
-			const notifications = await this.#notificationService.readAll()
-			this.setLastNotificationUpdateTime(notifications)
 			this.poll()
 		} catch (e) {
 			console.error('Error polling notificaitons', e)
@@ -149,9 +148,16 @@ export class NotificationWatchService {
 	private poll() {
 		this.#timerId = setTimeout(async () => {
 			try {
-				await this.#notificationService.poll(
+				const newNotifications = await this.#notificationService.poll(
 					HDateTime.make(this.#lastUpdateTime)
 				)
+
+				console.log(this.#lastUpdateTime)
+
+				if (newNotifications.length > 0) {
+					this.triggerHandlers(newNotifications)
+					this.setLastNotificationUpdateTime(newNotifications)
+				}
 			} catch (error) {
 				console.error(error)
 			} finally {

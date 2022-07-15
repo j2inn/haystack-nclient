@@ -5,7 +5,7 @@
 import { HDateTime, HDict, HList, HRef, HStr } from 'haystack-core'
 import { ClientServiceConfig } from '../ClientServiceConfig'
 import { fetchVal } from '../fetchVal'
-import { NotificationWatchService } from './NotificationWatchService'
+import { NotificationsHandler } from './NotificationsHandler'
 
 /**
  * Notification object that has a Notification backing record.
@@ -30,6 +30,13 @@ export interface Notification extends HDict {
 }
 
 /**
+ * The subject changed event callback handler.
+ */
+export interface NotificationEventHandler {
+	(notification: Notification[]): void
+}
+
+/**
  * An implementation of the FIN Notification service.
  */
 export class NotificationService<
@@ -46,12 +53,6 @@ export class NotificationService<
 	readonly #url: string
 
 	/**
-	 * The watch Notification service
-	 */
-
-	public readonly watch: NotificationWatchService
-
-	/**
 	 * Constructs a new notifications service object.
 	 *
 	 * @param serviceConfig Service configuration.
@@ -59,11 +60,22 @@ export class NotificationService<
 	public constructor(serviceConfig: ClientServiceConfig) {
 		this.#serviceConfig = serviceConfig
 		this.#url = serviceConfig.getServiceUrl('notifications')
+	}
 
-		this.watch = new NotificationWatchService({
+	test(notifications: Notification[]) {
+		console.log('hit test handler', notifications)
+	}
+
+	public async make(
+		callbacks: NotificationEventHandler[]
+	): Promise<NotificationsHandler> {
+		const notifications = new NotificationsHandler({
 			notificationService: this,
-			callbacks: [],
+			callbacks,
 		})
+
+		await notifications.open()
+		return notifications
 	}
 
 	/**

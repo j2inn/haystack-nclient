@@ -69,13 +69,13 @@ export class NotificationService<
 	public async make(
 		callbacks: NotificationEventHandler[]
 	): Promise<NotificationsHandler> {
-		const notifications = new NotificationsHandler({
+		const notificationHandler = new NotificationsHandler({
 			notificationService: this,
 			callbacks,
 		})
 
-		await notifications.open()
-		return notifications
+		await notificationHandler.open()
+		return notificationHandler
 	}
 
 	/**

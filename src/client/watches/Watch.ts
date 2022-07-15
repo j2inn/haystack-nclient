@@ -2,7 +2,15 @@
  * Copyright (c) 2020, J2 Innovations. All Rights Reserved
  */
 
-import { HGrid, HDict, HFilter, Node, HRef } from 'haystack-core'
+import {
+	HGrid,
+	HDict,
+	HFilter,
+	Node,
+	HRef,
+	valueIsKind,
+	Kind,
+} from 'haystack-core'
 import { Ids, getId, idsToArray } from '../../util/hval'
 import { Subject } from './Subject'
 import {
@@ -46,6 +54,11 @@ export class Watch {
 	 * The grid for the watch.
 	 */
 	public readonly grid: HGrid
+
+	/**
+	 * The ids of records that are currently in error and are not being watched.
+	 */
+	readonly #errors = new Set<string>()
 
 	/**
 	 * The display name for the watch.
@@ -260,12 +273,25 @@ export class Watch {
 		if (toAdd.length) {
 			await this.#subject.add(toAdd)
 
-			const event: WatchIdsEvent = {
-				type: WatchEventType.Added,
-				ids: this.addDictsToGrid(toAdd),
+			const { addedIds, errorIds } = this.addDictsToGrid(toAdd)
+
+			if (addedIds.length) {
+				const event: WatchIdsEvent = {
+					type: WatchEventType.Added,
+					ids: addedIds,
+				}
+
+				this.fire(event)
 			}
 
-			this.fire(event)
+			if (errorIds.length) {
+				const event: WatchIdsEvent = {
+					type: WatchEventType.Error,
+					ids: errorIds,
+				}
+
+				this.fire(event)
+			}
 		}
 	}
 
@@ -273,10 +299,14 @@ export class Watch {
 	 * Add new dicts to the watch's grid.
 	 *
 	 * @param toAdd The ids to add.
-	 * @returns The new ids added.
+	 * @returns The ids added and those in error.
 	 */
-	private addDictsToGrid(toAdd: string[]): string[] {
+	private addDictsToGrid(toAdd: string[]): {
+		addedIds: string[]
+		errorIds: string[]
+	} {
 		const addedIds: string[] = []
+		const errorIds: string[] = []
 		const dictsToAdd: HDict[] = []
 
 		let index = this.grid.length
@@ -284,30 +314,31 @@ export class Watch {
 		for (const id of toAdd) {
 			// Ignore duplicates.
 			if (this.#idsToGridIndexes[id] === undefined) {
-				addedIds.push(id)
+				// Always create a new copy because we want to
+				// track the changes in our local
+				// grid when updates are made.
+				const dict = this.#subject.get(id)?.newCopy()
 
-				let dict = this.#subject.get(id)
+				if (dict) {
+					// If we find the dict then we don't have an error.
+					this.#errors.delete(id)
 
-				if (!dict || dict.isEmpty()) {
-					// If a dict can't be found then this could be a timing issue where the dict
-					// isn't added to the subject yet. In this scenario, create a place holder dict.
-					dict = new HDict({ id: HRef.make(id) })
-				} else {
-					// Always create a new copy because we want to
-					// track the changes in our local
-					// grid when updates are made.
-					dict = dict.newCopy()
+					addedIds.push(id)
+					dictsToAdd.push(dict)
+					this.#idsToGridIndexes[id] = index++
+				} else if (!this.#errors.has(id)) {
+					// If the subject doesn't have a record then we can
+					// assume it's an error.
+					this.#errors.add(id)
+					errorIds.push(id)
 				}
-
-				dictsToAdd.push(dict)
-				this.#idsToGridIndexes[id] = index++
 			}
 		}
 
 		if (dictsToAdd.length) {
 			this.addToGrid(dictsToAdd)
 		}
-		return addedIds
+		return { addedIds, errorIds }
 	}
 
 	/**
@@ -324,8 +355,10 @@ export class Watch {
 	public async remove(ids: Ids): Promise<void> {
 		this.throwErrorIfClosed()
 
+		const idArray = idsToArray(ids)
+
 		// Only remove dicts that are already added.
-		const toRemove = idsToArray(ids).filter(
+		const toRemove = idArray.filter(
 			(id: string): boolean => this.#idsToGridIndexes[id] !== undefined
 		)
 
@@ -339,6 +372,9 @@ export class Watch {
 
 			this.fire(event)
 		}
+
+		// Remove any errors.
+		idArray.forEach(this.#errors.delete, this.#errors)
 	}
 
 	/**
@@ -883,5 +919,56 @@ export class Watch {
 
 		this.#subject.pollRate =
 			pollRate <= 0 ? DEFAULT_POLL_RATE_SECS : pollRate
+	}
+
+	/**
+	 * @returns The ids of the records that are in error
+	 * and can't be watched on the server.
+	 */
+	public get errors(): string[] {
+		return [...this.#errors]
+	}
+
+	/**
+	 * @returns the ids as refs of the records that in error
+	 * and can't be watched on the server.
+	 */
+	public get errorRefs(): HRef[] {
+		return this.errors.map((id) => HRef.make(id))
+	}
+
+	/**
+	 * @returns True if the watch has errors.
+	 */
+	public hasErrors(): boolean {
+		return this.#errors.size > 0
+	}
+
+	/**
+	 * Return true if the id or the record is currently in error.
+	 *
+	 * @param id The id or record to test.
+	 * @returns True if the id is in error.
+	 */
+	public hasErrorForId(id: string | HRef | HDict): boolean {
+		let error = false
+
+		let recordId = ''
+		if (typeof id === 'string') {
+			recordId = id
+		} else if (valueIsKind<HRef>(id, Kind.Ref)) {
+			recordId = id.value
+		} else if (valueIsKind<HDict>(id, Kind.Dict)) {
+			recordId = id.get<HRef>('id')?.value ?? ''
+		}
+
+		for (const errorId of this.#errors) {
+			if (errorId === recordId) {
+				error = true
+				break
+			}
+		}
+
+		return error
 	}
 }

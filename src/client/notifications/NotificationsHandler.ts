@@ -56,7 +56,7 @@ export class NotificationsHandler {
 	}
 
 	async open(): Promise<void> {
-		// TODO: throw an error if already closed????
+		this.throwErrorIfClosed()
 
 		if (!this.#opened) {
 			this.#opened = true
@@ -77,7 +77,10 @@ export class NotificationsHandler {
 		})
 
 		this.#eventSource.onmessage = this.onNotificationReceived
-		this.#eventSource.onerror = () => this.onNotificationPushError()
+		this.#eventSource.onerror = (e) => {
+			console.log('event source error', e)
+			this.onNotificationPushError()
+		}
 	}
 
 	/**
@@ -89,7 +92,6 @@ export class NotificationsHandler {
 		const data = JSON.parse(event.data)
 		const notification = makeValue(data) as Notification
 
-		// TODO: Convert this to accept array
 		this.triggerHandlers([notification])
 	}
 
@@ -117,6 +119,7 @@ export class NotificationsHandler {
 	private onNotificationPushError() {
 		try {
 			this.#eventSource?.close()
+			console.log('event source closed')
 		} catch {
 			this.#eventSource = undefined
 		}
@@ -138,11 +141,13 @@ export class NotificationsHandler {
 	}
 
 	private setLastNotificationUpdateTime(notifications: Notification[]) {
-		this.#lastUpdateTime =
-			notifications
-				.map((notification) => notification.lastUpdateTime?.date)
-				.sort()
-				.pop() ?? new Date()
+		// this.#lastUpdateTime =
+		// 	notifications
+		// 		.map((notification) => notification.lastUpdateTime?.date)
+		// 		.sort()
+		// 		.pop() ?? new Date()
+
+		this.#lastUpdateTime = new Date()
 	}
 
 	private poll() {
@@ -152,7 +157,7 @@ export class NotificationsHandler {
 					HDateTime.make(this.#lastUpdateTime)
 				)
 
-				console.log(this.#lastUpdateTime)
+				// console.log(this.#lastUpdateTime)
 
 				if (newNotifications.length > 0) {
 					this.triggerHandlers(newNotifications)
@@ -182,5 +187,14 @@ export class NotificationsHandler {
 		}
 
 		this.#callbacks = []
+	}
+
+	/**
+	 * @throws An error if the watch is closed.
+	 */
+	private throwErrorIfClosed(): void {
+		if (this.#closed) {
+			throw new Error('Watch is closed')
+		}
 	}
 }

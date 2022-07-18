@@ -11,6 +11,9 @@ import { NotificationsHandler } from './NotificationsHandler'
  * Notification object that has a Notification backing record.
  */
 export interface Notification extends HDict {
+	/** The id of the notification record */
+	id?: HRef
+
 	/** The target application this notification is intended for  */
 	targetApp: HStr
 
@@ -60,10 +63,6 @@ export class NotificationService<
 	public constructor(serviceConfig: ClientServiceConfig) {
 		this.#serviceConfig = serviceConfig
 		this.#url = serviceConfig.getServiceUrl('notifications')
-	}
-
-	test(notifications: Notification[]) {
-		console.log('hit test handler', notifications)
 	}
 
 	public async make(

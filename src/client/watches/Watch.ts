@@ -362,6 +362,9 @@ export class Watch {
 			(id: string): boolean => this.#idsToGridIndexes[id] !== undefined
 		)
 
+		// Remove any errors.
+		idArray.forEach(this.#errors.delete, this.#errors)
+
 		if (toRemove.length) {
 			await this.#subject.remove(toRemove)
 
@@ -372,9 +375,6 @@ export class Watch {
 
 			this.fire(event)
 		}
-
-		// Remove any errors.
-		idArray.forEach(this.#errors.delete, this.#errors)
 	}
 
 	/**

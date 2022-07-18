@@ -2,7 +2,15 @@
  * Copyright (c) 2020, J2 Innovations. All Rights Reserved
  */
 
-import { HGrid, HRef, HDict, HMarker, HStr, HNamespace } from 'haystack-core'
+import {
+	HGrid,
+	HRef,
+	HDict,
+	HMarker,
+	HStr,
+	HNamespace,
+	HVal,
+} from 'haystack-core'
 import {
 	getHaystackServiceUrl,
 	getHostServiceUrl,
@@ -18,6 +26,10 @@ import {
 import { DEFAULT_LEASE_TIME } from '../../../src/client/watches/WatchApis'
 import { getOpUrl } from '../../../src/util/http'
 
+function toJson(val: HVal): unknown {
+	return val.toJSON()
+}
+
 describe('WatchOpApis', function (): void {
 	const base = 'http://localhost:8080'
 
@@ -26,7 +38,11 @@ describe('WatchOpApis', function (): void {
 	let watchOps: WatchOpApis
 
 	function prepareClient(): void {
-		client = new Client({ base: new URL(base), project: 'demo', fetch })
+		client = new Client({
+			base: new URL(base),
+			project: 'demo',
+			fetch,
+		})
 
 		watchOps = new WatchOpApis({
 			getOpUrl: (op: string): string =>
@@ -90,7 +106,7 @@ describe('WatchOpApis', function (): void {
 		it('invokes a watch subscription and gets back a list of records', async function (): Promise<void> {
 			const { records } = await watchOps.open(['id'], 'watchDis')
 
-			expect(records).toEqual(grid.getRows())
+			expect(records.map(toJson)).toEqual(grid.getRows().map(toJson))
 		})
 
 		it('invokes a watch subscription and gets back an id', async function (): Promise<void> {
@@ -129,7 +145,7 @@ describe('WatchOpApis', function (): void {
 
 		it('invokes a watch subscription', async function (): Promise<void> {
 			const records = await watchOps.add('watchId', ['id'])
-			expect(records).toEqual(grid.getRows())
+			expect(records.map(toJson)).toEqual(grid.getRows().map(toJson))
 		})
 
 		it('encodes an array of ids', async function (): Promise<void> {
@@ -149,7 +165,7 @@ describe('WatchOpApis', function (): void {
 
 		it('invokes a watch poll', async function (): Promise<void> {
 			const records = await watchOps.poll('id')
-			expect(records).toEqual(grid.getRows())
+			expect(records.map(toJson)).toEqual(grid.getRows().map(toJson))
 		})
 
 		it('encodes a watchId into a grid', async function (): Promise<void> {
@@ -176,7 +192,7 @@ describe('WatchOpApis', function (): void {
 
 		it('invokes a watch refresh', async function (): Promise<void> {
 			const records = await watchOps.refresh('id')
-			expect(records).toEqual(grid.getRows())
+			expect(records.map(toJson)).toEqual(grid.getRows().map(toJson))
 		})
 
 		it('encodes a watchId into a grid', async function (): Promise<void> {

@@ -37,7 +37,8 @@ describe('ApiSubject', function (): void {
 	const project = 'demo'
 
 	beforeEach(function (): void {
-		jest.useFakeTimers('legacy')
+		jest.useFakeTimers()
+		jest.spyOn(global, 'setTimeout')
 
 		serviceConfig = {
 			getOpUrl: (op: string): string =>
@@ -76,7 +77,7 @@ describe('ApiSubject', function (): void {
 		})
 
 		firstGrid = HGrid.make({
-			meta: HDict.make({ watchId: HRef.make('watchId') }),
+			meta: HDict.make({ watchId: HStr.make('watchId') }),
 			rows: [firstDict],
 		})
 
@@ -86,12 +87,12 @@ describe('ApiSubject', function (): void {
 		})
 
 		secondGrid = HGrid.make({
-			meta: HDict.make({ watchId: HRef.make('watchId') }),
+			meta: HDict.make({ watchId: HStr.make('watchId') }),
 			rows: [secondDict],
 		})
 
 		combinedGrid = HGrid.make({
-			meta: HDict.make({ watchId: HRef.make('watchId') }),
+			meta: HDict.make({ watchId: HStr.make('watchId') }),
 			rows: [firstDict, secondDict],
 		})
 	})
@@ -145,7 +146,7 @@ describe('ApiSubject', function (): void {
 			})
 
 			it("updates the subject's grid", function (): void {
-				expect(subject.grid).toEqual(firstGrid)
+				expect(subject.grid.toJSON()).toEqual(firstGrid.toJSON())
 			})
 
 			it('starts the poll timer', function (): void {
@@ -163,7 +164,7 @@ describe('ApiSubject', function (): void {
 			})
 
 			it("adds to the subject's grid", async function (): Promise<void> {
-				expect(subject.grid).toEqual(combinedGrid)
+				expect(subject.grid.toJSON()).toEqual(combinedGrid.toJSON())
 			})
 
 			it('does not invoke the add op for already added records', async function (): Promise<void> {

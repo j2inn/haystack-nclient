@@ -17,7 +17,7 @@
 		"watch": "nodemon --ext ts --ignore dist/ --ignore build/ --exec \"npm run lint && npm run test && npx tsc --project ./tsconfig.build.json\"",
 		"lint": "eslint --ext .ts .",
 		"format": "prettier-eslint \"./**/*.ts\" --write",
-		"test": "npm run lint && jest --detectOpenHandles",
+		"test": "npm run lint && jest",
 		"coverage": "npm run lint && jest --coverage",
 		"doc": "npx rimraf ./docs && typedoc ./src --excludePrivate",
 		"build": "rimraf ./dist && rimraf ./build && tsc --project ./tsconfig.build.json && npx rollup --file=dist/index.es.js -- build/index.js && npx rollup --format=cjs --file=dist/index.js -- build/index.js && npx copyfiles -u 1 \"./build/**/*.d.ts\" ./dist",

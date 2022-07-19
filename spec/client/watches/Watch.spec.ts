@@ -46,7 +46,12 @@ describe('Watch', function (): void {
 	}
 
 	async function addToWatch(): Promise<void> {
-		asMock(subject.get).mockReturnValue(fooDict)
+		subject.get = jest.fn().mockReturnValue(fooDict)
+		await watch.add('foo')
+	}
+
+	async function addErrorToWatch(): Promise<void> {
+		subject.get = jest.fn().mockReturnValue(undefined)
 		await watch.add('foo')
 	}
 
@@ -107,7 +112,7 @@ describe('Watch', function (): void {
 		let openedWatch: Watch
 
 		beforeEach(async function (): Promise<void> {
-			asMock(subject.get).mockReturnValue(fooDict)
+			subject.get = jest.fn().mockReturnValue(fooDict)
 
 			openedWatch = await Watch.open({
 				subject,
@@ -156,6 +161,14 @@ describe('Watch', function (): void {
 			)
 		})
 
+		it('does not fire an error event when there are no errors', async function (): Promise<void> {
+			const cb = jest.fn()
+			watch.on(WatchEventType.Error, cb)
+			await addToWatch()
+
+			expect(cb).not.toHaveBeenCalled()
+		})
+
 		it('does not fire an add event for record that is already added', async function (): Promise<void> {
 			await addToWatch()
 
@@ -186,6 +199,28 @@ describe('Watch', function (): void {
 		it('adds to the watch list', async function (): Promise<void> {
 			await addToWatch()
 			expect(Watch.watches[0]).toBe(watch)
+		})
+
+		it('registers an error for an invalid id', async function (): Promise<void> {
+			await addErrorToWatch()
+			expect(watch.hasErrors()).toBe(true)
+		})
+
+		it('fires an error event for an invalid id', async function (): Promise<void> {
+			subject.get = jest.fn().mockReturnValue(undefined)
+
+			const cb = jest.fn()
+			watch.on(WatchEventType.Error, cb)
+
+			await watch.add('foo')
+
+			expect(cb).toHaveBeenCalledWith(
+				{
+					type: WatchEventType.Error,
+					ids: ['foo'],
+				},
+				watch
+			)
 		})
 	}) // #add()
 
@@ -240,6 +275,13 @@ describe('Watch', function (): void {
 			await addToWatch()
 			await removeFromWatch()
 			expect(watch.grid.isEmpty()).toBe(true)
+		})
+
+		it('clears an associated error when an invalid id is removed', async function (): Promise<void> {
+			await addErrorToWatch()
+			await removeFromWatch()
+
+			expect(watch.hasErrors()).toBe(false)
 		})
 	}) // #remove()
 
@@ -701,5 +743,71 @@ describe('Watch', function (): void {
 				expect(subject.off).toHaveBeenCalled()
 			})
 		}) // #clearCallbacks()
+
+		describe('#errors', function (): void {
+			it('returns an empty array when there are no errors', function (): void {
+				expect(watch.errors).toEqual([])
+			})
+
+			it('returns an id when in error', async function (): Promise<void> {
+				await addErrorToWatch()
+				expect(watch.errors).toEqual(['foo'])
+			})
+		}) // #errors
+
+		describe('#errorRefs', function (): void {
+			it('returns an empty array when there are no errors', function (): void {
+				expect(watch.errorRefs).toEqual([])
+			})
+
+			it('returns an id when in error', async function (): Promise<void> {
+				await addErrorToWatch()
+				expect(watch.errorRefs).toEqual([HRef.make('foo')])
+			})
+		}) // #errorRefs
+
+		describe('#hasErrors()', function (): void {
+			it('returns false when there are no errors', function (): void {
+				expect(watch.hasErrors()).toBe(false)
+			})
+
+			it('returns true when there is an error', async function (): Promise<void> {
+				await addErrorToWatch()
+				expect(watch.hasErrors()).toBe(true)
+			})
+		}) // #hasErrors()
+
+		describe('#hasErrorForId()', function (): void {
+			it('returns false when there is no error for an id string', function (): void {
+				expect(watch.hasErrorForId('foo')).toBe(false)
+			})
+
+			it('returns false when there is no error for an id ref', function (): void {
+				expect(watch.hasErrorForId(HRef.make('foo'))).toBe(false)
+			})
+
+			it('returns false when there is no error for an id dict', function (): void {
+				expect(
+					watch.hasErrorForId(new HDict({ id: HRef.make('foo') }))
+				).toBe(false)
+			})
+
+			it('returns true when there is an error for an id string', async function (): Promise<void> {
+				await addErrorToWatch()
+				expect(watch.hasErrorForId('foo')).toBe(true)
+			})
+
+			it('returns true when there is an error for an id ref', async function (): Promise<void> {
+				await addErrorToWatch()
+				expect(watch.hasErrorForId(HRef.make('foo'))).toBe(true)
+			})
+
+			it('returns true when there is an error for an id dict', async function (): Promise<void> {
+				await addErrorToWatch()
+				expect(
+					watch.hasErrorForId(new HDict({ id: HRef.make('foo') }))
+				).toBe(true)
+			})
+		}) // #hasErrorForId()
 	}) // events
 })

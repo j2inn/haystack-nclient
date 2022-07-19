@@ -54,7 +54,7 @@ Unless you're building your own APIs, it's recommended to use the Client APIs. T
 
 ### Construction
 
-Please note, since a Client instance contains state (i.e. maintains a list of watches), always cache and reuse a Client instance. Do *not* create a new Client instance everytime you use it!
+Please note, since a Client instance contains state (i.e. maintains a list of watches), always cache and reuse a Client instance. Do _not_ create a new Client instance everytime you use it!
 
 If you're using [haystack-react](hhttps://github.com/j2inn/haystack-react), the Client is created from a React Context. Use a hook called `useClient()` to get access to the Client.
 
@@ -66,13 +66,13 @@ If you need to create your own Client object...
 // Create a client object using the web browser's current URI.
 // The project name will be parsed from the URI.
 const client = new Client({
-	base: new URL(window.location.href)
+	base: new URL(window.location.href),
 })
 
 // Explicitly define what project to use...
 const clientWithProject = new Client({
 	base: new URL(window.location.href),
-	project: 'demo'
+	project: 'demo',
 })
 ```
 
@@ -87,7 +87,7 @@ Watches are used to watch for live events on records...
 const grid = await client.ops.read('point and navName == "SAT"')
 
 // Create a watch and give it a display name.
-const watch = client.ops.watch.make('All SAT points', grid)
+const watch = await client.ops.watch.make('All SAT points', grid)
 
 // Add event handlers. We're only interested in 'curVal' changes.
 watch.changed({

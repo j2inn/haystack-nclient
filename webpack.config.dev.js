@@ -9,7 +9,6 @@
 
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const CopyWebpackPlugin = require('copy-webpack-plugin')
 
 const finURL = `http://${process.env.FIN_HOST || 'localhost:8080'}`
 
@@ -33,7 +32,6 @@ module.exports = {
 		extensions: ['.tsx', '.ts', '.js'],
 	},
 	output: {
-		publicPath: './',
 		path: path.resolve(__dirname, 'dist'),
 		filename: 'bundle.js',
 	},
@@ -43,31 +41,19 @@ module.exports = {
 		minimize: false,
 	},
 	plugins: [
-		new CopyWebpackPlugin(
-			{
-				patterns: [
-					{
-						from: 'assets/*.zinc',
-						to: 'assets/',
-						force: true,
-					},
-				],
-			},
-			{ logLevel: 'debug' }
-		),
 		new HtmlWebpackPlugin({
-			template: './assets/devServer.html',
+			template: './assets/index.html',
 		}),
 	],
 	devServer: {
 		hot: true,
-		inline: true,
 		historyApiFallback: true,
 		host: '0.0.0.0',
-		disableHostCheck: true,
-		publicPath: '/',
+		allowedHosts: 'all',
 		port: 8081,
-		contentBase: path.resolve(__dirname, 'dist'),
+		static: {
+			directory: path.resolve(__dirname, 'dist'),
+		},
 		proxy: {
 			'/auth/*': finURL,
 			'/api/*': finURL,

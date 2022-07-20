@@ -307,4 +307,39 @@ export class RecordService {
 			this.#serviceConfig.fetch
 		)
 	}
+
+	/**
+	 * Duplicate an existing record in the database.
+	 *
+	 * @param options The duplicate options.
+	 * @param options.id The id of the record to duplicate.
+	 * @param options.count The number of times to duplicate a record.
+	 * @param options.includeChildren Whether to also duplicate any contained child records.
+	 * @returns A list of top level record ids that were duplicated. This does not include
+	 * any child record ids that were duplicated.
+	 */
+	public async duplicate({
+		id,
+		count,
+		includeChildren,
+	}: {
+		id: string | HRef
+		count: number
+		includeChildren: boolean
+	}): Promise<HList<HRef>> {
+		return fetchVal<HList<HRef>>(
+			`${this.#url}/${HRef.make(id).value}/duplicate`,
+			{
+				...this.#serviceConfig.getDefaultOptions(),
+				method: 'POST',
+				body: JSON.stringify(
+					new HDict({
+						count,
+						includeChildren,
+					})
+				),
+			},
+			this.#serviceConfig.fetch
+		)
+	}
 }

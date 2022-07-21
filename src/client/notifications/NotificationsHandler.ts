@@ -55,6 +55,9 @@ export class NotificationsHandler {
 		this.#callbacks = callbacks
 	}
 
+	/**
+	 * Opens the connection(s) to receive notifications
+	 */
 	async open(): Promise<void> {
 		this.throwErrorIfClosed()
 
@@ -78,7 +81,7 @@ export class NotificationsHandler {
 
 		this.#eventSource.onmessage = this.onNotificationReceived
 		this.#eventSource.onerror = (e) => {
-			console.log('event source error', e)
+			console.error('event source error', e)
 			this.onNotificationPushError()
 		}
 	}
@@ -92,13 +95,14 @@ export class NotificationsHandler {
 		const data = JSON.parse(event.data)
 		const notification = makeValue(data) as Notification
 
-		this.triggerHandlers([notification])
+		this.callNotificationHandlers([notification])
 	}
 
-	private triggerHandlers(notifications: Notification[]) {
-		// TODO: fire off event handlers. Ensure that if event handler throws error it
-		// doesn't stop the other event handlers from being called.
-
+	/**
+	 * Calls the callbacks when new notification(s) received
+	 * @param notifications Notifications[]
+	 */
+	private callNotificationHandlers(notifications: Notification[]) {
 		for (const handler of this.#callbacks) {
 			try {
 				handler(notifications)
@@ -157,10 +161,8 @@ export class NotificationsHandler {
 					HDateTime.make(this.#lastUpdateTime)
 				)
 
-				// console.log(this.#lastUpdateTime)
-
 				if (newNotifications.length > 0) {
-					this.triggerHandlers(newNotifications)
+					this.callNotificationHandlers(newNotifications)
 					this.setLastNotificationUpdateTime(newNotifications)
 				}
 			} catch (error) {
@@ -172,8 +174,6 @@ export class NotificationsHandler {
 			}
 		}, NOTIFICATIONS_POLL_TIMER_MS)
 	}
-
-	// TODO: record some statistics about notifications.
 
 	/**
 	 * Close EventSource API connection and stop API Polling

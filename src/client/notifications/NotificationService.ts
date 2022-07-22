@@ -198,7 +198,7 @@ export class NotificationService<
 			this.#serviceConfig.fetch
 		)
 
-		return notifications.toArray()
+		return notifications.toArray().sort()
 	}
 
 	/**

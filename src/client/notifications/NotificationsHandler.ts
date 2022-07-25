@@ -146,32 +146,25 @@ export class NotificationsHandler {
 	}
 
 	private setLastNotificationUpdateTime(notifications: Notification[]) {
-		debugger
 		if (notifications.length === 0) return
 
-		const mostRecentNotification = notifications.pop() as Notification
-		if (
-			mostRecentNotification?.lastUpdateTime?.date !==
-			this.#lastUpdateTime
-		) {
-			this.#lastUpdateTime =
-				mostRecentNotification?.lastUpdateTime?.date ?? new Date()
-		} else {
-			this.#lastUpdateTime = new Date()
-		}
+		this.#lastUpdateTime =
+			notifications
+				.map((notification) => {
+					return notification?.lastUpdateTime?.date ?? new Date()
+				})
+				.sort()
+				.pop() ?? new Date()
 	}
 
 	private poll() {
-		console.log('poll(): called')
 		this.#timerId = setTimeout(async () => {
 			try {
 				const newNotifications = await this.#notificationService.poll(
-					HDateTime.make(this.#lastUpdateTime)
+					HDateTime.make(
+						new Date(this.#lastUpdateTime.getTime() + 100)
+					)
 				)
-
-				console.log('pollAPI: called')
-
-				console.log(this.#lastUpdateTime, newNotifications)
 
 				if (newNotifications.length > 0) {
 					this.callNotificationHandlers(newNotifications)

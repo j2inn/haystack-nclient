@@ -30,6 +30,8 @@ export interface Notification extends HDict {
 	message?: HStr
 
 	lastUpdateTime?: HDateTime
+
+	creation?: HDateTime
 }
 
 /**
@@ -198,7 +200,7 @@ export class NotificationService<
 			this.#serviceConfig.fetch
 		)
 
-		return notifications.toArray().sort()
+		return notifications.toArray()
 	}
 
 	/**

@@ -10,6 +10,7 @@ import {
 	getFinCsrfToken,
 	CsrfError,
 	isCsrfError,
+	CsrfRequestInit,
 } from '../../src/client/finCsrfFetch'
 import {
 	FIN_AUTH_PATH,
@@ -24,6 +25,9 @@ describe('finCsrfFetch', function (): void {
 	const ABS_URL = 'https://www.foobar.com'
 	const ABS_READ = `${ABS_URL}/read`
 	const ABS_FIN_AUTH_PATH = `${ABS_URL}${FIN_AUTH_PATH}`
+
+	const ABS_ALT_AUTH_PATH = `${ABS_URL}/altAuthPath`
+	const ALT_AUTH_HEADER = 'alt-attest-key'
 
 	let respGrid: HGrid
 	let zinc: string
@@ -55,13 +59,30 @@ describe('finCsrfFetch', function (): void {
 
 		authResponse.headers[FIN_AUTH_KEY] = 'aKey'
 
+		const altAuthResponse: { headers: { [prop: string]: string } } = {
+			headers: {
+				[ALT_AUTH_HEADER]: 'altKey',
+			},
+		}
+
 		zinc = respGrid.toZinc()
 		fetchMock
 			.reset()
-			.post(FIN_AUTH_PATH, (): unknown => authResponse)
+			.post(FIN_AUTH_PATH, (request, options): unknown => {
+				if (options.headers && SKYARC_ATTEST_KEY in options.headers) {
+					throw new Error('Attest key exists in attest request')
+				}
+				return authResponse
+			})
 			.get(READ, zinc)
 			.post(ABS_FIN_AUTH_PATH, (): unknown => authResponse)
 			.get(ABS_READ, zinc)
+			.post(ABS_ALT_AUTH_PATH, (request, options): unknown => {
+				if (options.headers && ALT_AUTH_HEADER in options.headers) {
+					throw new Error('Attest key exists in attest request')
+				}
+				return altAuthResponse
+			})
 	}
 
 	beforeEach(function (): void {
@@ -93,6 +114,25 @@ describe('finCsrfFetch', function (): void {
 		it('makes one call for the CSRF token', async function (): Promise<void> {
 			await finCsrfFetch(READ)
 			expect(fetchMock.calls(FIN_AUTH_PATH).length).toBe(1)
+		})
+
+		it('fetches a CSRF token via alt configuration', async function (): Promise<void> {
+			await finCsrfFetch(READ, {
+				attestHeaderName: ALT_AUTH_HEADER,
+				attestRequestUri: ABS_ALT_AUTH_PATH,
+				attestResponseHeaderName: ALT_AUTH_HEADER,
+			} as CsrfRequestInit)
+			expect(fetchMock.called(ABS_ALT_AUTH_PATH)).toBe(true)
+		})
+
+		it('makes one call for the CSRF token via alt configuration', async function (): Promise<void> {
+			await finCsrfFetch(READ, {
+				attestHeaderName: ALT_AUTH_HEADER,
+				attestRequestUri: ABS_ALT_AUTH_PATH,
+				attestResponseHeaderName: ALT_AUTH_HEADER,
+			} as CsrfRequestInit)
+
+			expect(fetchMock.calls(ABS_ALT_AUTH_PATH).length).toBe(1)
 		})
 
 		it('throws an error if the CSRF token cannot be retreived', async function (): Promise<void> {

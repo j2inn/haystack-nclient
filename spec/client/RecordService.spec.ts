@@ -2,7 +2,14 @@
  * Copyright (c) 2020, J2 Innovations. All Rights Reserved
  */
 
-import { HGrid, HDict, HAYSON_MIME_TYPE, HSymbol } from 'haystack-core'
+import {
+	HGrid,
+	HDict,
+	HAYSON_MIME_TYPE,
+	HSymbol,
+	HRef,
+	HList,
+} from 'haystack-core'
 import { getHaystackServiceUrl } from '../../src/util/http'
 import { Client } from '../../src/client/Client'
 import { RecordService } from '../../src/client/RecordService'
@@ -13,7 +20,7 @@ describe('RecordService', function (): void {
 
 	let record: RecordService
 
-	function prepareMock(verb: string, resp: HDict | HGrid): void {
+	function prepareMock(verb: string, resp: HDict | HGrid | HList): void {
 		fetchMock.reset().mock(
 			`begin:${getHaystackServiceUrl({
 				origin: base,
@@ -372,4 +379,44 @@ describe('RecordService', function (): void {
 			)
 		})
 	}) // #update()
+
+	describe('#duplicate()', function (): void {
+		let list: HList<HRef>
+
+		beforeEach(function (): void {
+			list = HList.make([HRef.make('id')])
+			prepareMock('POST', list)
+		})
+
+		async function duplicate(): Promise<HList<HRef>> {
+			return record.duplicate({
+				id: 'id',
+				count: 1,
+				includeChildren: true,
+			})
+		}
+
+		it('encodes a POST to duplicate a record', async function (): Promise<void> {
+			await duplicate()
+
+			expect(fetchMock.lastUrl()).toBe(
+				`${getHaystackServiceUrl({
+					origin: base,
+					pathPrefix: '',
+					project: 'demo',
+					path: 'records',
+				})}/id/duplicate`
+			)
+
+			const body = new HDict({
+				count: 1,
+				includeChildren: true,
+			})
+			expect(getLastBody()).toEqual(JSON.stringify(body))
+		})
+
+		it('returns the duplicate record ids', async function (): Promise<void> {
+			expect(await duplicate()).toEqual(list)
+		})
+	}) // #duplicate()
 })

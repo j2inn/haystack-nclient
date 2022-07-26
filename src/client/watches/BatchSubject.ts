@@ -156,30 +156,34 @@ export class BatchSubject implements Subject {
 	 */
 	private startBatchTimer(): void {
 		this.#batchTimer = setTimeout(async (): Promise<void> => {
-			const batchedOps = this.#batchQueue
-			this.#batchQueue = []
+			try {
+				const batchedOps = this.#batchQueue
+				this.#batchQueue = []
 
-			for (const batchedOp of batchedOps) {
-				switch (batchedOp.op) {
-					case OpType.add:
-						await this.#subject
-							.add(batchedOp.ids)
-							.then(
-								batchedOp.deferred.resolve,
-								batchedOp.deferred.reject
-							)
-						break
-					case OpType.remove:
-						await this.#subject
-							.remove(batchedOp.ids)
-							.then(
-								batchedOp.deferred.resolve,
-								batchedOp.deferred.reject
-							)
-						break
-					default:
-						console.error(`Invalid op: ${batchedOp.op}`)
+				for (const batchedOp of batchedOps) {
+					switch (batchedOp.op) {
+						case OpType.add:
+							await this.#subject
+								.add(batchedOp.ids)
+								.then(
+									batchedOp.deferred.resolve,
+									batchedOp.deferred.reject
+								)
+							break
+						case OpType.remove:
+							await this.#subject
+								.remove(batchedOp.ids)
+								.then(
+									batchedOp.deferred.resolve,
+									batchedOp.deferred.reject
+								)
+							break
+						default:
+							console.error(`Invalid op: ${batchedOp.op}`)
+					}
 				}
+			} catch (error) {
+				console.error('Watch batch subject error', error)
 			}
 		}, BATCH_WINDOW_MS)
 	}

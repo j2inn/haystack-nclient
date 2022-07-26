@@ -1,6 +1,6 @@
 {
 	"compilerOptions": {
-		"target": "ES2017",
+		"target": "ES2021",
 		"module": "ESNext",
 		"esModuleInterop": true,
 		"allowSyntheticDefaultImports": true,
@@ -23,7 +23,8 @@
 		"experimentalDecorators": true,
 		"paths": {
 			"*": ["node_modules/*", "src/types/*"]
-		}
+		},
+		"skipLibCheck": true
 	},
 	"files": ["src/index.ts"],
 	"include": ["spec/**/*", "examples/**/*"]

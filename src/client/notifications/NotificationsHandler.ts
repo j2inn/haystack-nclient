@@ -2,7 +2,7 @@
  * Copyright (c) 2022, J2 Innovations. All Rights Reserved
  */
 
-import { makeValue, HDateTime } from 'haystack-core'
+import { makeValue } from 'haystack-core'
 import {
 	Notification,
 	NotificationService,
@@ -32,7 +32,7 @@ export class NotificationsHandler {
 	/**
 	 * Time of last notification update.
 	 */
-	#lastUpdateTime = new Date()
+	#lastUpdatedNotification: Notification | undefined
 
 	/**
 	 * The notifications service.
@@ -148,29 +148,38 @@ export class NotificationsHandler {
 	private setLastNotificationUpdateTime(notifications: Notification[]) {
 		if (notifications.length === 0) return
 
-		this.#lastUpdateTime =
-			notifications
-				.map((notification) => {
-					return notification?.lastUpdateTime?.date ?? new Date()
-				})
-				.sort()
-				.pop() ?? new Date()
+		this.#lastUpdatedNotification = notifications
+			.sort((a, b) => {
+				const ats = a?.lastUpdateTime?.iso as string
+				const bts = b?.lastUpdateTime?.iso as string
+
+				if (ats < bts) {
+					return -1
+				}
+				if (ats > bts) {
+					return 1
+				}
+
+				return 0
+			})
+			.pop()
 	}
 
 	private poll() {
 		this.#timerId = setTimeout(async () => {
 			try {
-				const newNotifications = await this.#notificationService.poll(
-					HDateTime.make(
-						new Date(this.#lastUpdateTime.getTime() + 100)
-					)
-				)
+				if (this.#lastUpdatedNotification?.lastUpdateTime) {
+					const newNotifications =
+						await this.#notificationService.poll(
+							this.#lastUpdatedNotification?.lastUpdateTime
+						)
 
-				if (newNotifications.length > 0) {
-					this.callNotificationHandlers(newNotifications)
+					if (newNotifications.length > 0) {
+						this.callNotificationHandlers(newNotifications)
+					}
+
+					this.setLastNotificationUpdateTime(newNotifications)
 				}
-
-				this.setLastNotificationUpdateTime(newNotifications)
 			} catch (error) {
 				console.error(error)
 			} finally {

@@ -24,7 +24,7 @@ export interface Notification extends HDict {
 	kind: 'alarm' | 'info' | 'warning' | 'success' | 'error'
 
 	/** The current notification state */
-	state: 'active' | 'resolved' | 'dismissed'
+	state: HStr
 
 	/** A message to accompany this notification that is direct to the end user */
 	message?: HStr
@@ -215,6 +215,7 @@ export class NotificationService<
 			{
 				method: 'PATCH',
 				...this.#serviceConfig.getDefaultOptions(),
+				body: JSON.stringify(id),
 			},
 			this.#serviceConfig.fetch
 		)
@@ -234,6 +235,7 @@ export class NotificationService<
 			{
 				method: 'PATCH',
 				...this.#serviceConfig.getDefaultOptions(),
+				body: JSON.stringify(id),
 			},
 			this.#serviceConfig.fetch
 		)

@@ -24,7 +24,7 @@ export interface Notification extends HDict {
 	kind: 'alarm' | 'info' | 'warning' | 'success' | 'error'
 
 	/** The current notification state */
-	state: 'active' | 'resolved'
+	state: 'active' | 'resolved' | 'dismissed'
 
 	/** A message to accompany this notification that is direct to the end user */
 	message?: HStr
@@ -220,5 +220,24 @@ export class NotificationService<
 		)
 
 		return resolvedNotification
+	}
+
+	/**
+	 * Marks the state of notification state as dismissed.
+	 *
+	 * @param id The notification ID to dismiss
+	 * @returns The notification object
+	 */
+	public async dismiss(id: string | HRef): Promise<NotificationType> {
+		const dismissedNotification = await fetchVal<NotificationType>(
+			`${this.#url}/dismiss/${HRef.make(id).value}`,
+			{
+				method: 'PATCH',
+				...this.#serviceConfig.getDefaultOptions(),
+			},
+			this.#serviceConfig.fetch
+		)
+
+		return dismissedNotification
 	}
 }

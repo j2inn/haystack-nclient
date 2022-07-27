@@ -27,7 +27,7 @@ describe('NotificationService', function (): void {
 		targetApp: HStr.make('code'),
 		topic: HStr.make('topic'),
 		kind: 'alarm',
-		state: 'active',
+		state: HStr.make('active'),
 	} as Notification
 
 	function prepareMock(verb: string, resp: HDict | HList | HRef): void {

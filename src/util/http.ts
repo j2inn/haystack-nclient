@@ -9,6 +9,25 @@ import { HList, HRef, Kind, valueIsKind } from 'haystack-core'
  */
 
 /**
+ * Returns the URL for an general API.
+ *
+ * @param params.origin The origin.
+ * @param params.path The path prefix to use.
+ * @returns A URL.
+ */
+export const getServiceUrl: getServiceUrlCallback = ({
+	origin,
+	path,
+}): string => `${origin}/api/${path}`
+
+/**
+ * The functional interface for getting the origin API url.
+ */
+export interface getServiceUrlCallback {
+	({ origin, path }: { origin: string; path: string }): string
+}
+
+/**
  * The functional interface for getting the op url.
  */
 export interface getOpUrlCallback {

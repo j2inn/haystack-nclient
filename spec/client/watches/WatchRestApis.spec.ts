@@ -14,6 +14,7 @@ import {
 import {
 	getHaystackServiceUrl,
 	getHostServiceUrl,
+	getServiceUrl,
 } from '../../../src/util/http'
 import { Client } from '../../../src/client/Client'
 import fetchMock from 'fetch-mock'
@@ -31,6 +32,11 @@ describe('WatchRestApis', function (): void {
 		client = new Client({ base: new URL(base), project: 'demo', fetch })
 
 		apis = new WatchRestApis({
+			getServiceUrl: (path: string) =>
+				getServiceUrl({
+					origin,
+					path,
+				}),
 			getOpUrl: (op: string): string =>
 				getOpUrl({
 					origin: client.origin,

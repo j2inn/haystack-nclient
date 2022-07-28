@@ -12,6 +12,8 @@ import {
 	getOpUrlCallback,
 	getHaystackServiceUrlCallback,
 	getHostServiceUrlCallback,
+	getServiceUrl as defaultgetServiceUrl,
+	getServiceUrlCallback,
 } from '../util/http'
 import { RecordService } from './RecordService'
 import { ClientServiceConfig } from './ClientServiceConfig'
@@ -26,6 +28,8 @@ import { UserService } from './UserService'
 import { ProjectService } from './ProjectService'
 import { GroupsService } from './groups/GroupService'
 import { RolesService } from './roles/RolesService'
+import { NotificationService } from './notifications/NotificationService'
+import { NotificationSettingsService } from './notifications/NotificationSettingService'
 
 /**
  * A high level Haystack Client
@@ -35,6 +39,12 @@ export class Client implements ClientServiceConfig {
 	 * The origin of the client.
 	 */
 	public readonly origin: string
+
+	/**
+	 * Fetches the API url
+	 */
+
+	readonly #getServiceUrl: getServiceUrlCallback
 
 	/**
 	 * Fetches the Ops URL.
@@ -112,6 +122,16 @@ export class Client implements ClientServiceConfig {
 	public readonly proj: ProjectService
 
 	/**
+	 * The notifications service.
+	 */
+	public readonly notifications: NotificationService
+
+	/**
+	 * The notifications settings service.
+	 */
+	public readonly notificationsSettings: NotificationSettingsService
+
+	/**
 	 * The `fetch` options.
 	 */
 	readonly #options: RequestInit
@@ -152,6 +172,7 @@ export class Client implements ClientServiceConfig {
 		options,
 		authBearer,
 		fetch,
+		getServiceUrl,
 		getOpUrl,
 		getHaystackServiceUrl,
 		getHostServiceUrl,
@@ -163,6 +184,7 @@ export class Client implements ClientServiceConfig {
 		options?: RequestInit
 		authBearer?: string
 		fetch?: FetchMethod
+		getServiceUrl?: getServiceUrlCallback
 		getOpUrl?: getOpUrlCallback
 		getHaystackServiceUrl?: getHaystackServiceUrlCallback
 		getHostServiceUrl?: getHostServiceUrlCallback
@@ -182,6 +204,7 @@ export class Client implements ClientServiceConfig {
 
 		this.pathPrefix = addStartSlashRemoveEndSlash(pathPrefix?.trim() ?? '')
 
+		this.#getServiceUrl = getServiceUrl ?? defaultgetServiceUrl
 		this.#getOpUrl = getOpUrl ?? defaultGetOpUrl
 		this.#getHaystackServiceUrl =
 			getHaystackServiceUrl ?? defaultGetHaystackServiceUrl
@@ -208,6 +231,8 @@ export class Client implements ClientServiceConfig {
 		this.proj = new ProjectService(this)
 		this.groups = new GroupsService(this)
 		this.roles = new RolesService(this)
+		this.notifications = new NotificationService(this)
+		this.notificationsSettings = new NotificationSettingsService(this)
 
 		// Add the authorization bearer token if specified.
 		if (typeof authBearer === 'string') {
@@ -228,6 +253,19 @@ export class Client implements ClientServiceConfig {
 	private static parseProjectFromProjects(path: string): string {
 		const res = /\/projects\/([^/?#]+)/.exec(path)
 		return (res && res[1]) ?? ''
+	}
+
+	/**
+	 * Returns the origin API Url
+	 *
+	 * @param path Name of the API
+	 * @returns A URL.
+	 */
+	public getServiceUrl(path: string) {
+		return this.#getServiceUrl({
+			origin: this.origin,
+			path,
+		})
 	}
 
 	/**

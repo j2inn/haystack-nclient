@@ -19,6 +19,7 @@ import {
 	getOpUrl,
 	getHaystackServiceUrl,
 	getHostServiceUrl,
+	getServiceUrl,
 } from '../../../src/util/http'
 import { WatchApis } from '../../../src/client/watches/WatchApis'
 import { ClientServiceConfig } from '../../../src/client/ClientServiceConfig'
@@ -41,6 +42,11 @@ describe('ApiSubject', function (): void {
 		jest.spyOn(global, 'setTimeout')
 
 		serviceConfig = {
+			getServiceUrl: (path: string) =>
+				getServiceUrl({
+					origin,
+					path,
+				}),
 			getOpUrl: (op: string): string =>
 				getOpUrl({
 					origin,

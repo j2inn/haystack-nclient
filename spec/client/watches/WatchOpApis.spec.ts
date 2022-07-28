@@ -14,6 +14,7 @@ import {
 import {
 	getHaystackServiceUrl,
 	getHostServiceUrl,
+	getServiceUrl,
 } from '../../../src/util/http'
 import { Client } from '../../../src/client/Client'
 import fetchMock from 'fetch-mock'
@@ -45,6 +46,11 @@ describe('WatchOpApis', function (): void {
 		})
 
 		watchOps = new WatchOpApis({
+			getServiceUrl: (path: string) =>
+				getServiceUrl({
+					origin,
+					path,
+				}),
 			getOpUrl: (op: string): string =>
 				getOpUrl({
 					origin: client.origin,

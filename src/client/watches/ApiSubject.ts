@@ -11,7 +11,7 @@ import { Subject, SubjectChangedEventHandler } from './Subject'
 import { Mutex } from '../../util/Mutex'
 import { clear } from '../../util/obj'
 import { ClientServiceConfig } from '../ClientServiceConfig'
-import { Record } from '../../util/Record'
+import { Record as RecordDict } from '../../util/Record'
 
 interface DictCount {
 	dict: HDict
@@ -64,7 +64,7 @@ export class ApiSubject implements Subject {
 	/**
 	 * The grid for the watch.
 	 */
-	#grid?: HGrid<Record>
+	#grid?: HGrid<RecordDict>
 
 	/**
 	 * The server watch id.
@@ -166,21 +166,24 @@ export class ApiSubject implements Subject {
 				this.stopLingerTimer()
 
 				// Only add dicts to the server that aren't already added.
-				const toAddToServer = ids.filter(
-					(id: string): boolean => !this.#dictCache[id]
-				)
+				const toAddToServer = new Set<string>()
 
 				// Keep track of what is not being added to the server
 				// to keep track of the reference count.
-				const notToAddToServer = ids.filter(
-					(id: string): boolean => !!this.#dictCache[id]
-				)
+				const notToAddToServer: string[] = []
 
-				if (toAddToServer.length) {
-					const addedToServer = await this.#apis.add(
-						this.watchId,
-						toAddToServer
-					)
+				for (const id of ids) {
+					if (!this.#dictCache[id] && !toAddToServer.has(id)) {
+						toAddToServer.add(id)
+					} else {
+						notToAddToServer.push(id)
+					}
+				}
+
+				if (toAddToServer.size > 0) {
+					const addedToServer = await this.#apis.add(this.watchId, [
+						...toAddToServer,
+					])
 
 					this.addDictsToGrid(addedToServer)
 				}
@@ -237,9 +240,21 @@ export class ApiSubject implements Subject {
 			try {
 				this.stopLingerTimer()
 
+				const openIds: string[] = []
+				const counts: Record<string, number> = {}
+
+				for (const id of ids) {
+					if (!counts[id]) {
+						openIds.push(id)
+						counts[id] = 1
+					} else {
+						++counts[id]
+					}
+				}
+
 				// Keep track of the promise to open a watch so we don't have
 				// clashes between a watch trying to open and close at the same time.
-				const { id, records } = await this.#apis.open(ids)
+				const { id, records } = await this.#apis.open(openIds)
 
 				this.#id = id
 
@@ -254,7 +269,8 @@ export class ApiSubject implements Subject {
 				clear(this.#dictCache)
 
 				for (const dict of this.grid) {
-					this.#dictCache[getId(dict)] = { count: 1, dict }
+					const id = getId(dict)
+					this.#dictCache[id] = { count: counts[id] || 1, dict }
 				}
 
 				this.restartPollTimer()
@@ -306,15 +322,17 @@ export class ApiSubject implements Subject {
 					return
 				}
 
-				const toRemoveFromServer = ids.filter(
-					(id: string): boolean => this.#dictCache[id]?.count === 1
-				)
+				const toRemoveFromServer: string[] = []
+
+				for (const id of ids) {
+					if (this.decrementAndRemoveDictFromGrid(id)) {
+						toRemoveFromServer.push(id)
+					}
+				}
 
 				if (toRemoveFromServer.length) {
 					await this.#apis.remove(this.watchId, toRemoveFromServer)
 				}
-
-				this.decrementAndRemoveDictsFromGrid(ids)
 			} finally {
 				// If there's nothing left to watch then start the linger.
 				if (this.grid.isEmpty()) {
@@ -325,18 +343,19 @@ export class ApiSubject implements Subject {
 	}
 
 	/**
-	 * Removes dicts from the watch's grid.
+	 * Decrement and possible remove an id from a watch's grid.
 	 *
-	 * @param toRemove The dicts to remove.
-	 * @returns The removed ids.
+	 * @param id The id to remove
+	 * @returns True if the id has been removed.
 	 */
-	private decrementAndRemoveDictsFromGrid(toRemove: string[]): void {
-		for (const id of toRemove) {
-			const dictCount = this.#dictCache[id]
-			if (dictCount && --dictCount.count <= 0) {
-				this.grid.remove(`id == @${id}`)
-				delete this.#dictCache[id]
-			}
+	private decrementAndRemoveDictFromGrid(id: string): boolean {
+		const dictCount = this.#dictCache[id]
+		if (dictCount && --dictCount.count <= 0) {
+			this.grid.remove(`id == @${id}`)
+			delete this.#dictCache[id]
+			return true
+		} else {
+			return false
 		}
 	}
 

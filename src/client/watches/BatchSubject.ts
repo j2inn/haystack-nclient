@@ -128,9 +128,7 @@ export class BatchSubject implements Subject {
 		// If the last op was the same as this then coalesce the request.
 		if (lastOp?.op === op) {
 			for (const id of ids) {
-				if (!lastOp.ids.includes(id)) {
-					lastOp.ids.push(id)
-				}
+				lastOp.ids.push(id)
 			}
 
 			// Chain the new promise onto the existing one so it executes in sequence.

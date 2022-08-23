@@ -141,91 +141,163 @@ describe('ApiSubject', function (): void {
 	}) // #watchId
 
 	describe('#add()', function (): void {
-		beforeEach(async function (): Promise<void> {
-			mockOpen()
-			await subject.add(['foo'])
-		})
-
-		describe('opens on first call', function (): void {
-			it('calls the open op', function (): void {
-				expect(apis.open).toHaveBeenCalledWith(['foo'])
+		describe('watches a single record', () => {
+			beforeEach(async function (): Promise<void> {
+				mockOpen()
+				await subject.add(['foo'])
 			})
 
-			it("updates the subject's grid", function (): void {
-				expect(subject.grid.toJSON()).toEqual(firstGrid.toJSON())
+			describe('opens on first call', function (): void {
+				it('calls the open op', function (): void {
+					expect(apis.open).toHaveBeenCalledWith(['foo'])
+				})
+
+				it("updates the subject's grid", function (): void {
+					expect(subject.grid.toJSON()).toEqual(firstGrid.toJSON())
+				})
+
+				it('starts the poll timer', function (): void {
+					expect(setTimeout).toHaveBeenLastCalledWith(
+						expect.any(Function),
+						DEFAULT_POLL_RATE_SECS * 1000
+					)
+				})
 			})
 
-			it('starts the poll timer', function (): void {
-				expect(setTimeout).toHaveBeenLastCalledWith(
-					expect.any(Function),
-					DEFAULT_POLL_RATE_SECS * 1000
+			describe('adds after the first call', function (): void {
+				beforeEach(async function (): Promise<void> {
+					asMock(apis.add).mockResolvedValue(secondGrid)
+					await subject.add(['boo'])
+				})
+
+				it("adds to the subject's grid", async function (): Promise<void> {
+					expect(subject.grid.toJSON()).toEqual(combinedGrid.toJSON())
+				})
+
+				it('does not invoke the add op for already added records', async function (): Promise<void> {
+					await subject.add(['boo'])
+					expect(apis.add).toBeCalledTimes(1)
+				})
+			})
+
+			it('cancels linger timer when adding new records after remove', async function (): Promise<void> {
+				await subject.remove(['foo'])
+
+				expect(setTimeout).toHaveBeenCalledWith(
+					subject.checkClose,
+					LINGER_TIMEOUT_MS
 				)
 			})
-		})
+		}) // watches a single record
 
-		describe('adds after the first call', function (): void {
+		describe('watches duplicate records', () => {
 			beforeEach(async function (): Promise<void> {
-				asMock(apis.add).mockResolvedValue(secondGrid)
-				await subject.add(['boo'])
+				mockOpen()
+				await subject.add(['foo', 'foo'])
 			})
 
-			it("adds to the subject's grid", async function (): Promise<void> {
-				expect(subject.grid.toJSON()).toEqual(combinedGrid.toJSON())
+			describe('opens on first call', function (): void {
+				it('calls the open op', function (): void {
+					expect(apis.open).toHaveBeenCalledWith(['foo'])
+				})
+
+				it("updates the subject's grid", function (): void {
+					expect(subject.grid.toJSON()).toEqual(firstGrid.toJSON())
+				})
+
+				it('starts the poll timer', function (): void {
+					expect(setTimeout).toHaveBeenLastCalledWith(
+						expect.any(Function),
+						DEFAULT_POLL_RATE_SECS * 1000
+					)
+				})
 			})
 
-			it('does not invoke the add op for already added records', async function (): Promise<void> {
-				await subject.add(['boo'])
-				expect(apis.add).toBeCalledTimes(1)
+			describe('adds after the first call', function (): void {
+				beforeEach(async function (): Promise<void> {
+					asMock(apis.add).mockResolvedValue(secondGrid)
+					await subject.add(['boo', 'boo'])
+				})
+
+				it("adds to the subject's grid", async function (): Promise<void> {
+					expect(subject.grid.toJSON()).toEqual(combinedGrid.toJSON())
+				})
+
+				it('does not invoke the add op for already added records', async function (): Promise<void> {
+					await subject.add(['boo', 'boo'])
+					expect(apis.add).toBeCalledTimes(1)
+				})
 			})
-		})
 
-		it('cancels linger timer when adding new records after remove', async function (): Promise<void> {
-			await subject.remove(['foo'])
+			it('cancels linger timer when adding new records after remove is called twice', async function (): Promise<void> {
+				await subject.remove(['foo'])
 
-			expect(setTimeout).toHaveBeenCalledWith(
-				subject.checkClose,
-				LINGER_TIMEOUT_MS
-			)
-		})
+				expect(setTimeout).not.toHaveBeenCalledWith(
+					subject.checkClose,
+					LINGER_TIMEOUT_MS
+				)
+
+				await subject.remove(['foo'])
+
+				expect(setTimeout).toHaveBeenCalledWith(
+					subject.checkClose,
+					LINGER_TIMEOUT_MS
+				)
+			})
+		}) // watches duplicate records
 	}) // #add()
 
 	describe('#remove()', function (): void {
-		beforeEach(async function (): Promise<void> {
-			mockOpen()
-			await subject.add(['foo'])
-		})
+		describe('removes a single record', () => {
+			beforeEach(async function (): Promise<void> {
+				mockOpen()
+				await subject.add(['foo'])
+			})
 
-		it('removes records from the grid', async function (): Promise<void> {
-			await subject.remove(['foo'])
-			expect(subject.grid.isEmpty()).toBe(true)
-		})
+			it('removes records from the grid', async function (): Promise<void> {
+				await subject.remove(['foo'])
+				expect(subject.grid.isEmpty()).toBe(true)
+			})
 
-		it('does not invoke ops remove when no data is to be removed', async function (): Promise<void> {
-			await subject.remove(['foo'])
-			await subject.remove(['foo'])
-			expect(apis.remove).toHaveBeenCalledTimes(1)
-		})
+			it('does not invoke ops remove when no data is to be removed', async function (): Promise<void> {
+				await subject.remove(['foo'])
+				await subject.remove(['foo'])
+				expect(apis.remove).toHaveBeenCalledTimes(1)
+			})
 
-		it('does not invoke ops remove when reference count is not zero', async function (): Promise<void> {
-			await subject.add(['foo'])
-			await subject.remove(['foo'])
-			expect(apis.remove).not.toHaveBeenCalled()
-		})
+			it('does not invoke ops remove when reference count is not zero', async function (): Promise<void> {
+				await subject.add(['foo'])
+				await subject.remove(['foo'])
+				expect(apis.remove).not.toHaveBeenCalled()
+			})
 
-		it('invokes ops remove method when reference count is zero', async function (): Promise<void> {
-			await subject.add(['foo'])
-			await subject.remove(['foo'])
-			await subject.remove(['foo'])
-			expect(apis.remove).toHaveBeenCalledTimes(1)
-		})
+			it('invokes ops remove method when reference count is zero', async function (): Promise<void> {
+				await subject.add(['foo'])
+				await subject.remove(['foo'])
+				await subject.remove(['foo'])
+				expect(apis.remove).toHaveBeenCalledTimes(1)
+			})
 
-		it('starts linger timer when all records have been removed', async function (): Promise<void> {
-			await subject.remove(['foo'])
-			expect(setTimeout).toHaveBeenCalledWith(
-				subject.checkClose,
-				LINGER_TIMEOUT_MS
-			)
-		})
+			it('starts linger timer when all records have been removed', async function (): Promise<void> {
+				await subject.remove(['foo'])
+				expect(setTimeout).toHaveBeenCalledWith(
+					subject.checkClose,
+					LINGER_TIMEOUT_MS
+				)
+			})
+		}) // removes a single record
+
+		describe('removes duplicate records', () => {
+			beforeEach(async function (): Promise<void> {
+				mockOpen()
+				await subject.add(['foo', 'foo'])
+			})
+
+			it('removes records from the grid', async function (): Promise<void> {
+				await subject.remove(['foo', 'foo'])
+				expect(subject.grid.isEmpty()).toBe(true)
+			})
+		}) // removes duplicate records
 	}) // #remove()
 
 	describe('#poll()', function (): void {

@@ -35,6 +35,7 @@ describe('BatchSubject', function (): void {
 			await Promise.all([
 				batch.add(['a']),
 				batch.add(['b']),
+				batch.add(['a']),
 				batch.remove(['c']),
 				batch.remove(['d']),
 				batch.remove(['e']),
@@ -43,7 +44,7 @@ describe('BatchSubject', function (): void {
 				batch.add(['h']),
 			])
 
-			expect(ops.join(',')).toBe('add:a,b,remove:c,d,e,f,add:g,h')
+			expect(ops.join(',')).toBe('add:a,b,a,remove:c,d,e,f,add:g,h')
 		})
 
 		it('invokes all operations in order', async function (): Promise<void> {

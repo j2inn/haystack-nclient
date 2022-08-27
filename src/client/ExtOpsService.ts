@@ -7,6 +7,7 @@ import { fetchAllGrids } from './fetchAllGrids'
 import { fetchVal } from './fetchVal'
 import { dictsToGrid } from '../util/hval'
 import { ClientServiceConfig } from './ClientServiceConfig'
+import { BatchProcessor } from '../util/BatchProcessor'
 
 /**
  * The commit op type.
@@ -32,12 +33,20 @@ export class ExtOpsService {
 	#loadDefsPromise?: Promise<HNamespace>
 
 	/**
+	 * Batch processor for evals.
+	 */
+	readonly #evalBatchProcessor: BatchProcessor<string, HGrid>
+
+	/**
 	 * Constructs a service object.
 	 *
 	 * @param serviceConfig Service configuration.
 	 */
 	public constructor(serviceConfig: ClientServiceConfig) {
 		this.#serviceConfig = serviceConfig
+		this.#evalBatchProcessor = new BatchProcessor({
+			batcher: this.batchEval,
+		})
 	}
 
 	/**
@@ -112,7 +121,23 @@ export class ExtOpsService {
 	}
 
 	/**
+	 * Evalulate a haystack filter request and return the result.
+	 *
+	 * This operation will automatically attempt to batch network calls
+	 * together to optimize client network requests.
+	 *
+	 * @param filter The haystack filter.
+	 * @returns The result of the filter query.
+	 */
+	public async read(filter: string): Promise<HGrid> {
+		return this.eval(`parseFilter("${filter}").readAll()`)
+	}
+
+	/**
 	 * Evaluate some code server side and return the response.
+	 *
+	 * This operation will automatically attempt to batch network calls
+	 * together to optimize client network requests.
 	 *
 	 * https://skyfoundry.com/doc/docSkySpark/Ops#eval
 	 *
@@ -120,6 +145,32 @@ export class ExtOpsService {
 	 * @returns The evaluated expression response.
 	 */
 	public async eval(expr: string): Promise<HGrid> {
+		return this.#evalBatchProcessor.invoke(expr)
+	}
+
+	/**
+	 * Used when evaluating batched eval requests.
+	 *
+	 * @param exprs The expressions to evaluate.
+	 * @returns The evalulated expression responses.
+	 */
+	private batchEval = async (exprs: string[]): Promise<HGrid[]> => {
+		if (exprs.length === 1) {
+			return [await this.evalSingle(exprs[0])]
+		} else {
+			return this.evalAll(exprs)
+		}
+	}
+
+	/**
+	 * Evaluate some code server side and return the response.
+	 *
+	 * https://skyfoundry.com/doc/docSkySpark/Ops#eval
+	 *
+	 * @param expr The expression to evaluate.
+	 * @returns The evaluated expression response.
+	 */
+	private async evalSingle(expr: string): Promise<HGrid> {
 		return fetchVal<HGrid>(
 			this.#serviceConfig.getOpUrl('eval'),
 			{
@@ -139,7 +190,7 @@ export class ExtOpsService {
 	 * @param exprs The expressions to evaluate.
 	 * @returns The evalulated expression responses.
 	 */
-	public async evalAll(exprs: string[]): Promise<HGrid[]> {
+	public evalAll(exprs: string[]): Promise<HGrid[]> {
 		const grid = HGrid.make(
 			exprs.map((expr: string): HDict => HDict.make({ expr }))
 		)

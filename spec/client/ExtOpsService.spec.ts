@@ -144,6 +144,21 @@ describe('ExtOpsService', function (): void {
 			preparePostOp('evalAll', zinc)
 		})
 
+		it('is called when one more or more eval expressions are made', async function (): Promise<void> {
+			jest.spyOn(ext, 'evalAll')
+
+			const grids = await Promise.all([
+				ext.eval('site'),
+				ext.eval('defs()'),
+			])
+
+			expect(ext.evalAll).toHaveBeenCalled()
+
+			expect(grids.length).toBe(2)
+			expect(grids[0].toZinc()).toBe(grid.toZinc())
+			expect(grids[1].toZinc()).toBe(grid.toZinc())
+		})
+
 		it('fetches the data', async function (): Promise<void> {
 			const grids = await ext.evalAll(['site', 'defs()'])
 

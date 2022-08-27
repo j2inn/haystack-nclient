@@ -45,6 +45,18 @@ interface Invocation<ArgType, ReturnType> {
  *
  * The supplied `batcher` function is used to send all the requests
  * together in one go and return the response values.
+ *
+ * ```typescript
+ * const batcher = async (values: string[]): Promise<string[]> => makeMyNetworkRequest(values)
+ * ...
+ * const processor = new BatchProcessor<string, string>({ batcher })
+ * ...
+ * await Promise.all([
+ *   processor.invoke('foo'),
+ *   processor.invoke('bar'),
+ *   processor.invoke('today')
+ * ])
+ * ```
  */
 export class BatchProcessor<ArgType, ReturnType> {
 	/**

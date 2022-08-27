@@ -10,21 +10,41 @@ import { makeDeferred, Deferred } from '../util/promise'
 const DEFAULT_BATCH_WINDOW_TIMEOUT_MS = 0
 
 /**
+ * The default batch limit.
+ */
+const DEFAULT_BATCH_LIMIT = 100
+
+/**
  * The function used to batch arguments together and return their results.
  *
  * The returned array size must be the same size as the arguments. If there's
  * an error instead of a return value, an error must be returned for the specified
  * argument.
  */
-interface BatcherFunc<ArgType, ReturnType> {
+export interface BatcherFunc<ArgType, ReturnType> {
 	(args: ArgType[]): Promise<(ReturnType | Error)[]>
+}
+
+/**
+ * A capture invocation.
+ */
+interface Invocation<ArgType, ReturnType> {
+	/**
+	 * The invocation for the argument.
+	 */
+	arg: ArgType
+
+	/**
+	 * The deferred promise to be resolved at some point.
+	 */
+	deferred: Deferred<ReturnType>
 }
 
 /**
  * Used for batching asynchronous requests together.
  *
- * The supplied `batcher` function is used to send all the requests together in one
- * go and return the response values.
+ * The supplied `batcher` function is used to send all the requests
+ * together in one go and return the response values.
  */
 export class BatchProcessor<ArgType, ReturnType> {
 	/**
@@ -33,19 +53,9 @@ export class BatchProcessor<ArgType, ReturnType> {
 	#timerId?: NodeJS.Timeout
 
 	/**
-	 * The deferred promises.
+	 * The cached invocations to batch.
 	 */
-	#deferreds: Deferred<ReturnType>[] = []
-
-	/**
-	 * The cached arguments.
-	 */
-	#args: ArgType[] = []
-
-	/**
-	 * Time in milliseconds to wait before invoking the `batcher` function.
-	 */
-	readonly #timeoutWindowMs: number
+	#invocations: Invocation<ArgType, ReturnType>[] = []
 
 	/**
 	 * A `batcher` function that sends all the arguments together and then returns
@@ -54,21 +64,41 @@ export class BatchProcessor<ArgType, ReturnType> {
 	readonly #batcher: BatcherFunc<ArgType, ReturnType>
 
 	/**
+	 * Time in milliseconds to wait before invoking the `batcher` function.
+	 */
+	readonly #timeoutWindowMs: number
+
+	/**
+	 * The limit on the number of arguments sent to a batcher in one go.
+	 */
+	readonly #limit: number
+
+	/**
 	 * Construct a new batch processor that's used for batching
 	 * requests together.
 	 *
-	 * @param batcher The batcher function that typically makes a network request
+	 * @param options.batcher The batcher function that typically makes a network request
 	 * with all the supplied arguments and returns the results.
-	 * @param timeoutWindowMs Optional timeout window in milliseconds. By
+	 * @param options.timeoutWindowMs Optional timeout window in milliseconds. By
 	 * default this is set to zero ms. This is the time used to wait before
 	 * invoking the `batcher` function.
+	 * @param options.limit Optional number of arguments limit in one call to the batcher
+	 * function. For instance, if the limit is 10 and there are 100 arguments batched
+	 * then the batcher will be called 10 times with 10 arguments each time.
+	 * By default, this is set to 100.
 	 */
-	constructor(
-		batcher: BatcherFunc<ArgType, ReturnType>,
-		timeoutWindowMs = DEFAULT_BATCH_WINDOW_TIMEOUT_MS
-	) {
+	constructor({
+		batcher,
+		timeoutWindowMs = DEFAULT_BATCH_WINDOW_TIMEOUT_MS,
+		limit = DEFAULT_BATCH_LIMIT,
+	}: {
+		batcher: BatcherFunc<ArgType, ReturnType>
+		timeoutWindowMs?: number
+		limit?: number
+	}) {
 		this.#batcher = batcher
 		this.#timeoutWindowMs = timeoutWindowMs
+		this.#limit = limit
 	}
 
 	/**
@@ -81,8 +111,7 @@ export class BatchProcessor<ArgType, ReturnType> {
 	invoke(arg: ArgType): Promise<ReturnType> {
 		const deferred = makeDeferred<ReturnType>()
 
-		this.#deferreds.push(deferred)
-		this.#args.push(arg)
+		this.#invocations.push({ arg, deferred })
 
 		this.restartBatchTimer()
 
@@ -95,35 +124,60 @@ export class BatchProcessor<ArgType, ReturnType> {
 	private restartBatchTimer() {
 		clearTimeout(this.#timerId)
 		this.#timerId = setTimeout(async (): Promise<void> => {
-			const deferreds = this.#deferreds
-			const args = this.#args
+			const invocationList = this.getInvocationsByLimit()
+			this.#invocations = []
 
-			this.#deferreds = []
-			this.#args = []
-
-			try {
-				const returnVals = await this.#batcher(args)
-
-				if (returnVals.length !== args.length) {
-					throw new Error(
-						'The batcher return and arguments array size must be the same'
+			for (const invocations of invocationList) {
+				try {
+					const returnVals = await this.#batcher(
+						invocations.map((inv) => inv.arg)
 					)
-				}
 
-				for (let i = 0; i < returnVals.length; ++i) {
-					const returnVal = returnVals[i]
-
-					if (returnVal instanceof Error) {
-						deferreds[i].reject(returnVal)
-					} else {
-						deferreds[i].resolve(returnVal)
+					if (returnVals.length !== invocations.length) {
+						throw new Error(
+							'The batcher return and arguments array size must be the same'
+						)
 					}
-				}
-			} catch (error) {
-				for (const deferred of deferreds) {
-					deferred.reject(error)
+
+					for (let i = 0; i < returnVals.length; ++i) {
+						const returnVal = returnVals[i]
+
+						if (returnVal instanceof Error) {
+							invocations[i].deferred.reject(returnVal)
+						} else {
+							invocations[i].deferred.resolve(returnVal)
+						}
+					}
+				} catch (error) {
+					for (const { deferred } of invocations) {
+						deferred.reject(error)
+					}
 				}
 			}
 		}, this.#timeoutWindowMs)
+	}
+
+	/**
+	 * Return a list of invocations bounded by a limit.
+	 *
+	 * @returns A list of invocations.
+	 */
+	private getInvocationsByLimit(): Invocation<ArgType, ReturnType>[][] {
+		const list: Invocation<ArgType, ReturnType>[][] = []
+
+		let count = 0
+
+		while (count < this.#invocations.length) {
+			const upper = count + this.#limit
+			const args = this.#invocations.slice(count, upper)
+
+			if (args.length) {
+				list.push(args)
+			}
+
+			count = upper
+		}
+
+		return list
 	}
 }

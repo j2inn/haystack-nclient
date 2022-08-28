@@ -90,7 +90,8 @@ export class BatchProcessor<ArgType, ReturnType> {
 	 * requests together.
 	 *
 	 * @param options.batcher The batcher function that typically makes a network request
-	 * with all the supplied arguments and returns the results.
+	 * with all the supplied arguments and returns the results. Each result can either
+	 * be the expected result or an Error object.
 	 * @param options.timeoutWindowMs Optional timeout window in milliseconds. By
 	 * default this is set to zero ms. This is the time used to wait before
 	 * invoking the `batcher` function.
@@ -140,29 +141,31 @@ export class BatchProcessor<ArgType, ReturnType> {
 			this.#invocations = []
 
 			for (const invocations of invocationList) {
-				try {
-					const returnVals = await this.#batcher(
-						invocations.map((inv) => inv.arg)
-					)
-
-					if (returnVals.length !== invocations.length) {
-						throw new Error(
-							'The batcher return and arguments array size must be the same'
+				if (invocations.length > 0) {
+					try {
+						const returnVals = await this.#batcher(
+							invocations.map((inv) => inv.arg)
 						)
-					}
 
-					for (let i = 0; i < returnVals.length; ++i) {
-						const returnVal = returnVals[i]
-
-						if (returnVal instanceof Error) {
-							invocations[i].deferred.reject(returnVal)
-						} else {
-							invocations[i].deferred.resolve(returnVal)
+						if (returnVals.length !== invocations.length) {
+							throw new Error(
+								'The batcher return and arguments array size must be the same'
+							)
 						}
-					}
-				} catch (error) {
-					for (const { deferred } of invocations) {
-						deferred.reject(error)
+
+						for (let i = 0; i < returnVals.length; ++i) {
+							const returnVal = returnVals[i]
+
+							if (returnVal instanceof Error) {
+								invocations[i].deferred.reject(returnVal)
+							} else {
+								invocations[i].deferred.resolve(returnVal)
+							}
+						}
+					} catch (error) {
+						for (const { deferred } of invocations) {
+							deferred.reject(error)
+						}
 					}
 				}
 			}

@@ -66,6 +66,7 @@ describe('BatchProcessor', function (): void {
 		})
 
 		describe('limit', function (): void {
+			/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 			let batcher: BatcherFunc<number, number> & jest.Mock<any, any>
 
 			beforeEach(function (): void {

@@ -4,7 +4,7 @@
 
 /* eslint @typescript-eslint/no-explicit-any: "off" */
 
-import { HGrid, HDict, HStr } from 'haystack-core'
+import { HGrid, HDict, HStr, HMarker } from 'haystack-core'
 import { Client } from '../../src/client/Client'
 import fetchMock from 'fetch-mock'
 import { ExtOpsService, CommitType } from '../../src/client/ExtOpsService'
@@ -174,6 +174,19 @@ describe('ExtOpsService', function (): void {
 			expect(fetchMock.lastCall(getOpUrl('evalAll'))?.[1]?.body).toBe(
 				argsZinc
 			)
+		})
+
+		it('rejects if there is an error grid in the response', async function (): Promise<void> {
+			grid.meta.set('err', HMarker.make())
+			grid.meta.set('dis', 'error')
+			grid.meta.set('errType', 'error')
+			grid.meta.set('errTrace', '')
+
+			const zinc = `${grid.toZinc()}\n${grid.toZinc()}`
+			fetchMock.reset()
+			preparePostOp('evalAll', zinc)
+
+			await expect(ext.evalAll(['site', 'defs()'])).rejects.toThrowError()
 		})
 	}) // #evalAll()
 })

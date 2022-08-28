@@ -26,6 +26,8 @@ function validateGrid(val: unknown): HGrid {
 				meta: new HDict({
 					err: HMarker.make(),
 					dis: 'Expected grid in response',
+					errType: 'error',
+					errTrace: '',
 				}),
 		  })
 }

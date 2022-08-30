@@ -10,7 +10,7 @@ import {
 	ZINC_MIME_TYPE,
 } from '../../src/util/http'
 import fetchMock from 'fetch-mock'
-import { HGrid, HDict, HAYSON_MIME_TYPE } from 'haystack-core'
+import { HGrid, HDict, HAYSON_MIME_TYPE, HMarker } from 'haystack-core'
 import { HS_ACCEPT_HEADER_VALUE } from '../../src/client/fetchVal'
 
 describe('fetchGrid', function (): void {
@@ -26,11 +26,10 @@ describe('fetchGrid', function (): void {
 
 		const meta = error
 			? HDict.make({
-					err: {
-						errType: 'error',
-						errTrace: 'trace',
-						errDis: 'Error',
-					},
+					err: HMarker.make(),
+					errType: 'error',
+					errTrace: 'trace',
+					dis: 'Error',
 			  })
 			: HDict.make({})
 
@@ -128,6 +127,13 @@ describe('fetchGrid', function (): void {
 
 		it('throws an error if zero grids are requested', async function (): Promise<void> {
 			await expect(fetchAllGrids(READ, 0)).rejects.toBeTruthy()
+		})
+
+		it('returns an error grid in the response if detected', async function (): Promise<void> {
+			prepareFetch(/*error*/ true, 2)
+			const grids = await fetchAllGrids(READ, 1)
+
+			expect(grids[0].isError()).toBe(true)
 		})
 	}) // fetchAllGrids()
 })

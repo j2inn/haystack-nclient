@@ -5,20 +5,24 @@
 /**
  * A deferred promise.
  */
-export interface Deferred {
-	promise: Promise<void>
-	resolve: () => void
+export interface Deferred<PromiseType = void> {
+	promise: Promise<PromiseType>
+	resolve: (value: PromiseType) => void
 	reject: (reason?: unknown) => void
 }
 
 /**
  * @returns A new deferred promise.
  */
-export function makeDeferred(): Deferred {
-	const deferred: Deferred = {} as unknown as Deferred
+export function makeDeferred<PromiseType = void>(): Deferred<PromiseType> {
+	const deferred: Deferred<PromiseType> =
+		{} as unknown as Deferred<PromiseType>
 
-	deferred.promise = new Promise(
-		(resolve: () => void, reject: (reason?: unknown) => void): void => {
+	deferred.promise = new Promise<PromiseType>(
+		(
+			resolve: (value: PromiseType) => void,
+			reject: (reason?: unknown) => void
+		): void => {
 			deferred.resolve = resolve
 			deferred.reject = reject
 		}

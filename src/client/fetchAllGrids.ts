@@ -2,8 +2,35 @@
  * Copyright (c) 2020, J2 Innovations. All Rights Reserved
  */
 
-import { HGrid, ZincReader } from 'haystack-core'
-import { FetchMethod, makeHsOptions, validateValue } from './fetchVal'
+import {
+	HDict,
+	HGrid,
+	HMarker,
+	Kind,
+	valueIsKind,
+	ZincReader,
+} from 'haystack-core'
+import { FetchMethod, makeHsOptions, validateResponse } from './fetchVal'
+
+/**
+ * Validate the value to ensure it's a grid.
+ *
+ * @param hval The value to validate or a decoded string.
+ * @returns The haystack value.
+ * @throws Throws an error if we don't have a valid haystack value.
+ */
+function validateGrid(val: unknown): HGrid {
+	return valueIsKind<HGrid>(val, Kind.Grid)
+		? val
+		: new HGrid({
+				meta: new HDict({
+					err: HMarker.make(),
+					dis: 'Expected grid in response',
+					errType: 'error',
+					errTrace: '',
+				}),
+		  })
+}
 
 /**
  * Reads a number of grids from a response.
@@ -16,6 +43,8 @@ async function readAllGrids(
 	resp: Response,
 	gridCount: number
 ): Promise<HGrid[]> {
+	validateResponse(resp)
+
 	// Please note, due to each grid being a separate part of the response object,
 	// this should probably be always encoded in Zinc and never JSON.
 
@@ -23,17 +52,16 @@ async function readAllGrids(
 	const allGrids: HGrid[] = []
 
 	for (let i = 0; i < gridCount; ++i) {
-		allGrids.push(validateValue(zincReader.readValue(), resp) as HGrid)
+		allGrids.push(validateGrid(zincReader.readValue()))
 	}
 
 	return allGrids
 }
 
 /**
- * Convience method to fetch multiple grids from a response.
+ * Convenience method to fetch multiple grids from a response.
  *
- * If the returned grid has an error then the returned promise
- * will be rejected with a `GridError` instance.
+ * A caller will have to check each grid to see if it's in error.
  *
  * Please note: fetching multiple grids from a response is unorthodox. This
  * was added to support the rather antiquated `evalAll` that has multiple grids
@@ -44,7 +72,7 @@ async function readAllGrids(
  * @param options Optional object containing any custom settings.
  * @param fetchFunc Optional fetch function to use instead of global fetch.
  * @returns A promise that resolves to a number of grids.
- * @throws A fetch or grid error.
+ * @throws A fetch error.
  */
 export async function fetchAllGrids(
 	resource: RequestInfo,

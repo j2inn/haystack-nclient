@@ -22,7 +22,7 @@ export class NotificationsHandler {
 	/**
 	 * The poll interval timeout id.
 	 */
-	#timerId?: NodeJS.Timeout
+	#timerId?: ReturnType<typeof setTimeout>
 
 	/**
 	 * Event and Poll connection status

@@ -32,14 +32,26 @@ export interface FetchMethod {
 }
 
 /**
+ * Validate the HTTP response object.
+ *
+ * @param resp The response to validate.
+ * @throws Error if the response is invalid.
+ */
+export function validateResponse(resp: Response): void {
+	if (resp.status !== 200 && resp.status !== 201) {
+		throw new Error('Error in decoding haystack response')
+	}
+}
+
+/**
  * Validate the haystack value.
  *
  * @param hval The value to validate or a decoded string.
  * @returns The haystack value.
  * @throws Throws an error if we don't have a valid haystack value.
  */
-export function validateValue<Value extends HVal>(
-	val: Value | string | undefined | null,
+function validateValue<Value extends HVal>(
+	val: unknown,
 	resp: Response
 ): Value {
 	// 1. First check to see if the decoded value is a grid with an error.
@@ -52,18 +64,14 @@ export function validateValue<Value extends HVal>(
 	}
 
 	// 2. Check response codes and throw an error with anything read.
-	if (resp.status !== 200 && resp.status !== 201) {
-		throw new Error(
-			val ? String(val) : 'Error in decoding haystack response'
-		)
-	}
+	validateResponse(resp)
 
 	// 3. Check we do have a haystack value decoded.
 	if (!isHVal(val)) {
 		throw new Error('Unable to decode haystack value')
 	}
 
-	return val
+	return val as Value
 }
 
 async function parseResponse(resp: Response): Promise<HVal | undefined | null> {

@@ -33,7 +33,7 @@ export class BatchSubject implements Subject {
 	/**
 	 * The timer used for batching operations.
 	 */
-	#batchTimer?: NodeJS.Timeout
+	#batchTimer?: ReturnType<typeof setTimeout>
 
 	/**
 	 * The queued batched ops.

@@ -21,14 +21,14 @@ const DEFAULT_BATCH_LIMIT = 100
  * an error instead of a return value, an error must be returned for the specified
  * argument.
  */
-export interface BatcherFunc<ArgType, ReturnType> {
-	(args: ArgType[]): Promise<(ReturnType | Error)[]>
+export interface BatcherFunc<ArgType, ReturnValueType> {
+	(args: ArgType[]): Promise<(ReturnValueType | Error)[]>
 }
 
 /**
  * A capture invocation.
  */
-interface Invocation<ArgType, ReturnType> {
+interface Invocation<ArgType, ReturnValueType> {
 	/**
 	 * The invocation for the argument.
 	 */
@@ -37,7 +37,7 @@ interface Invocation<ArgType, ReturnType> {
 	/**
 	 * The deferred promise to be resolved at some point.
 	 */
-	deferred: Deferred<ReturnType>
+	deferred: Deferred<ReturnValueType>
 }
 
 /**
@@ -58,22 +58,22 @@ interface Invocation<ArgType, ReturnType> {
  * ])
  * ```
  */
-export class BatchProcessor<ArgType, ReturnType> {
+export class BatchProcessor<ArgType, ReturnValueType> {
 	/**
 	 * The internal timer id for keeping track of async activity.
 	 */
-	#timerId?: NodeJS.Timeout
+	#timerId?: ReturnType<typeof setTimeout>
 
 	/**
 	 * The cached invocations to batch.
 	 */
-	#invocations: Invocation<ArgType, ReturnType>[] = []
+	#invocations: Invocation<ArgType, ReturnValueType>[] = []
 
 	/**
 	 * A `batcher` function that sends all the arguments together and then returns
 	 * all of their results.
 	 */
-	readonly #batcher: BatcherFunc<ArgType, ReturnType>
+	readonly #batcher: BatcherFunc<ArgType, ReturnValueType>
 
 	/**
 	 * Time in milliseconds to wait before invoking the `batcher` function.
@@ -105,7 +105,7 @@ export class BatchProcessor<ArgType, ReturnType> {
 		timeoutWindowMs = DEFAULT_BATCH_WINDOW_TIMEOUT_MS,
 		limit = DEFAULT_BATCH_LIMIT,
 	}: {
-		batcher: BatcherFunc<ArgType, ReturnType>
+		batcher: BatcherFunc<ArgType, ReturnValueType>
 		timeoutWindowMs?: number
 		limit?: number
 	}) {
@@ -121,8 +121,8 @@ export class BatchProcessor<ArgType, ReturnType> {
 	 * @param arg The invocation arguments.
 	 * @returns The invoked response.
 	 */
-	invoke(arg: ArgType): Promise<ReturnType> {
-		const deferred = makeDeferred<ReturnType>()
+	invoke(arg: ArgType): Promise<ReturnValueType> {
+		const deferred = makeDeferred<ReturnValueType>()
 
 		this.#invocations.push({ arg, deferred })
 
@@ -177,8 +177,8 @@ export class BatchProcessor<ArgType, ReturnType> {
 	 *
 	 * @returns A list of invocations.
 	 */
-	private getInvocationsByLimit(): Invocation<ArgType, ReturnType>[][] {
-		const list: Invocation<ArgType, ReturnType>[][] = []
+	private getInvocationsByLimit(): Invocation<ArgType, ReturnValueType>[][] {
+		const list: Invocation<ArgType, ReturnValueType>[][] = []
 
 		let count = 0
 

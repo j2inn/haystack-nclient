@@ -49,12 +49,12 @@ export class ApiSubject implements Subject {
 	/**
 	 * The timer id used for polling.
 	 */
-	#pollTimerId?: NodeJS.Timeout
+	#pollTimerId?: ReturnType<typeof setTimeout>
 
 	/**
 	 * The timer id to linger a watch before it's closed.
 	 */
-	#lingerTimerId?: NodeJS.Timeout
+	#lingerTimerId?: ReturnType<typeof setTimeout>
 
 	/**
 	 * Flag indicating whether the watch is open.

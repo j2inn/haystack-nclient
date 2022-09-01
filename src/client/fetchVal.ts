@@ -35,11 +35,14 @@ export interface FetchMethod {
  * Validate the HTTP response object.
  *
  * @param resp The response to validate.
+ * @param val The associated value.
  * @throws Error if the response is invalid.
  */
-export function validateResponse(resp: Response): void {
+export function validateResponse(resp: Response, val?: unknown): void {
 	if (resp.status !== 200 && resp.status !== 201) {
-		throw new Error('Error in decoding haystack response')
+		throw new Error(
+			val ? String(val) : 'Error in decoding haystack response'
+		)
 	}
 }
 
@@ -64,7 +67,7 @@ function validateValue<Value extends HVal>(
 	}
 
 	// 2. Check response codes and throw an error with anything read.
-	validateResponse(resp)
+	validateResponse(resp, val)
 
 	// 3. Check we do have a haystack value decoded.
 	if (!isHVal(val)) {

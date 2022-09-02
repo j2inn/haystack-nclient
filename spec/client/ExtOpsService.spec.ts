@@ -189,4 +189,40 @@ describe('ExtOpsService', function (): void {
 			await expect(ext.evalAll(['site', 'defs()'])).rejects.toThrowError()
 		})
 	}) // #evalAll()
+
+	describe('#read()', function (): void {
+		beforeEach(function (): void {
+			preparePostOp('eval')
+		})
+
+		it('reads the data', async function (): Promise<void> {
+			expect((await ext.read('site')).toZinc()).toBe(grid.toZinc())
+		})
+
+		it('encodes a `site` read to a grid', async function (): Promise<void> {
+			await ext.read('site')
+
+			const argsZinc = HGrid.make([
+				HDict.make({ expr: 'parseFilter("site").readAll()' }),
+			]).toZinc()
+
+			expect(fetchMock.lastCall(getOpUrl('eval'))?.[1]?.body).toBe(
+				argsZinc
+			)
+		})
+
+		it('encodes a `dis == "JB Tower"` read to a grid', async function (): Promise<void> {
+			await ext.read('dis == "JB Tower"')
+
+			const argsZinc = HGrid.make([
+				HDict.make({
+					expr: 'parseFilter("dis == \\"JB Tower\\"").readAll()',
+				}),
+			]).toZinc()
+
+			expect(fetchMock.lastCall(getOpUrl('eval'))?.[1]?.body).toBe(
+				argsZinc
+			)
+		})
+	}) // #read()
 })

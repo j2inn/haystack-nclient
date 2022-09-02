@@ -2,7 +2,14 @@
  * Copyright (c) 2020, J2 Innovations. All Rights Reserved
  */
 
-import { HGrid, HDict, HaysonDict, HList, HNamespace } from 'haystack-core'
+import {
+	HGrid,
+	HDict,
+	HaysonDict,
+	HList,
+	HNamespace,
+	HStr,
+} from 'haystack-core'
 import { fetchAllGrids } from './fetchAllGrids'
 import { fetchVal } from './fetchVal'
 import { dictsToGrid } from '../util/hval'
@@ -131,7 +138,7 @@ export class ExtOpsService {
 	 * @returns The result of the filter query.
 	 */
 	public async read(filter: string): Promise<HGrid> {
-		return this.eval(`parseFilter("${filter}").readAll()`)
+		return this.eval(`parseFilter(${HStr.make(filter).toAxon()}).readAll()`)
 	}
 
 	/**

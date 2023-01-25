@@ -88,11 +88,7 @@ export class FunctionService<FunctionType extends FinFunction = FinFunction> {
 			this.#serviceConfig.fetch
 		)
 
-		if (functions.isEmpty()) {
-			return []
-		}
-
-		return functions.getRows()
+		return !functions.isEmpty() ? functions.getRows() : []
 	}
 
 	/**
@@ -103,15 +99,13 @@ export class FunctionService<FunctionType extends FinFunction = FinFunction> {
 	 * @throws An error if the function can't be found.
 	 */
 	public async readById(id: string | HRef): Promise<FunctionType> {
-		const finFunction = await fetchVal<FunctionType>(
+		return await fetchVal<FunctionType>(
 			`${this.#url}/${HRef.make(id).value}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
 			},
 			this.#serviceConfig.fetch
 		)
-
-		return finFunction
 	}
 
 	/**

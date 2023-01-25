@@ -30,6 +30,7 @@ import { GroupsService } from './groups/GroupService'
 import { RolesService } from './roles/RolesService'
 import { NotificationService } from './notifications/NotificationService'
 import { NotificationSettingsService } from './notifications/NotificationSettingService'
+import { FunctionService } from './functions/FunctionService'
 
 /**
  * A high level Haystack Client
@@ -130,6 +131,11 @@ export class Client implements ClientServiceConfig {
 	 * The notifications settings service.
 	 */
 	public readonly notificationsSettings: NotificationSettingsService
+
+	/**
+	 * The functions service
+	 */
+	public readonly functions: FunctionService
 
 	/**
 	 * The `fetch` options.
@@ -233,6 +239,7 @@ export class Client implements ClientServiceConfig {
 		this.roles = new RolesService(this)
 		this.notifications = new NotificationService(this)
 		this.notificationsSettings = new NotificationSettingsService(this)
+		this.functions = new FunctionService(this)
 
 		// Add the authorization bearer token if specified.
 		if (typeof authBearer === 'string') {

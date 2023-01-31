@@ -2,7 +2,7 @@
  * Copyright (c) 2020, J2 Innovations. All Rights Reserved
  */
 
-import { HRef, HDict } from 'haystack-core'
+import { HRef, HDict, HGrid } from 'haystack-core'
 import { Subject, SubjectChangedEventHandler } from './Subject'
 import { makeDeferred, Deferred } from '../../util/promise'
 
@@ -212,6 +212,15 @@ export class BatchSubject implements Subject {
 	 */
 	public get(id: string | HRef): HDict | undefined {
 		return this.#subject.get(id)
+	}
+
+	/**
+	 * Used to manually trigger a watch update.
+	 *
+	 * @param grid A grid of dicts to update.
+	 */
+	public async update(grid: HGrid): Promise<void> {
+		return this.#subject.update(grid)
 	}
 
 	/**

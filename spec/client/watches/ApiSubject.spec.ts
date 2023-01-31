@@ -9,7 +9,15 @@ import {
 	LINGER_TIMEOUT_MS,
 } from '../../../src/client/watches/ApiSubject'
 import { DEFAULT_POLL_RATE_SECS } from '../../../src/client/watches/Watch'
-import { Kind, HGrid, HDict, HRef, HStr, HNamespace } from 'haystack-core'
+import {
+	Kind,
+	HGrid,
+	HDict,
+	HRef,
+	HStr,
+	HNamespace,
+	HDateTime,
+} from 'haystack-core'
 import {
 	WatchEventType,
 	WatchChangedEvent,
@@ -83,7 +91,9 @@ describe('ApiSubject', function (): void {
 		})
 
 		firstGrid = HGrid.make({
-			meta: HDict.make({ watchId: HStr.make('watchId') }),
+			meta: HDict.make({
+				watchId: HStr.make('watchId'),
+			}),
 			rows: [firstDict],
 		})
 
@@ -350,6 +360,63 @@ describe('ApiSubject', function (): void {
 			expect(cb).toHaveBeenCalledWith(event)
 		})
 
+		it('does not invoke a callback is the new data is older than the current', async () => {
+			firstDict.set('mod', HDateTime.make('2022-01-31T19:38:11.019Z'))
+
+			const changed = [
+				HDict.make({
+					id: HRef.make('foo'),
+					data: HStr.make('some changed data'),
+					mod: HDateTime.make('2021-01-31T19:38:11.019Z'),
+				}),
+			]
+
+			asMock(apis.poll).mockResolvedValue(changed)
+			await subject.poll()
+
+			expect(cb).not.toHaveBeenCalled()
+		})
+
+		it('invokes a callback is the new data is newer than the current', async () => {
+			const currentMod = HDateTime.make('2021-01-31T19:38:11.019Z')
+			const newMod = HDateTime.make('2022-01-31T19:38:11.019Z')
+
+			firstDict.set('mod', currentMod)
+
+			const changed = [
+				HDict.make({
+					id: HRef.make('foo'),
+					data: HStr.make('some changed data'),
+					mod: newMod,
+				}),
+			]
+
+			asMock(apis.poll).mockResolvedValue(changed)
+			await subject.poll()
+
+			const event: WatchChangedEvent = {
+				type: WatchEventType.Changed,
+				ids: {
+					foo: {
+						changed: [
+							{
+								name: 'data',
+								oldValue: HStr.make('some data'),
+								value: HStr.make('some changed data'),
+							},
+							{
+								name: 'mod',
+								oldValue: currentMod,
+								value: newMod,
+							},
+						],
+					},
+				},
+			}
+
+			expect(cb).toHaveBeenCalledWith(event)
+		})
+
 		it('invokes callback with added data', async function (): Promise<void> {
 			const changed = [
 				HDict.make({
@@ -490,6 +557,45 @@ describe('ApiSubject', function (): void {
 			await expect(subject.poll()).rejects.toBeTruthy()
 		})
 	}) // #poll()
+
+	describe('#update()', () => {
+		let cb: jest.Mock
+
+		beforeEach(async function (): Promise<void> {
+			cb = jest.fn()
+			subject.on(cb)
+			mockOpen()
+			await subject.add(['foo'])
+		})
+
+		it('triggers a poll with the updated records', async () => {
+			const changed = new HGrid([
+				HDict.make({
+					id: HRef.make('foo'),
+					data: HStr.make('some changed data'),
+				}),
+			])
+
+			await subject.update(changed)
+
+			const event: WatchChangedEvent = {
+				type: WatchEventType.Changed,
+				ids: {
+					foo: {
+						changed: [
+							{
+								name: 'data',
+								oldValue: HStr.make('some data'),
+								value: HStr.make('some changed data'),
+							},
+						],
+					},
+				},
+			}
+
+			expect(cb).toHaveBeenCalledWith(event)
+		})
+	}) // #update()
 
 	describe('#refresh()', function (): void {
 		beforeEach(function (): void {

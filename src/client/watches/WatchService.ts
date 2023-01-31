@@ -2,8 +2,8 @@
  * Copyright (c) 2020, J2 Innovations. All Rights Reserved
  */
 
-import { HGrid } from 'haystack-core'
-import { Ids } from '../../util/hval'
+import { HaysonDict, HDict, HGrid, HList } from 'haystack-core'
+import { dictsToGrid, Ids } from '../../util/hval'
 import { ClientServiceConfig } from '../ClientServiceConfig'
 import { DEFAULT_POLL_RATE_SECS, Watch } from './Watch'
 import { ApiSubject } from './ApiSubject'
@@ -65,5 +65,27 @@ export class WatchService {
 	 */
 	public async close(): Promise<void> {
 		await Watch.close(this.#subject)
+	}
+
+	/**
+	 * Triggers a manual update of the watches.
+	 *
+	 * This is used to manually update dicts outside of a poll.
+	 * Providing the dicts are newer and they're being watched, any
+	 * listeners will receive the update as if they were updated from
+	 * the server via a watch poll request.
+	 *
+	 * @param dicts The dicts to update.
+	 */
+	public async update(
+		dicts:
+			| HDict
+			| HaysonDict
+			| HDict[]
+			| HaysonDict[]
+			| HGrid
+			| HList<HDict>
+	): Promise<void> {
+		return this.#subject.update(dictsToGrid(dicts))
 	}
 }

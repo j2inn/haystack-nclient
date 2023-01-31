@@ -30,6 +30,7 @@ describe('Watch', function (): void {
 			on: jest.fn(),
 			off: jest.fn(),
 			get: jest.fn(),
+			update: jest.fn(),
 			inspect: jest.fn(),
 		}
 

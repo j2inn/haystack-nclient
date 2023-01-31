@@ -382,47 +382,9 @@ export class ApiSubject implements Subject {
 	 */
 	public async poll(): Promise<void> {
 		try {
-			const watchId = this.watchId
-			if (!watchId) {
-				return
-			}
-
-			// Only generate any events if there are registered callbacks.
-			const generateEvent = this.#callbacks.size > 0
-
-			let event: WatchChangedEvent | undefined
-			const updates = await this.#apis.poll(watchId)
-
-			for (const newDict of updates) {
-				const curDict = this.#dictCache[getId(newDict)]?.dict
-				if (curDict) {
-					const changes = ApiSubject.updateDict(
-						curDict,
-						newDict,
-						generateEvent
-					)
-
-					if (changes) {
-						event = event ?? {
-							type: WatchEventType.Changed,
-							ids: {},
-						}
-
-						event.ids[getId(curDict)] = changes
-					}
-				}
-			}
-
-			// Only fire an event if there are any changes detected.
-			if (event) {
-				for (const callback of this.#callbacks) {
-					try {
-						callback(event)
-					} catch (err) {
-						console.error(err)
-					}
-				}
-			}
+			return await this.doUpdate(async (watchId) =>
+				this.#apis.poll(watchId)
+			)
 		} catch (err) {
 			if (isGridError(err)) {
 				await this.reopen()
@@ -433,6 +395,69 @@ export class ApiSubject implements Subject {
 			await this.#mutex.wait()
 			if (this.isOpen()) {
 				this.restartPollTimer()
+			}
+		}
+	}
+
+	/**
+	 * Used to manually trigger a watch update.
+	 *
+	 * @param grid A grid of dicts to update.
+	 */
+	public async update(grid: HGrid): Promise<void> {
+		await this.doUpdate(async () => grid.getRows())
+	}
+
+	/**
+	 * Poll the watch and update the watch's grid.
+	 *
+	 * @param getUpdatedRecords Optional function used to get the updated records.
+	 */
+	private async doUpdate(
+		getUpdatedRecords: (watchId: string) => Promise<RecordDict[]> = async (
+			watchId
+		) => this.#apis.poll(watchId)
+	): Promise<void> {
+		const watchId = this.watchId
+		if (!watchId) {
+			return
+		}
+
+		// Only generate any events if there are registered callbacks.
+		const generateEvent = this.#callbacks.size > 0
+
+		let event: WatchChangedEvent | undefined
+		const updates = await getUpdatedRecords(watchId)
+
+		for (const newDict of updates) {
+			const curDict = this.#dictCache[getId(newDict)]?.dict
+
+			if (curDict && newDict.isNewer(curDict)) {
+				const changes = ApiSubject.updateDict(
+					curDict,
+					newDict,
+					generateEvent
+				)
+
+				if (changes) {
+					event = event ?? {
+						type: WatchEventType.Changed,
+						ids: {},
+					}
+
+					event.ids[getId(curDict)] = changes
+				}
+			}
+		}
+
+		// Only fire an event if there are any changes detected.
+		if (event) {
+			for (const callback of this.#callbacks) {
+				try {
+					callback(event)
+				} catch (err) {
+					console.error(err)
+				}
 			}
 		}
 	}

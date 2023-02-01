@@ -360,7 +360,7 @@ describe('ApiSubject', function (): void {
 			expect(cb).toHaveBeenCalledWith(event)
 		})
 
-		it('does not invoke a callback is the new data is older than the current', async () => {
+		it('does not invoke a callback if the new data is older than the current', async () => {
 			firstDict.set('mod', HDateTime.make('2022-01-31T19:38:11.019Z'))
 
 			const changed = [

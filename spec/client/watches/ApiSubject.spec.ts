@@ -377,7 +377,7 @@ describe('ApiSubject', function (): void {
 			expect(cb).not.toHaveBeenCalled()
 		})
 
-		it('invokes a callback is the new data is newer than the current', async () => {
+		it('invokes a callback if the new data is newer than the current', async () => {
 			const currentMod = HDateTime.make('2021-01-31T19:38:11.019Z')
 			const newMod = HDateTime.make('2022-01-31T19:38:11.019Z')
 

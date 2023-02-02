@@ -73,6 +73,6 @@
 		"write-file-webpack-plugin": "^4.5.1"
 	},
 	"peerDependencies": {
-		"haystack-core": "^2.0.44"
+		"haystack-core": "^2.0.45"
 	}
 }

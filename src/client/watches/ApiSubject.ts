@@ -469,7 +469,7 @@ export class ApiSubject implements Subject {
 	 * @param newDict The new dict.
 	 * @returns True if an update can be triggered.
 	 */
-	private static canUpdate(curDict: HDict, newDict: HDict): boolean {
+	public static canUpdate(curDict: HDict, newDict: HDict): boolean {
 		const curMod = curDict.get<HDateTime>('mod')
 		const newMod = newDict.get<HDateTime>('mod')
 

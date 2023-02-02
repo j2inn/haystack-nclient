@@ -17,6 +17,7 @@ import {
 	HStr,
 	HNamespace,
 	HDateTime,
+	HMarker,
 } from 'haystack-core'
 import {
 	WatchEventType,
@@ -723,4 +724,75 @@ describe('ApiSubject', function (): void {
 			)
 		})
 	}) // #pollRate
+
+	describe('#canUpdate()', () => {
+		it('returns false for two dicts that are the same with no timestamp', () => {
+			expect(
+				ApiSubject.canUpdate(
+					new HDict({ test: HMarker.make() }),
+					new HDict({ test: HMarker.make() })
+				)
+			).toBe(false)
+		})
+
+		it('returns false when the newer dict has an older timestamp', () => {
+			expect(
+				ApiSubject.canUpdate(
+					new HDict({
+						test: HMarker.make(),
+						mod: HDateTime.make('2023-02-02T11:57:29.055Z'),
+					}),
+					new HDict({
+						test: HMarker.make(),
+						mod: HDateTime.make('2023-01-02T11:57:29.055Z'),
+					})
+				)
+			).toBe(false)
+		})
+
+		it('returns false when the newer dict has the same timestamp and the dicts are equal', () => {
+			expect(
+				ApiSubject.canUpdate(
+					new HDict({
+						test: HMarker.make(),
+						mod: HDateTime.make('2023-02-02T11:57:29.055Z'),
+					}),
+					new HDict({
+						test: HMarker.make(),
+						mod: HDateTime.make('2023-02-02T11:57:29.055Z'),
+					})
+				)
+			).toBe(false)
+		})
+
+		it('returns true when the newer dict has the same timestamp and the dicts are not equal', () => {
+			expect(
+				ApiSubject.canUpdate(
+					new HDict({
+						test: HMarker.make(),
+						mod: HDateTime.make('2023-02-02T11:57:29.055Z'),
+					}),
+					new HDict({
+						foobar: HMarker.make(),
+						mod: HDateTime.make('2023-02-02T11:57:29.055Z'),
+					})
+				)
+			).toBe(true)
+		})
+
+		it('returns true when the newer dict has an newer timestamp', () => {
+			expect(
+				ApiSubject.canUpdate(
+					new HDict({
+						test: HMarker.make(),
+						mod: HDateTime.make('2023-02-02T11:57:29.055Z'),
+					}),
+					new HDict({
+						test: HMarker.make(),
+						mod: HDateTime.make('2023-03-02T11:57:29.055Z'),
+					})
+				)
+			).toBe(true)
+		})
+	}) // #canUpdate()
 })

@@ -2,7 +2,7 @@
  * Copyright (c) 2020, J2 Innovations. All Rights Reserved
  */
 
-import { HGrid, HDict, HRef } from 'haystack-core'
+import { HGrid, HDict, HRef, HDateTime } from 'haystack-core'
 import { WatchApis } from './WatchApis'
 import { isGridError } from '../GridError'
 import { getId } from '../../util/hval'
@@ -432,7 +432,7 @@ export class ApiSubject implements Subject {
 		for (const newDict of updates) {
 			const curDict = this.#dictCache[getId(newDict)]?.dict
 
-			if (curDict && newDict.isNewer(curDict)) {
+			if (curDict && ApiSubject.canUpdate(curDict, newDict)) {
 				const changes = ApiSubject.updateDict(
 					curDict,
 					newDict,
@@ -459,6 +459,36 @@ export class ApiSubject implements Subject {
 					console.error(err)
 				}
 			}
+		}
+	}
+
+	/**
+	 * Return true if the dicts can trigger an update event for a watch.
+	 *
+	 * @param curDict The current dict.
+	 * @param newDict The new dict.
+	 * @returns True if an update can be triggered.
+	 */
+	private static canUpdate(curDict: HDict, newDict: HDict): boolean {
+		const curMod = curDict.get<HDateTime>('mod')
+		const newMod = newDict.get<HDateTime>('mod')
+
+		// If neither dict has a timestamp tag then use an equality check.
+		if (!(curMod && newMod)) {
+			return !curDict.equals(newDict)
+		}
+
+		const result = newMod.compareTo(curMod)
+
+		if (result > 0) {
+			// If the new timestamp is newer than the current timestamp then we can update.
+			return true
+		} else if (result === 0) {
+			// If the timestamps are the same then do an additional equality check.
+			return !curDict.equals(newDict)
+		} else {
+			// The timestamp is older then we can't do an update.
+			return false
 		}
 	}
 

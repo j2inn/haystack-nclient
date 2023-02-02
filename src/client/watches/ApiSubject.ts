@@ -2,7 +2,7 @@
  * Copyright (c) 2020, J2 Innovations. All Rights Reserved
  */
 
-import { HGrid, HDict, HRef } from 'haystack-core'
+import { HGrid, HDict, HRef, HDateTime } from 'haystack-core'
 import { WatchApis } from './WatchApis'
 import { isGridError } from '../GridError'
 import { getId } from '../../util/hval'
@@ -382,47 +382,9 @@ export class ApiSubject implements Subject {
 	 */
 	public async poll(): Promise<void> {
 		try {
-			const watchId = this.watchId
-			if (!watchId) {
-				return
-			}
-
-			// Only generate any events if there are registered callbacks.
-			const generateEvent = this.#callbacks.size > 0
-
-			let event: WatchChangedEvent | undefined
-			const updates = await this.#apis.poll(watchId)
-
-			for (const newDict of updates) {
-				const curDict = this.#dictCache[getId(newDict)]?.dict
-				if (curDict) {
-					const changes = ApiSubject.updateDict(
-						curDict,
-						newDict,
-						generateEvent
-					)
-
-					if (changes) {
-						event = event ?? {
-							type: WatchEventType.Changed,
-							ids: {},
-						}
-
-						event.ids[getId(curDict)] = changes
-					}
-				}
-			}
-
-			// Only fire an event if there are any changes detected.
-			if (event) {
-				for (const callback of this.#callbacks) {
-					try {
-						callback(event)
-					} catch (err) {
-						console.error(err)
-					}
-				}
-			}
+			return await this.doUpdate(async (watchId) =>
+				this.#apis.poll(watchId)
+			)
 		} catch (err) {
 			if (isGridError(err)) {
 				await this.reopen()
@@ -434,6 +396,99 @@ export class ApiSubject implements Subject {
 			if (this.isOpen()) {
 				this.restartPollTimer()
 			}
+		}
+	}
+
+	/**
+	 * Used to manually trigger a watch update.
+	 *
+	 * @param grid A grid of dicts to update.
+	 */
+	public async update(grid: HGrid): Promise<void> {
+		await this.doUpdate(async () => grid.getRows())
+	}
+
+	/**
+	 * Poll the watch and update the watch's grid.
+	 *
+	 * @param getUpdatedRecords Optional function used to get the updated records.
+	 */
+	private async doUpdate(
+		getUpdatedRecords: (watchId: string) => Promise<RecordDict[]> = async (
+			watchId
+		) => this.#apis.poll(watchId)
+	): Promise<void> {
+		const watchId = this.watchId
+		if (!watchId) {
+			return
+		}
+
+		// Only generate any events if there are registered callbacks.
+		const generateEvent = this.#callbacks.size > 0
+
+		let event: WatchChangedEvent | undefined
+		const updates = await getUpdatedRecords(watchId)
+
+		for (const newDict of updates) {
+			const curDict = this.#dictCache[getId(newDict)]?.dict
+
+			if (curDict && ApiSubject.canUpdate(curDict, newDict)) {
+				const changes = ApiSubject.updateDict(
+					curDict,
+					newDict,
+					generateEvent
+				)
+
+				if (changes) {
+					event = event ?? {
+						type: WatchEventType.Changed,
+						ids: {},
+					}
+
+					event.ids[getId(curDict)] = changes
+				}
+			}
+		}
+
+		// Only fire an event if there are any changes detected.
+		if (event) {
+			for (const callback of this.#callbacks) {
+				try {
+					callback(event)
+				} catch (err) {
+					console.error(err)
+				}
+			}
+		}
+	}
+
+	/**
+	 * Return true if the dicts can trigger an update event for a watch.
+	 *
+	 * @param curDict The current dict.
+	 * @param newDict The new dict.
+	 * @returns True if an update can be triggered.
+	 */
+	public static canUpdate(curDict: HDict, newDict: HDict): boolean {
+		const curMod = curDict.get<HDateTime>('mod')
+		const newMod = newDict.get<HDateTime>('mod')
+
+		// If neither dict has a timestamp tag then use an equality check.
+		if (!(curMod && newMod)) {
+			return !curDict.equals(newDict)
+		}
+
+		const result = newMod.compareTo(curMod)
+
+		if (result > 0) {
+			// If the new timestamp is newer than the current timestamp then we can update.
+			return true
+		} else if (result === 0) {
+			// If the timestamps are the same then do an additional equality check.
+			return !curDict.equals(newDict)
+		} else {
+			// The timestamp is older then we can't do an update.
+			return false
 		}
 	}
 

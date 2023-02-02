@@ -2,6 +2,7 @@
  * Copyright (c) 2021, J2 Innovations. All Rights Reserved
  */
 
+import { HGrid } from 'haystack-core'
 import { BatchSubject } from '../../../src/client/watches/BatchSubject'
 import { Subject } from '../../../src/client/watches/Subject'
 
@@ -20,6 +21,7 @@ describe('BatchSubject', function (): void {
 			remove: jest.fn().mockImplementation(async (ids: string[]) => {
 				ops.push('remove:' + ids.join(','))
 			}),
+			update: jest.fn(),
 		} as unknown as Subject
 
 		batch = new BatchSubject(subject)
@@ -107,4 +109,12 @@ describe('BatchSubject', function (): void {
 			expect(order).toBe('abcdefghi')
 		})
 	}) // #remove()
+
+	describe('#update()', () => {
+		it('calls inner subject update', async () => {
+			const grid = new HGrid()
+			await batch.update(grid)
+			expect(subject.update).toHaveBeenCalledWith(grid)
+		})
+	}) // #update()
 })

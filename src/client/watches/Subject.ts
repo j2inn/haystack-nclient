@@ -2,7 +2,7 @@
  * Copyright (c) 2020, J2 Innovations. All Rights Reserved
  */
 
-import { HRef, HDict } from 'haystack-core'
+import { HRef, HDict, HGrid } from 'haystack-core'
 import { WatchChangedEvent } from './WatchEvent'
 
 /**
@@ -68,6 +68,13 @@ export interface Subject {
 	 * @returns The dict or undefined if it can't be found.
 	 */
 	get(id: string | HRef): HDict | undefined
+
+	/**
+	 * Used to manually trigger a watch update.
+	 *
+	 * @param grid A grid of dicts to update.
+	 */
+	update(grid: HGrid): Promise<void>
 
 	/**
 	 * Inspect the subject.

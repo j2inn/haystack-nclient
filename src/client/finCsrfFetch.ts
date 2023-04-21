@@ -14,6 +14,7 @@ import {
 	SKYARC_ATTEST_KEY,
 	removeHeader,
 } from '../util/http'
+import { FetchMethod } from './fetchVal'
 
 /**
  * The http status code for an invalid attest key.
@@ -80,12 +81,14 @@ export async function getFinCsrfToken(host: string): Promise<string> {
  *
  * @param origin The origin to request the attest key from.
  * @param options The `fetch` options to use when making an HTTP request.
+ * @param fetchFunc Fetch function to use instead of global fetch.
  * @returns A promise that resolves to the attest key or an empty string.
  * @throws Error if we cannot obtain the key.
  */
 async function requestFinAttestKey(
 	origin: string,
-	options: RequestInit
+	options: RequestInit,
+	fetchFunc: FetchMethod
 ): Promise<string> {
 	const opt: RequestInit = {
 		...options,
@@ -101,7 +104,7 @@ async function requestFinAttestKey(
 		? options.attestResponseHeaderName ?? FIN_AUTH_KEY
 		: FIN_AUTH_KEY
 
-	const resp = await fetch(`${origin}${attestRequestUri}`, opt)
+	const resp = await fetchFunc(`${origin}${attestRequestUri}`, opt)
 	const auth = getHeader(resp.headers, attestResponseHeaderName)
 
 	if (!auth) {
@@ -116,11 +119,13 @@ async function requestFinAttestKey(
  *
  * @param resource The resource being request.
  * @param cors Indicates whether the originating request was using cors.
+ * @param fetchFunc Fetch function to use instead of global fetch.
  * @returns A promise that resolves to the attest key.
  */
 async function getAttestKey(
 	resource: string,
-	options: RequestInit
+	options: RequestInit,
+	fetchFunc: FetchMethod
 ): Promise<string> {
 	const host = getOrigin(resource)
 	let promise = originAttestKeyPromises.get(host)
@@ -128,7 +133,11 @@ async function getAttestKey(
 	if (!promise) {
 		// Cache the promise to get the attest key. This handles
 		// multiple requests being concurrently made on start up.
-		promise = requestFinAttestKey(host, options) as Promise<string>
+		promise = requestFinAttestKey(
+			host,
+			options,
+			fetchFunc
+		) as Promise<string>
 		originAttestKeyPromises.set(host, promise)
 	}
 
@@ -160,21 +169,29 @@ function clearAttestKey(resource: string): void {
  *
  * @param resource The resource to request.
  * @param options Optional object containing any custom settings.
+ * @param fetchFunc Optional fetch function to use instead of global fetch.
  * @returns A promise that resolves to a response object.
  */
 export async function finCsrfFetch(
 	resource: RequestInfo,
-	options?: RequestInit
+	options?: RequestInit,
+	fetchFunc?: FetchMethod
 ): Promise<Response> {
 	const hsOptions: RequestInit = options ?? {}
 	const attestHeaderName = isCsrfRequestInit(options)
 		? options.attestHeaderName ?? SKYARC_ATTEST_KEY
 		: SKYARC_ATTEST_KEY
 
+	const fetchImpl = fetchFunc ?? fetch
+
 	async function addAttestKeyHeader(): Promise<boolean> {
 		removeHeader(hsOptions.headers, attestHeaderName)
 
-		const attestKey = await getAttestKey(String(resource), hsOptions)
+		const attestKey = await getAttestKey(
+			String(resource),
+			hsOptions,
+			fetchImpl
+		)
 
 		// Only add the attest key if we have one. Some haystack servers may not use this key.
 		if (attestKey) {
@@ -193,7 +210,7 @@ export async function finCsrfFetch(
 		hasAttestKey = true
 	}
 
-	let resp = await fetch(resource, hsOptions)
+	let resp = await fetchImpl(resource, hsOptions)
 
 	// If we get a 400 response back then it's likely the attest key is no longer
 	// valid. Perhaps the server has restarted. In this case, clear the attest key
@@ -202,7 +219,7 @@ export async function finCsrfFetch(
 		clearAttestKey(String(resource))
 
 		if (await addAttestKeyHeader()) {
-			resp = await fetch(resource, hsOptions)
+			resp = await fetchImpl(resource, hsOptions)
 		}
 	}
 

@@ -19,6 +19,7 @@ import {
 } from '../../src/util/http'
 import fetchMock from 'fetch-mock'
 import { HGrid, HDict } from 'haystack-core'
+import { FetchMethod } from '../../src/client/fetchVal'
 
 describe('finCsrfFetch', function (): void {
 	const READ = '/read'
@@ -225,6 +226,28 @@ describe('finCsrfFetch', function (): void {
 			expect(body).toBe(respGrid.toZinc())
 			expect(count).toBe(2)
 			expect(fetchMock.calls(FIN_AUTH_PATH).length).toBe(2)
+		})
+
+		it('uses parameter fetch', async function (): Promise<void> {
+			let callCount = 0
+
+			const headers = new Headers()
+			headers.set(SKYARC_ATTEST_KEY, 'test')
+
+			const mockFetch = async () => {
+				++callCount
+				return {
+					status: 200,
+				}
+			}
+
+			await finCsrfFetch(
+				READ,
+				{ headers },
+				mockFetch as unknown as FetchMethod
+			)
+
+			expect(callCount).toBe(1)
 		})
 	}) // finCsrfFetch()
 

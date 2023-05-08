@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, J2 Innovations. All Rights Reserved
+ * Copyright (c) 2020-2023, J2 Innovations. All Rights Reserved
  */
 
 import {
@@ -13,14 +13,42 @@ import {
 	HStr,
 	HTime,
 	HVal,
+	Kind,
 } from 'haystack-core'
 
-export interface ScheduleReadOptions {
-	columns?: string[]
-	limit?: number
+/**
+ * Options for reading Schedules and Calendars.
+ */
+export type ScheduleReadOptions = {
+	/**
+	 * If defined, Gets the functions filtered by a Haystack filter
+	 */
+	filter?: string
+
+	/**
+	 * If defined, specifies the name of the tag/prop by which the returned function records are sorted in ascending order.
+	 */
 	sort?: string[]
+
+	/**
+	 * If defined, specifies the max number of function records that will be returned by the read
+	 */
+	limit?: number
+
+	/**
+	 * If defined, limit the number of columns sent back in the response.
+	 */
+	columns?: string[]
+
+	/**
+	 * Omit the specified columns from the response.
+	 */
+	omit?: string[]
 }
 
+/**
+ * Interface for adding and/or removing schedulable points
+ */
 export interface SchedulePointUpdate {
 	add?: HRef[]
 	remove?: HRef[]
@@ -34,13 +62,13 @@ export interface ScheduleRange extends HDict {
 	 * Specifies the date when the schedule starts to be active. If not specified, is/was
 	 * always active
 	 */
-	start?: HDate
+	lowBound?: HDate
 
 	/**
 	 * Specifies the date when the schedule ceases to be active. IF not specifies will
 	 * start active forever
 	 */
-	end?: HDate
+	upBound?: HDate
 }
 
 /**
@@ -152,6 +180,38 @@ export interface SchedulePeriod extends HDict {
 }
 
 /**
+ * A list of daily schedules for a week.
+ */
+export type WeeklySchedule = WeekDaySchedule[]
+
+/**
+ * Defines the day of week and schedule for that day.
+ */
+export interface WeekDaySchedule extends HDict {
+	dayOfWeek: HNum,
+	dailySchedule: DailySchedule
+}
+
+/**
+ * Defines the schedule for a day.
+ */
+export interface DailySchedule extends HDict {
+	bacnetTime: {
+		hour: HNum
+		minute: HNum
+		second: HNum
+		hundredths: HNum
+	}
+	scheduledVal: HVal
+}
+
+export type ExceptionSchedules = ExeceptionSchedule[]
+
+export interface ExeceptionSchedule extends HDict {
+
+}
+
+/**
  * Is the calendar entry object
  */
 export interface CalendarEntry extends HDict {
@@ -234,18 +294,13 @@ export interface ScheduleEvent extends HDict {
 }
 
 /**
- * Is the Schedule object
+ * Schedule object
  */
 export interface Schedule extends HDict {
 	/**
 	 * Is the id of the scehdule object
 	 */
 	id: HRef
-
-	/**
-	 * Is the date/time value when the schedule was modified last
-	 */
-	mod: HDateTime
 
 	/**
 	 * Specifies the name of the schedule
@@ -255,43 +310,48 @@ export interface Schedule extends HDict {
 	/**
 	 * Is the schedule kind (bool, number, str)
 	 */
-	kind: HStr
+	kind: Kind
+
+	/**
+	 * Is the range of dates (if any) that the schedule is active
+	 */
+	effectivePeriod: ScheduleRange
 
 	/**
 	 * Is the current value of the schedule
 	 */
-	curVal: HVal
-
-	/**
-	 * Is the next value of the schedule (whenever it changes)
-	 */
-	nextVal: HVal
-
-	/**
-	 * Specifies the date-time when the value of schedule will update next
-	 */
-	nextChange: HDateTime
+	curVal?: HVal
 
 	/**
 	 * Is the list of calendar(s) the schedule subscribes to
 	 */
-	calendars?: HList<HRef>
-
-	/**
-	 * Specifies the list of enumerated values that the schedule value can have. Only applicable
-	 * when the schedule is of the type string
-	 */
-	enum?: HList<HStr>
+	calendarRefs?: HList<HRef>
 
 	/**
 	 * Specifies the default value of the schedule (if any)
 	 */
 	defaultVal?: HVal
+	/**
+	 * Is the next value of the schedule (whenever it changes)
+	 */
+	nextVal?: HVal
 
 	/**
-	 * Is the range of dates (if any) that the schedule is active
+	 * Specifies the date-time when the value of schedule will update next
 	 */
-	range?: ScheduleRange
+	nextTime?: HDateTime
+
+	/**
+	 * Is the date/time value when the schedule was modified last
+	 */
+	mod?: HDateTime
+
+	/**
+	 * One week of schedules per day
+	 */
+	weeklySchedule?: WeeklySchedule
+
+	exceptionSchedule?: 
 }
 
 /**

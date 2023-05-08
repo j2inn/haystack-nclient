@@ -9,42 +9,13 @@ import {
 	Schedule,
 	Calendar,
 	CalendarEntry,
+	ScheduleReadOptions,
 } from './types'
 import { fetchVal } from '../fetchVal'
 import { ClientServiceConfig } from '../ClientServiceConfig'
 import { ScheduleEvent, SchedulePoint } from './types'
 import { encodeQuery } from '../../util/http'
 import { dictsToGrid } from '../../util/hval'
-
-/**
- * Options for reading Schedules and Calendars.
- */
-export type ScheduleReadOptions = {
-	/**
-	 * If defined, Gets the functions filtered by a Haystack filter
-	 */
-	filter?: string
-
-	/**
-	 * If defined, specifies the name of the tag/prop by which the returned function records are sorted in ascending order.
-	 */
-	sort?: string[]
-
-	/**
-	 * If defined, specifies the max number of function records that will be returned by the read
-	 */
-	limit?: number
-
-	/**
-	 * If defined, limit the number of columns sent back in the response.
-	 */
-	columns?: string[]
-
-	/**
-	 * Omit the specified columns from the response.
-	 */
-	omit?: string[]
-}
 
 export class ScheduleService {
 	/**

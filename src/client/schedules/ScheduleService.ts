@@ -2,18 +2,16 @@
  * Copyright (c) 2020, J2 Innovations. All Rights Reserved
  */
 
-import { HDict, HGrid, HList, HRef } from 'haystack-core'
+import { HGrid, HRef } from 'haystack-core'
 import {
-	// ScheduleReadOptions,
 	SchedulePointUpdate,
 	Schedule,
 	Calendar,
-	CalendarEntry,
 	ScheduleReadOptions,
+	SchedulablePoint,
 } from './types'
 import { fetchVal } from '../fetchVal'
 import { ClientServiceConfig } from '../ClientServiceConfig'
-import { ScheduleEvent, SchedulePoint } from './types'
 import { encodeQuery } from '../../util/http'
 import { dictsToGrid } from '../../util/hval'
 
@@ -55,7 +53,7 @@ export class ScheduleService {
 	 * @returns The HGrid result of the schedule read function.
 	 */
 	public async readAllSchedules(options?: ScheduleReadOptions) {
-		return fetchVal<HGrid<T>>(
+		return fetchVal<HGrid<Schedule>>(
 			`${this.#schedulesUrl}${encodeQuery({
 				...(options ?? {}),
 			})}`,
@@ -69,11 +67,11 @@ export class ScheduleService {
 	/**
 	 * Creates single or multiple schedules.
 	 *
-	 * @param schedules HDict | HGrid
+	 * @param schedules Schedule | HGrid of Schedule
 	 * @returns A grid containing the created schedules.
 	 */
-	public async createSchedules(schedules: HDict | HGrid) {
-		return fetchVal<HGrid<T>>(
+	public async createSchedules(schedules: Schedule | HGrid<Schedule>) {
+		return fetchVal<HGrid<Schedule>>(
 			this.#schedulesUrl,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -91,7 +89,7 @@ export class ScheduleService {
 	 * @returns The schedule record.
 	 */
 	public async readScheduleById(id: string | HRef) {
-		return fetchVal<HDict<T>>(
+		return fetchVal<Schedule>(
 			`${this.#schedulesUrl}/${HRef.make(id).value}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -105,8 +103,8 @@ export class ScheduleService {
 	 * @param schedule Schedule | HDict
 	 * @returns The updated schedule record.
 	 */
-	public async updateSchedule(schedule: HDict) {
-		return fetchVal<HDict<T>>(
+	public async updateSchedule(schedule: Schedule) {
+		return fetchVal<Schedule>(
 			`${this.#schedulesUrl}/${schedule.id?.value ?? ''}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -124,7 +122,7 @@ export class ScheduleService {
 	 * @returns The deleted schedule.
 	 */
 	public async deleteScheduleById(id: string | HRef) {
-		return fetchVal<T>(
+		return fetchVal<Schedule>(
 			`${this.#schedulesUrl}/${HRef.make(id).value}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -140,10 +138,8 @@ export class ScheduleService {
 	 * @param id string | HRef
 	 * @returns HGrid<Calendar>
 	 */
-	public async readScheduleCalendarsById(
-		id: string | HRef
-	): Promise<HGrid<CalendarEntry>> {
-		return fetchVal<HGrid<CalendarEntry>>(
+	public async readScheduleCalendarsById(id: string | HRef) {
+		return fetchVal<HGrid<Calendar>>(
 			`${this.#schedulesUrl}/${HRef.make(id).value}/calendars`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -156,13 +152,13 @@ export class ScheduleService {
 	 *
 	 * @param id string | HRef
 	 * @param options ScheduleReadOptions & { omit?: string[] }
-	 * @returns HGrid<SchedulablePoints>
+	 * @returns HGrid of SchedulablePoints
 	 */
 	public async readSchedulablePoints(
 		id: string | HRef,
 		options?: ScheduleReadOptions
-	): Promise<HGrid<T>> {
-		return fetchVal<HGrid<T>>(
+	) {
+		return fetchVal<HGrid<SchedulablePoint>>(
 			`${this.#schedulesUrl}/${HRef.make(id).value}/points/${encodeQuery({
 				...(options ?? {}),
 			})}`,
@@ -178,13 +174,13 @@ export class ScheduleService {
 	 *
 	 * @param id string | HRef
 	 * @param pointUpdates SchedulePointUpdate
-	 * @returns HGrid with all points that were added or removed.
+	 * @returns HGrid with all SchedulablePoint(s) that were added or removed.
 	 */
 	public async updateSchedulePoints(
 		id: string | HRef,
 		pointUpdates: SchedulePointUpdate
 	) {
-		return fetchVal<HGrid<T>>(
+		return fetchVal<HGrid<SchedulablePoint>>(
 			`${this.#schedulesUrl}/${HRef.make(id).value}/points/`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -206,7 +202,7 @@ export class ScheduleService {
 	 * @returns The HGrid result of the calendar read function.
 	 */
 	public async readAllCalendars(options?: ScheduleReadOptions) {
-		return fetchVal<HGrid<T>>(
+		return fetchVal<HGrid<Calendar>>(
 			`${this.#calendarsUrl}${encodeQuery({
 				...(options ?? {}),
 			})}`,
@@ -220,11 +216,11 @@ export class ScheduleService {
 	/**
 	 * Creates single or multiple calendars.
 	 *
-	 * @param calendars HDict | HGrid
+	 * @param calendars Calendar | HGrid of Calendar
 	 * @returns A grid containing the created calendar(s).
 	 */
-	public async createCalendars(calendars: HDict | HGrid) {
-		return fetchVal<HGrid<T>>(
+	public async createCalendars(calendars: Calendar | HGrid<Calendar>) {
+		return fetchVal<HGrid<Calendar>>(
 			this.#schedulesUrl,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -242,7 +238,7 @@ export class ScheduleService {
 	 * @returns The calendar record.
 	 */
 	public async readCalendarById(id: string | HRef) {
-		return fetchVal<HDict<T>>(
+		return fetchVal<Calendar>(
 			`${this.#calendarsUrl}/${HRef.make(id).value}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -253,11 +249,11 @@ export class ScheduleService {
 	/**
 	 * Updates a calendar.
 	 *
-	 * @param schedule Calendar | HDict
+	 * @param schedule Calendar
 	 * @returns The updated calendar record.
 	 */
-	public async updateCalendar(calendar: HDict) {
-		return fetchVal<HDict<T>>(
+	public async updateCalendar(calendar: Calendar) {
+		return fetchVal<Calendar>(
 			`${this.#calendarsUrl}/${calendar.id?.value ?? ''}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -275,7 +271,7 @@ export class ScheduleService {
 	 * @returns The deleted calendar.
 	 */
 	public async deleteCalendarById(id: string | HRef) {
-		return fetchVal<T>(
+		return fetchVal<Calendar>(
 			`${this.#calendarsUrl}/${HRef.make(id).value}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
@@ -291,10 +287,8 @@ export class ScheduleService {
 	 * @param id string | HRef
 	 * @returns HGrid<Schedule>
 	 */
-	public async readCalendarSchedulesById(
-		id: string | HRef
-	): Promise<HGrid<CalendarEntry>> {
-		return fetchVal<HGrid<CalendarEntry>>(
+	public async readCalendarSchedulesById(id: string | HRef) {
+		return fetchVal<HGrid<Schedule>>(
 			`${this.#schedulesUrl}/${HRef.make(id).value}/schedules`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023, J2 Innovations. All Rights Reserved
+ * Copyright (c) 2020, J2 Innovations. All Rights Reserved
  */
 
 import {
@@ -14,6 +14,14 @@ import {
 	HVal,
 	Kind,
 } from 'haystack-core'
+
+/**
+ * The entry endpoints for the Schedule Service
+ */
+export enum ScheduleServiceEndpoints {
+	Schedules = 'schedules',
+	Calendars = 'calendars',
+}
 
 /**
  * Options for reading Schedules and Calendars.
@@ -136,12 +144,12 @@ export interface Schedule extends HDict {
 	/**
 	 * Is the next value of the schedule (whenever it changes).
 	 */
-	nextVal: HVal
+	nextVal?: HVal
 
 	/**
 	 * Specifies the date-time when the value of schedule will update next.
 	 */
-	nextTime: HDateTime
+	nextTime?: HDateTime
 
 	/**
 	 * Is the range of dates (if any) that the schedule is active.
@@ -252,8 +260,8 @@ export interface CalendarDate {
  * The Date range of a Calendar.
  */
 export interface CalendarRange {
-	lowBound: HDate
-	upBound: HDate
+	lowBound?: HDate
+	upBound?: HDate
 }
 
 /**

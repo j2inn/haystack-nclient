@@ -2,13 +2,14 @@
  * Copyright (c) 2020, J2 Innovations. All Rights Reserved
  */
 
-import { HGrid, HRef } from 'haystack-core'
+import { HDict, HGrid, HRef } from 'haystack-core'
 import {
 	SchedulePointUpdate,
 	Schedule,
 	Calendar,
 	ScheduleReadOptions,
 	SchedulablePoint,
+	ScheduleServiceEndpoints,
 } from './types'
 import { fetchVal } from '../fetchVal'
 import { ClientServiceConfig } from '../ClientServiceConfig'
@@ -38,8 +39,13 @@ export class ScheduleService {
 	 */
 	public constructor(serviceConfig: ClientServiceConfig) {
 		this.#serviceConfig = serviceConfig
-		this.#calendarsUrl = serviceConfig.getHaystackServiceUrl('calendars')
-		this.#schedulesUrl = serviceConfig.getHaystackServiceUrl('schedules')
+
+		this.#calendarsUrl = serviceConfig.getHaystackServiceUrl(
+			ScheduleServiceEndpoints.Calendars
+		)
+		this.#schedulesUrl = serviceConfig.getHaystackServiceUrl(
+			ScheduleServiceEndpoints.Schedules
+		)
 	}
 
 	// *******************
@@ -67,10 +73,10 @@ export class ScheduleService {
 	/**
 	 * Creates single or multiple schedules.
 	 *
-	 * @param schedules Schedule | HGrid of Schedule
+	 * @param schedules Schedule | HDict | HGrid
 	 * @returns A grid containing the created schedules.
 	 */
-	public async createSchedules(schedules: Schedule | HGrid<Schedule>) {
+	public async createSchedules(schedules: Schedule | HDict | HGrid) {
 		return fetchVal<HGrid<Schedule>>(
 			this.#schedulesUrl,
 			{
@@ -151,7 +157,7 @@ export class ScheduleService {
 	 * Reads all the schedulable points associated to a schedule.
 	 *
 	 * @param id string | HRef
-	 * @param options ScheduleReadOptions & { omit?: string[] }
+	 * @param options ScheduleReadOptions
 	 * @returns HGrid of SchedulablePoints
 	 */
 	public async readSchedulablePoints(
@@ -159,7 +165,7 @@ export class ScheduleService {
 		options?: ScheduleReadOptions
 	) {
 		return fetchVal<HGrid<SchedulablePoint>>(
-			`${this.#schedulesUrl}/${HRef.make(id).value}/points/${encodeQuery({
+			`${this.#schedulesUrl}/${HRef.make(id).value}/points${encodeQuery({
 				...(options ?? {}),
 			})}`,
 			{
@@ -181,7 +187,7 @@ export class ScheduleService {
 		pointUpdates: SchedulePointUpdate
 	) {
 		return fetchVal<HGrid<SchedulablePoint>>(
-			`${this.#schedulesUrl}/${HRef.make(id).value}/points/`,
+			`${this.#schedulesUrl}/${HRef.make(id).value}/points`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
 				method: 'PATCH',
@@ -216,10 +222,10 @@ export class ScheduleService {
 	/**
 	 * Creates single or multiple calendars.
 	 *
-	 * @param calendars Calendar | HGrid of Calendar
+	 * @param calendars Calendar | HDict | HGrid
 	 * @returns A grid containing the created calendar(s).
 	 */
-	public async createCalendars(calendars: Calendar | HGrid<Calendar>) {
+	public async createCalendars(calendars: Calendar | HDict | HGrid) {
 		return fetchVal<HGrid<Calendar>>(
 			this.#schedulesUrl,
 			{
@@ -254,7 +260,7 @@ export class ScheduleService {
 	 */
 	public async updateCalendar(calendar: Calendar) {
 		return fetchVal<Calendar>(
-			`${this.#calendarsUrl}/${calendar.id?.value ?? ''}`,
+			`${this.#calendarsUrl}/${calendar.id?.value}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
 				method: 'PATCH',
@@ -289,7 +295,7 @@ export class ScheduleService {
 	 */
 	public async readCalendarSchedulesById(id: string | HRef) {
 		return fetchVal<HGrid<Schedule>>(
-			`${this.#schedulesUrl}/${HRef.make(id).value}/schedules`,
+			`${this.#calendarsUrl}/${HRef.make(id).value}/schedules`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
 			}

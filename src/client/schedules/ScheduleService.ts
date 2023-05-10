@@ -227,7 +227,7 @@ export class ScheduleService {
 	 */
 	public async createCalendars(calendars: Calendar | HDict | HGrid) {
 		return fetchVal<HGrid<Calendar>>(
-			this.#schedulesUrl,
+			this.#calendarsUrl,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
 				method: 'POST',

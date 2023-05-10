@@ -570,43 +570,41 @@ describe('ScheduleService', () => {
 		})
 	})
 
-	// describe('#createCalendars()', () => {
-	// 	beforeEach(() => {
-	// 		resp = HGrid.make(mockCalendar())
-	// 		prepareMock('POST', ScheduleServiceEndpoints.Calendars, resp)
-	// 	})
+	describe('#createCalendars()', () => {
+		beforeEach(() => {
+			resp = HGrid.make(mockCalendar())
+			prepareMock('POST', ScheduleServiceEndpoints.Calendars, resp)
+		})
 
-	// it('creates a single calendar', async () => {
-	// 	const payload = mockCalendar()
-	// 	payload.remove('id')
+		it('creates a single calendar', async () => {
+			const payload = mockCalendar()
+			payload.remove('id')
 
-	// 	console.log('yeet')
+			const response = HGrid.make(payload)
 
-	// 	const response = HGrid.make(payload)
+			await service.createCalendars(payload)
+			expect(
+				fetchMock.lastCall(
+					getUrl(ScheduleServiceEndpoints.Calendars)
+				)?.[1]?.body
+			).toEqual(JSON.stringify(response.toJSON()))
+		})
 
-	// 	await service.createCalendars(payload)
-	// 	expect(
-	// 		fetchMock.lastCall(
-	// 			getUrl(ScheduleServiceEndpoints.Calendars)
-	// 		)?.[1]?.body
-	// 	).toEqual(JSON.stringify(response.toJSON()))
-	// })
+		it('creates multiple calendars', async () => {
+			const d1 = mockCalendar()
+			d1.remove('id')
 
-	// it('creates multiple calendars', async () => {
-	// 	const d1 = mockCalendar()
-	// 	d1.remove('id')
+			const d2 = HDict.make(d1)
+			const payload = HGrid.make([d1, d2])
 
-	// 	const d2 = HDict.make(d1)
-	// 	const payload = HGrid.make([d1, d2])
-
-	// 	await service.createCalendars(payload)
-	// 	expect(
-	// 		fetchMock.lastCall(
-	// 			getUrl(ScheduleServiceEndpoints.Calendars)
-	// 		)?.[1]?.body
-	// 	).toEqual(JSON.stringify(payload.toJSON()))
-	// })
-	// })
+			await service.createCalendars(payload)
+			expect(
+				fetchMock.lastCall(
+					getUrl(ScheduleServiceEndpoints.Calendars)
+				)?.[1]?.body
+			).toEqual(JSON.stringify(payload.toJSON()))
+		})
+	})
 
 	describe('#readCalendarById()', () => {
 		beforeEach(() => {
@@ -658,30 +656,30 @@ describe('ScheduleService', () => {
 		})
 	})
 
-	// describe('#deleteCalendarById()', () => {
-	// 	beforeEach(() => {
-	// 		resp = mockCalendar()
-	// 		prepareMock(
-	// 			'DELETE',
-	// 			`${ScheduleServiceEndpoints.Calendars}/c123`,
-	// 			resp
-	// 		)
-	// 	})
+	describe('#deleteCalendarById()', () => {
+		beforeEach(() => {
+			resp = mockCalendar()
+			prepareMock(
+				'DELETE',
+				`${ScheduleServiceEndpoints.Calendars}/c123`,
+				resp
+			)
+		})
 
-	// 	it('deletes a particular calendar by string id', async () => {
-	// 		await service.deleteCalendarById('123')
-	// 		expect(fetchMock.lastUrl()).toEqual(
-	// 			`${getUrl(ScheduleServiceEndpoints.Calendars)}/c123`
-	// 		)
-	// 	})
+		it('deletes a particular calendar by string id', async () => {
+			await service.deleteCalendarById('c123')
+			expect(fetchMock.lastUrl()).toEqual(
+				`${getUrl(ScheduleServiceEndpoints.Calendars)}/c123`
+			)
+		})
 
-	// 	it('deletes a particular calendar identified by HRef id', async () => {
-	// 		await service.deleteCalendarById(HRef.make('123'))
-	// 		expect(fetchMock.lastUrl()).toEqual(
-	// 			`${getUrl(ScheduleServiceEndpoints.Calendars)}/c123`
-	// 		)
-	// 	})
-	// })
+		it('deletes a particular calendar identified by HRef id', async () => {
+			await service.deleteCalendarById(HRef.make('c123'))
+			expect(fetchMock.lastUrl()).toEqual(
+				`${getUrl(ScheduleServiceEndpoints.Calendars)}/c123`
+			)
+		})
+	})
 
 	describe('#readCalendarSchedulesById()', () => {
 		beforeEach(() => {

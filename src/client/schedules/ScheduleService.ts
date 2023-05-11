@@ -76,7 +76,7 @@ export class ScheduleService {
 	 * @param schedules Schedule | HDict | HGrid
 	 * @returns A grid containing the created schedules.
 	 */
-	public async createSchedules(schedules: Schedule | HDict | HGrid) {
+	public async createSchedules(schedules: Schedule | HGrid<Schedule>) {
 		return fetchVal<HGrid<Schedule>>(
 			this.#schedulesUrl,
 			{
@@ -106,12 +106,13 @@ export class ScheduleService {
 	/**
 	 * Updates a schedule.
 	 *
+	 * @param id The id of the record to update
 	 * @param schedule Schedule | HDict
 	 * @returns The updated schedule record.
 	 */
-	public async updateSchedule(schedule: Schedule) {
+	public async updateSchedule(id: string | HRef, schedule: HDict) {
 		return fetchVal<Schedule>(
-			`${this.#schedulesUrl}/${schedule.id?.value ?? ''}`,
+			`${this.#schedulesUrl}/${HRef.make(id).value}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
 				method: 'PATCH',
@@ -222,10 +223,10 @@ export class ScheduleService {
 	/**
 	 * Creates single or multiple calendars.
 	 *
-	 * @param calendars Calendar | HDict | HGrid
+	 * @param calendars Calendar | HGrid
 	 * @returns A grid containing the created calendar(s).
 	 */
-	public async createCalendars(calendars: Calendar | HDict | HGrid) {
+	public async createCalendars(calendars: Calendar | HGrid<Calendar>) {
 		return fetchVal<HGrid<Calendar>>(
 			this.#calendarsUrl,
 			{
@@ -258,9 +259,9 @@ export class ScheduleService {
 	 * @param schedule Calendar
 	 * @returns The updated calendar record.
 	 */
-	public async updateCalendar(calendar: Calendar) {
+	public async updateCalendar(id: string | HRef, calendar: HDict) {
 		return fetchVal<Calendar>(
-			`${this.#calendarsUrl}/${calendar.id?.value}`,
+			`${this.#calendarsUrl}/${HRef.make(id).value}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
 				method: 'PATCH',

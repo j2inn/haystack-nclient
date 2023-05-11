@@ -11,7 +11,7 @@ import {
 	HNum,
 	HRef,
 	HStr,
-	HVal,
+	OptionalHVal,
 	Kind,
 } from 'haystack-core'
 
@@ -98,8 +98,8 @@ export interface SchedulablePoint extends HDict {
  * Interface for adding and/or removing schedulable points
  */
 export interface SchedulePointUpdate {
-	add?: HRef[]
-	remove?: HRef[]
+	add?: HList<HRef>
+	remove?: HList<HRef>
 }
 
 /**
@@ -117,14 +117,19 @@ export interface Schedule extends HDict {
 	dis: HStr
 
 	/**
-	 * Is the date-time when the schedule was last modified
+	 * Is the date-time when the schedule was last modified.
 	 */
 	mod?: HDateTime
 
 	/**
+	 * The required timezone of the schedule.
+	 */
+	tz: HStr
+
+	/**
 	 * Is the current value of the schedule.
 	 */
-	curVal?: HVal
+	curVal?: OptionalHVal
 
 	/**
 	 * Is the schedule kind (bool, number, str).
@@ -139,12 +144,12 @@ export interface Schedule extends HDict {
 	/**
 	 * Specifies the default value of the schedule (if any).
 	 */
-	defaultVal?: HVal
+	defaultVal?: OptionalHVal
 
 	/**
 	 * Is the next value of the schedule (whenever it changes).
 	 */
-	nextVal?: HVal
+	nextVal?: OptionalHVal
 
 	/**
 	 * Specifies the date-time when the value of schedule will update next.
@@ -159,48 +164,48 @@ export interface Schedule extends HDict {
 	/**
 	 * One week of schedules per day.
 	 */
-	weeklySchedule?: WeekDaySchedule[]
+	weeklySchedule?: HList<WeekDaySchedule>
 
 	/**
 	 * The scheduled exceptions.
 	 */
-	exceptionSchedule?: SpecialEvent[]
+	exceptionSchedule?: ExceptionSchedule
 }
 
 /**
  * Defines the day of week and schedule for that day.
  */
-export interface WeekDaySchedule {
+export interface WeekDaySchedule extends HDict {
 	dayOfWeek: HNum
-	dailySchedule: DailySchedule[]
+	dailySchedule: HList<DailySchedule>
 }
 
 /**
  * A List of Schedules Exceptions.
  */
-export type ExceptionSchedule = SpecialEvent[]
+export type ExceptionSchedule = HList<SpecialEvent>
 
 /**
  * Defines data for a special event.
  */
-export interface SpecialEvent {
+export interface SpecialEvent extends HDict {
 	calendarEntry?: CalendarEntry
 	calendarRef?: HRef
 	priority: number
-	dailySchedule: DailySchedule[]
+	dailySchedule: HList<DailySchedule>
 }
 
 /**
  * Defines the schedule for a day.
  */
-export interface DailySchedule {
+export interface DailySchedule extends HDict {
 	bacnetTime: {
-		hour: number
-		minute: number
-		second: number
-		hundredths: number
+		hour?: number
+		minute?: number
+		second?: number
+		hundredths?: number
 	}
-	scheduledVal: HVal
+	scheduledVal: OptionalHVal
 }
 
 /**
@@ -250,10 +255,10 @@ export type CalendarEntry =
  * A Date for a Calendar.
  */
 export interface CalendarDate {
-	year: number
-	month: number
-	dayOfMonth: number
-	dayOfWeek: number
+	year?: number
+	month?: number
+	dayOfMonth?: number
+	dayOfWeek?: number
 }
 
 /**
@@ -268,6 +273,7 @@ export interface CalendarRange {
  * Define the week and day of a Calendar.
  */
 export interface CalendarWeekNDay {
-	nthWeek: number
-	dayOfWeek: number
+	weekOfMonth?: number
+	month?: number
+	dayOfWeek?: number
 }

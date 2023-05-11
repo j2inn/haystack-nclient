@@ -205,7 +205,7 @@ describe('ScheduleService', () => {
 			d1.remove('id')
 			d1.remove('schedule')
 
-			const d2 = HDict.make(d1)
+			const d2 = HDict.make(d1) as Schedule
 			const payload = HGrid.make([d1, d2])
 
 			await service.createSchedules(payload)
@@ -253,9 +253,9 @@ describe('ScheduleService', () => {
 		})
 
 		it('updates a schedule specified by an id', async () => {
-			const sch = mockSchedule()
+			const schedule = mockSchedule()
 
-			await service.updateSchedule(sch)
+			await service.updateSchedule('123', schedule)
 			expect(fetchMock.lastUrl()).toEqual(
 				`${getUrl(ScheduleServiceEndpoints.Schedules)}/123`
 			)
@@ -263,7 +263,7 @@ describe('ScheduleService', () => {
 				fetchMock.lastCall(
 					`${getUrl(ScheduleServiceEndpoints.Schedules)}/123`
 				)?.[1]?.body
-			).toEqual(JSON.stringify(sch.toJSON()))
+			).toEqual(JSON.stringify(schedule.toJSON()))
 		})
 	})
 
@@ -419,7 +419,7 @@ describe('ScheduleService', () => {
 		})
 
 		it('adds points to a schedule specified by string id', async () => {
-			const payload = { add: [HRef.make('345')] }
+			const payload = { add: HList.make([HRef.make('345')]) }
 
 			await service.updateSchedulePoints('123', payload)
 			expect(fetchMock.lastUrl()).toEqual(
@@ -437,7 +437,7 @@ describe('ScheduleService', () => {
 		})
 
 		it('adds points to a schedule specfied by HRef id', async () => {
-			const payload = { add: [HRef.make('345')] }
+			const payload = { add: HList.make([HRef.make('345')]) }
 
 			await service.updateSchedulePoints(HRef.make('123'), payload)
 			expect(fetchMock.lastUrl()).toEqual(
@@ -455,7 +455,7 @@ describe('ScheduleService', () => {
 		})
 
 		it('removes points from a schedule', async () => {
-			const payload = { remove: [HRef.make('345')] }
+			const payload = { remove: HList.make([HRef.make('345')]) }
 
 			await service.updateSchedulePoints('123', payload)
 			expect(fetchMock.lastUrl()).toEqual(
@@ -474,8 +474,8 @@ describe('ScheduleService', () => {
 
 		it('adds and removes the points from the schedule', async () => {
 			const payload = {
-				add: [HRef.make('abc')],
-				remove: [HRef.make('345')],
+				add: HList.make([HRef.make('abc')]),
+				remove: HList.make([HRef.make('345')]),
 			}
 
 			await service.updateSchedulePoints('123', payload)
@@ -594,7 +594,7 @@ describe('ScheduleService', () => {
 			const d1 = mockCalendar()
 			d1.remove('id')
 
-			const d2 = HDict.make(d1)
+			const d2 = HDict.make(d1) as Calendar
 			const payload = HGrid.make([d1, d2])
 
 			await service.createCalendars(payload)
@@ -642,9 +642,9 @@ describe('ScheduleService', () => {
 		})
 
 		it('updates a calendar specified by id', async () => {
-			const cal = mockCalendar()
+			const calendar = mockCalendar()
 
-			await service.updateCalendar(cal)
+			await service.updateCalendar('c123', calendar)
 			expect(fetchMock.lastUrl()).toEqual(
 				`${getUrl(ScheduleServiceEndpoints.Calendars)}/c123`
 			)
@@ -652,7 +652,7 @@ describe('ScheduleService', () => {
 				fetchMock.lastCall(
 					`${getUrl(ScheduleServiceEndpoints.Calendars)}/c123`
 				)?.[1]?.body
-			).toEqual(JSON.stringify(cal.toJSON()))
+			).toEqual(JSON.stringify(calendar.toJSON()))
 		})
 	})
 

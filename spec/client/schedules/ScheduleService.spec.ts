@@ -3,107 +3,85 @@
  */
 
 import {
-	date,
-	dateTime,
-	dict,
 	HAYSON_MIME_TYPE,
+	HDate,
 	HDict,
 	HGrid,
+	HList,
+	HMarker,
+	HRef,
+	HStr,
 	Kind,
-	list,
-	MARKER,
-	num,
-	ref,
-	str,
-	time,
 } from 'haystack-core'
 import fetchMock from 'fetch-mock'
 import { clearFinCsrfTokens } from '../../../src/client/finCsrfFetch'
-import {
-	ScheduleService,
-	Schedule_Serv_EndPoints,
-	ScheduleMessages,
-} from '../../../src/client/schedules/ScheduleService'
+import { ScheduleService } from '../../../src/client/schedules/ScheduleService'
 import { Client } from '../../../src/client/Client'
+import {
+	Calendar,
+	SchedulablePoint,
+	Schedule,
+	ScheduleServiceEndpoints,
+	getHaystackServiceUrl,
+} from '../../../src'
+
+const mockSchedule = (): Schedule => {
+	return new HDict({
+		schedule: HMarker.make(),
+		id: HRef.make('123'),
+		dis: HStr.make('sample'),
+		kind: HStr.make(Kind.Number),
+		effectivePeriod: new HDict({
+			lowBound: HDate.make(new Date()),
+			upBound: HDate.make(new Date()),
+		}),
+	}) as Schedule
+}
+
+const mockPoint = (): SchedulablePoint => {
+	return new HDict({
+		id: HRef.make('p9089'),
+		dis: HStr.make('s-point'),
+		kind: Kind.Bool,
+		point: HMarker.make(),
+		schedulable: 12,
+		scheduleHRef: HRef.make('123'),
+	}) as SchedulablePoint
+}
+
+const mockCalendar = (): Calendar => {
+	return new HDict({
+		id: HRef.make('c123'),
+		dis: HStr.make('Cal-01'),
+		calendar: HMarker.make(),
+		entries: HList.make([
+			new HDict({
+				entryType: 'WeekNDay',
+				nthWeek: 1,
+				dayOfWeek: 2,
+			}),
+		]),
+	}) as Calendar
+}
 
 describe('ScheduleService', () => {
-	const SampleScheduleObj = () => {
-		return dict({
-			schedule: MARKER,
-			id: ref('123'),
-			dis: str('sample'),
-			mod: dateTime(new Date()),
-			kind: str(Kind.Number),
-			curVal: num(20),
-			nextVal: num(30),
-			nextChange: dateTime(new Date()),
-		})
-	}
-
-	const SampleEvent = () => {
-		return dict({
-			dis: str('event 01'),
-			type: str('exception'),
-			start: time('08:30:00'),
-			end: time('15:30:00'),
-			val: num(20),
-			priority: num(5),
-			status: str('ok'),
-			period: dict({
-				type: str('date'),
-				val: date('2020-10-23'),
-			}),
-		})
-	}
-
-	const SamplePoint = () => {
-		return dict({
-			id: ref('p9089'),
-			schedulable: num(12),
-			scheduleRef: ref('123'),
-		})
-	}
-
-	const SampleCalendar = () => {
-		return dict({
-			id: ref('c123'),
-			dis: str('Cal-01'),
-			mod: dateTime(new Date()),
-			entries: list([
-				dict({
-					val: num(10),
-					period: dict({
-						type: str('date'),
-						val: date('2020-10-23'),
-					}),
-				}),
-			]),
-		})
-	}
-
-	let resp: HDict | HGrid
+	let resp: HDict | HGrid | HRef
 	let service: ScheduleService
 
 	const baseUrl = 'http://localhost:8080'
-	const ABS_DEFS_PATH = `${baseUrl}/api/sys/eval`
-
-	function prepareFetch(): void {
-		const grid = HGrid.make({ rows: [{ foo: true }] })
-
-		fetchMock.reset().post(ABS_DEFS_PATH, grid.toZinc())
-
-		service = new ScheduleService(
-			new Client({ base: new URL(baseUrl), fetch })
-		)
-	}
 
 	function prepareMock(
 		verb: string,
-		endpoint: string,
+		endpoint: ScheduleServiceEndpoints | string,
 		resp: HDict | HGrid
 	): void {
-		fetchMock.mock(
-			`begin:${baseUrl}/api/haystack/demo/${endpoint}`,
+		fetchMock.reset().mock(
+			`begin:${getHaystackServiceUrl({
+				origin: baseUrl,
+				pathPrefix: '',
+				project: 'demo',
+				path: endpoint,
+			})}`,
 			{
 				body: resp.toJSON(),
 				headers: { 'content-type': HAYSON_MIME_TYPE },
@@ -118,72 +96,74 @@ describe('ScheduleService', () => {
 
 	beforeEach(function (): void {
 		clearFinCsrfTokens()
-		prepareFetch()
 	})
 
-	function getUrl(path: string): string {
-		return `${baseUrl}/api/haystack/demo/${path}`
-	}
+	const getUrl = (path: string): string =>
+		`${getHaystackServiceUrl({
+			origin: baseUrl,
+			pathPrefix: '',
+			project: 'demo',
+			path,
+		})}`
 
-	describe('#readSchedules()', () => {
+	// ********************************
+	// Start Schedule Endpoint Testing
+	// ********************************
+
+	describe('#readAllSchedules()', () => {
 		beforeEach((): void => {
-			resp = HGrid.make(SampleScheduleObj())
-			prepareMock('get', Schedule_Serv_EndPoints.Schedules, resp)
+			resp = HGrid.make(mockSchedule())
+			prepareMock('GET', ScheduleServiceEndpoints.Schedules, resp)
 		})
 
 		it('fetches the schedule with no params/options', async () => {
-			await service.readSchedules()
+			await service.readAllSchedules()
 			expect(fetchMock.lastUrl()).toEqual(
-				getUrl(Schedule_Serv_EndPoints.Schedules)
+				getUrl(ScheduleServiceEndpoints.Schedules)
 			)
 		})
 
 		it('fetches the schedules based on a filter', async () => {
-			await service.readSchedules({ filter: 'dis=="sample"' })
+			await service.readAllSchedules({ filter: 'dis=="sample"' })
+
 			expect(fetchMock.lastUrl()).toEqual(
 				`${getUrl(
-					Schedule_Serv_EndPoints.Schedules
+					ScheduleServiceEndpoints.Schedules
 				)}?filter=${encodeURIComponent('dis=="sample"')}`
 			)
 		})
 
 		it('fetches the schedules and limits them to 1 item', async () => {
-			await service.readSchedules({ options: { limit: 1 } })
+			await service.readAllSchedules({ limit: 1 })
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Schedules)}?limit=1`
+				`${getUrl(ScheduleServiceEndpoints.Schedules)}?limit=1`
 			)
 		})
 
 		it('fetches the schedules and asks for only some columns/props specified', async () => {
-			await service.readSchedules({
-				options: { columns: ['dis', 'mod'] },
-			})
+			await service.readAllSchedules({ columns: ['dis', 'mod'] })
 			expect(fetchMock.lastUrl()).toEqual(
 				`${getUrl(
-					Schedule_Serv_EndPoints.Schedules
+					ScheduleServiceEndpoints.Schedules
 				)}?columns=${encodeURI('dis|mod')}`
 			)
 		})
 
 		it('fetches the schedule and sorts the result by some column names', async () => {
-			await service.readSchedules({
-				options: { sort: ['dis', 'mod'] },
-			})
+			await service.readAllSchedules({ sort: ['dis', 'mod'] })
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Schedules)}?sort=${encodeURI(
+				`${getUrl(ScheduleServiceEndpoints.Schedules)}?sort=${encodeURI(
 					'dis|mod'
 				)}`
 			)
 		})
 
 		it('fetches the schedules with all query params', async () => {
-			await service.readSchedules({
+			await service.readAllSchedules({
+				columns: ['dis', 'mod'],
+				limit: 2,
+				sort: ['dis', 'id'],
 				filter: 'events < 5',
-				options: {
-					columns: ['dis', 'mod'],
-					limit: 2,
-					sort: ['dis', 'id'],
-				},
 			})
 
 			const expected = `columns=${encodeURI(
@@ -193,44 +173,45 @@ describe('ScheduleService', () => {
 			)}`
 
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Schedules)}?${expected}`
+				`${getUrl(ScheduleServiceEndpoints.Schedules)}?${expected}`
 			)
 		})
 	})
 
-	describe('#createSchedule()', () => {
+	describe('#createSchedules()', () => {
 		beforeEach(() => {
-			resp = HGrid.make(SampleScheduleObj())
-			prepareMock('post', Schedule_Serv_EndPoints.Schedules, resp)
+			resp = HGrid.make(mockSchedule())
+			prepareMock('POST', ScheduleServiceEndpoints.Schedules, resp)
 		})
 
 		it('creates a single schedule', async () => {
-			const payload = SampleScheduleObj()
+			const payload = mockSchedule()
 			payload.remove('id')
 			payload.remove('schedule')
-			payload.remove('mod')
+
+			// API always returns HGrid
+			const response = HGrid.make(payload)
 
 			await service.createSchedules(payload)
 			expect(
 				fetchMock.lastCall(
-					getUrl(Schedule_Serv_EndPoints.Schedules)
+					getUrl(ScheduleServiceEndpoints.Schedules)
 				)?.[1]?.body
-			).toEqual(JSON.stringify(payload.toJSON()))
+			).toEqual(JSON.stringify(response.toJSON()))
 		})
 
 		it('creates multiple schedules', async () => {
-			const d1 = SampleScheduleObj()
+			const d1 = mockSchedule()
 			d1.remove('id')
 			d1.remove('schedule')
-			d1.remove('mod')
 
-			const d2 = HDict.make(d1)
+			const d2 = HDict.make(d1) as Schedule
 			const payload = HGrid.make([d1, d2])
 
 			await service.createSchedules(payload)
 			expect(
 				fetchMock.lastCall(
-					getUrl(Schedule_Serv_EndPoints.Schedules)
+					getUrl(ScheduleServiceEndpoints.Schedules)
 				)?.[1]?.body
 			).toEqual(JSON.stringify(payload.toJSON()))
 		})
@@ -238,10 +219,10 @@ describe('ScheduleService', () => {
 
 	describe('#readScheduleById()', () => {
 		beforeEach(() => {
-			resp = HGrid.make(SampleScheduleObj())
+			resp = mockSchedule()
 			prepareMock(
-				'get',
-				Schedule_Serv_EndPoints.Schedule.replace(':id', '123'),
+				'GET',
+				`${ScheduleServiceEndpoints.Schedules}/123`,
 				resp
 			)
 		})
@@ -249,412 +230,332 @@ describe('ScheduleService', () => {
 		it('reads a particular schedule by string id', async () => {
 			await service.readScheduleById('123')
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Schedule).replace(
-					':id',
-					'123'
-				)}`
+				`${getUrl(ScheduleServiceEndpoints.Schedules)}/123`
 			)
 		})
 
-		it('reads a particular schedule by ref', async () => {
-			await service.readScheduleById(ref('123'))
+		it('reads a particular schedule by HRef', async () => {
+			await service.readScheduleById(HRef.make('123'))
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Schedule).replace(
-					':id',
-					'123'
-				)}`
+				`${getUrl(ScheduleServiceEndpoints.Schedules)}/123`
 			)
 		})
 	})
 
 	describe('#updateSchedule()', () => {
 		beforeEach(() => {
-			resp = HGrid.make(SampleScheduleObj())
+			resp = mockSchedule()
 			prepareMock(
-				'patch',
-				Schedule_Serv_EndPoints.Schedule.replace(':id', '123'),
+				'PATCH',
+				`${ScheduleServiceEndpoints.Schedules}/123`,
 				resp
 			)
 		})
 
 		it('updates a schedule specified by an id', async () => {
-			const sch = SampleScheduleObj()
+			const schedule = mockSchedule()
 
-			await service.updateSchedule(sch)
+			await service.updateSchedule('123', schedule)
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Schedule).replace(
-					':id',
-					'123'
-				)}`
+				`${getUrl(ScheduleServiceEndpoints.Schedules)}/123`
 			)
 			expect(
 				fetchMock.lastCall(
-					getUrl(Schedule_Serv_EndPoints.Schedule).replace(
-						':id',
-						'123'
-					)
+					`${getUrl(ScheduleServiceEndpoints.Schedules)}/123`
 				)?.[1]?.body
-			).toEqual(JSON.stringify(sch.toJSON()))
-		})
-
-		it('throws error if the rec does not have an id', async () => {
-			const sch = SampleScheduleObj()
-			sch.remove('id')
-
-			expect(service.updateSchedule(sch)).rejects.toEqual(
-				new Error(ScheduleMessages.BadRequest)
-			)
+			).toEqual(JSON.stringify(schedule.toJSON()))
 		})
 	})
 
-	describe('#deleteSchedule()', () => {
+	describe('#deleteScheduleById()', () => {
 		beforeEach(() => {
-			resp = HGrid.make(SampleScheduleObj())
+			resp = mockSchedule()
 			prepareMock(
-				'delete',
-				Schedule_Serv_EndPoints.Schedule.replace(':id', '123'),
+				'DELETE',
+				`${ScheduleServiceEndpoints.Schedules}/123`,
 				resp
 			)
 		})
 
 		it('deletes a particular schedule by string id', async () => {
-			await service.deleteSchedule('123')
+			await service.deleteScheduleById('123')
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Schedule).replace(
-					':id',
-					'123'
-				)}`
+				`${getUrl(ScheduleServiceEndpoints.Schedules)}/123`
 			)
 		})
 
-		it('deletes a particular schedule by ref', async () => {
-			await service.deleteSchedule(ref('123'))
+		it('deletes a particular schedule by HRef', async () => {
+			await service.deleteScheduleById(HRef.make('123'))
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Schedule).replace(
-					':id',
-					'123'
-				)}`
+				`${getUrl(ScheduleServiceEndpoints.Schedules)}/123`
 			)
 		})
 	})
 
-	describe('#readScheduleEvents()', () => {
+	describe('#readScheduleCalendarsById()', () => {
 		beforeEach(() => {
-			resp = HGrid.make(SampleEvent())
+			resp = HGrid.make(mockCalendar())
 			prepareMock(
 				'get',
-				Schedule_Serv_EndPoints.Events.replace(':id', '123'),
+				`${ScheduleServiceEndpoints.Schedules}/123/calendars`,
 				resp
 			)
 		})
 
 		it('gets the events for schedule id specified as string', async () => {
-			await service.readScheduleEvents('123')
+			await service.readScheduleCalendarsById('123')
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Events).replace(
-					':id',
-					'123'
-				)}`
+				`${getUrl(ScheduleServiceEndpoints.Schedules)}/123/calendars`
 			)
 		})
 
-		it('gets the events for schedule id specified as ref', async () => {
-			await service.readScheduleEvents(ref('123'))
+		it('gets the events for schedule id specified as HRef', async () => {
+			await service.readScheduleCalendarsById(HRef.make('123'))
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Events).replace(
-					':id',
-					'123'
-				)}`
+				`${getUrl(ScheduleServiceEndpoints.Schedules)}/123/calendars`
 			)
 		})
 	})
 
-	describe('#updateScheduleEvents()', () => {
+	// ***************************************
+	// Start Schedule/Points Endpoint Testing
+	// ***************************************
+
+	describe('#readSchedulablePoints()', () => {
 		beforeEach(() => {
-			resp = HGrid.make(SampleEvent())
+			resp = HGrid.make(mockPoint())
 			prepareMock(
-				'patch',
-				Schedule_Serv_EndPoints.Events.replace(':id', '123'),
-				resp
-			)
-		})
-
-		it('updates the events for schedule id specified as string', async () => {
-			const payload = HGrid.make(SampleEvent())
-			await service.updateScheduleEvents('123', payload)
-			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Events).replace(
-					':id',
-					'123'
-				)}`
-			)
-			expect(
-				fetchMock.lastCall(
-					`${getUrl(Schedule_Serv_EndPoints.Events).replace(
-						':id',
-						'123'
-					)}`
-				)?.[1]?.body
-			).toEqual(JSON.stringify(payload.toJSON()))
-		})
-
-		it('gets the events for schedule id specified as ref', async () => {
-			const payload = HGrid.make(SampleEvent())
-			await service.updateScheduleEvents('123', payload)
-			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Events).replace(
-					':id',
-					'123'
-				)}`
-			)
-			expect(
-				fetchMock.lastCall(
-					`${getUrl(Schedule_Serv_EndPoints.Events).replace(
-						':id',
-						'123'
-					)}`
-				)?.[1]?.body
-			).toEqual(JSON.stringify(payload.toJSON()))
-		})
-	})
-
-	describe('#readSchedulePoints()', () => {
-		beforeEach(() => {
-			resp = HGrid.make(SamplePoint())
-			prepareMock(
-				'get',
-				Schedule_Serv_EndPoints.Points.replace(':id', '123'),
+				'GET',
+				`${ScheduleServiceEndpoints.Schedules}/123/points`,
 				resp
 			)
 		})
 
 		it('gets the points for schedule id specified as string', async () => {
-			await service.readSchedulePoints('123')
+			await service.readSchedulablePoints('123')
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Points).replace(
-					':id',
-					'123'
-				)}`
+				`${getUrl(ScheduleServiceEndpoints.Schedules)}/123/points`
 			)
 		})
 
-		it('gets the points for schedule id specified as ref', async () => {
-			await service.readSchedulePoints(ref('123'))
+		it('gets the points for schedule id specified as HRef', async () => {
+			await service.readSchedulablePoints(HRef.make('123'))
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Points).replace(
-					':id',
-					'123'
-				)}`
+				`${getUrl(ScheduleServiceEndpoints.Schedules)}/123/points`
+			)
+		})
+
+		it('fetches the schedulable points based on a filter', async () => {
+			await service.readSchedulablePoints('123', {
+				filter: 'dis=="sample"',
+			})
+
+			expect(fetchMock.lastUrl()).toEqual(
+				`${getUrl(
+					ScheduleServiceEndpoints.Schedules
+				)}/123/points?filter=${encodeURIComponent('dis=="sample"')}`
+			)
+		})
+
+		it('fetches the schedulable points and limits them to 1 item', async () => {
+			await service.readSchedulablePoints('123', { limit: 1 })
+			expect(fetchMock.lastUrl()).toEqual(
+				`${getUrl(
+					ScheduleServiceEndpoints.Schedules
+				)}/123/points?limit=1`
+			)
+		})
+
+		it('fetches the scheduluable points and asks for only some columns/props specified', async () => {
+			await service.readSchedulablePoints('123', {
+				columns: ['dis', 'mod'],
+			})
+			expect(fetchMock.lastUrl()).toEqual(
+				`${getUrl(
+					ScheduleServiceEndpoints.Schedules
+				)}/123/points?columns=${encodeURI('dis|mod')}`
+			)
+		})
+
+		it('fetches the scheduluable points and sorts the result by some column names', async () => {
+			await service.readSchedulablePoints('123', { sort: ['dis', 'mod'] })
+			expect(fetchMock.lastUrl()).toEqual(
+				`${getUrl(
+					ScheduleServiceEndpoints.Schedules
+				)}/123/points?sort=${encodeURI('dis|mod')}`
+			)
+		})
+
+		it('fetches the scheduluable points with all query params', async () => {
+			await service.readSchedulablePoints('123', {
+				columns: ['dis', 'mod'],
+				limit: 2,
+				sort: ['dis', 'id'],
+				filter: 'events < 5',
+			})
+
+			const expected = `columns=${encodeURI(
+				'dis|mod'
+			)}&limit=2&sort=${encodeURI('dis|id')}&filter=${encodeURIComponent(
+				'events < 5'
+			)}`
+
+			expect(fetchMock.lastUrl()).toEqual(
+				`${getUrl(
+					ScheduleServiceEndpoints.Schedules
+				)}/123/points?${expected}`
 			)
 		})
 	})
 
 	describe('#updateSchedulePoints()', () => {
 		beforeEach(() => {
-			resp = HGrid.make(SamplePoint())
+			resp = HGrid.make(mockPoint())
 			prepareMock(
-				'patch',
-				Schedule_Serv_EndPoints.Points.replace(':id', '123'),
+				'PATCH',
+				`${ScheduleServiceEndpoints.Schedules}/123/points`,
 				resp
 			)
 		})
 
-		it('adds points to a schedule specfied my string id', async () => {
-			const payload = { add: [ref('345')] }
+		it('adds points to a schedule specified by string id', async () => {
+			const payload = { add: HList.make([HRef.make('345')]) }
 
 			await service.updateSchedulePoints('123', payload)
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Points).replace(
-					':id',
-					'123'
-				)}`
+				`${getUrl(ScheduleServiceEndpoints.Schedules)}/123/points`
 			)
 
-			const expected = dict({
-				add: list([ref('345')]),
+			const expected = HDict.make({
+				add: HList.make([HRef.make('345')]),
 			})
 			expect(
 				fetchMock.lastCall(
-					`${getUrl(Schedule_Serv_EndPoints.Points).replace(
-						':id',
-						'123'
-					)}`
+					`${getUrl(ScheduleServiceEndpoints.Schedules)}/123/points`
 				)?.[1]?.body
 			).toEqual(JSON.stringify(expected.toJSON()))
 		})
 
-		it('adds points to a schedule specfied my ref id', async () => {
-			const payload = { add: [ref('345')] }
+		it('adds points to a schedule specfied by HRef id', async () => {
+			const payload = { add: HList.make([HRef.make('345')]) }
 
-			await service.updateSchedulePoints(ref('123'), payload)
+			await service.updateSchedulePoints(HRef.make('123'), payload)
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Points).replace(
-					':id',
-					'123'
-				)}`
+				`${getUrl(ScheduleServiceEndpoints.Schedules)}/123/points`
 			)
 
-			const expected = dict({
-				add: list([ref('345')]),
+			const expected = HDict.make({
+				add: HList.make([HRef.make('345')]),
 			})
 			expect(
 				fetchMock.lastCall(
-					`${getUrl(Schedule_Serv_EndPoints.Points).replace(
-						':id',
-						'123'
-					)}`.replace('begin:', '')
+					`${getUrl(ScheduleServiceEndpoints.Schedules)}/123/points`
 				)?.[1]?.body
 			).toEqual(JSON.stringify(expected.toJSON()))
 		})
 
-		it('removes points to a schedule', async () => {
-			const payload = { remove: [ref('345')] }
+		it('removes points from a schedule', async () => {
+			const payload = { remove: HList.make([HRef.make('345')]) }
 
 			await service.updateSchedulePoints('123', payload)
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Points).replace(
-					':id',
-					'123'
-				)}`
+				`${getUrl(ScheduleServiceEndpoints.Schedules)}/123/points`
 			)
 
-			const expected = dict({
-				remove: list([ref('345')]),
+			const expected = HDict.make({
+				remove: HList.make([HRef.make('345')]),
 			})
 			expect(
 				fetchMock.lastCall(
-					`${getUrl(Schedule_Serv_EndPoints.Points).replace(
-						':id',
-						'123'
-					)}`
+					`${getUrl(ScheduleServiceEndpoints.Schedules)}/123/points`
 				)?.[1]?.body
 			).toEqual(JSON.stringify(expected.toJSON()))
 		})
 
 		it('adds and removes the points from the schedule', async () => {
-			const payload = { add: [ref('abc')], remove: [ref('345')] }
+			const payload = {
+				add: HList.make([HRef.make('abc')]),
+				remove: HList.make([HRef.make('345')]),
+			}
 
 			await service.updateSchedulePoints('123', payload)
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Points).replace(
-					':id',
-					'123'
-				)}`
+				`${getUrl(ScheduleServiceEndpoints.Schedules)}/123/points`
 			)
 
-			const expected = dict({
-				add: list([ref('abc')]),
-				remove: list([ref('345')]),
+			const expected = HDict.make({
+				add: HList.make([HRef.make('abc')]),
+				remove: HList.make([HRef.make('345')]),
 			})
 			expect(
 				fetchMock.lastCall(
-					`${getUrl(Schedule_Serv_EndPoints.Points).replace(
-						':id',
-						'123'
-					)}`
+					`${getUrl(ScheduleServiceEndpoints.Schedules)}/123/points`
 				)?.[1]?.body
 			).toEqual(JSON.stringify(expected.toJSON()))
 		})
-
-		it('returns empty array when the nothing is specified to be added ot removed', async () => {
-			const resp = await service.updateSchedulePoints(ref('123'), {
-				add: [],
-				remove: [],
-			})
-			expect(resp).toEqual([])
-		})
 	})
 
-	describe('#getScheduleCalendars()', () => {
-		beforeEach(() => {
-			resp = HGrid.make(SampleCalendar())
-			prepareMock(
-				'get',
-				Schedule_Serv_EndPoints.ScheduleCalendars.replace(':id', '123'),
-				resp
-			)
-		})
+	// ***********************
+	// Start Calendar Testing
+	// ***********************
 
-		it('returns all the calendars for a schedule identified by string id', async () => {
-			await service.getScheduleCalendars('123')
-			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.ScheduleCalendars).replace(
-					':id',
-					'123'
-				)}`
-			)
-		})
-
-		it('returns all the calendars for a schedule identified by ref id', async () => {
-			await service.getScheduleCalendars(ref('123'))
-			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.ScheduleCalendars).replace(
-					':id',
-					'123'
-				)}`
-			)
-		})
-	})
-
-	describe('#readCalendars()', () => {
+	describe('#readAllCalendars()', () => {
 		beforeEach((): void => {
-			resp = HGrid.make(SampleCalendar())
-			prepareMock('get', Schedule_Serv_EndPoints.Calendars, resp)
+			resp = HGrid.make(mockCalendar())
+			prepareMock('GET', ScheduleServiceEndpoints.Calendars, resp)
 		})
 
 		it('fetches the calendars with no params/options', async () => {
-			await service.readCalendars()
+			await service.readAllCalendars()
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Calendars)}`
+				`${getUrl(ScheduleServiceEndpoints.Calendars)}`
 			)
 		})
 
 		it('fetches the calendars based on a filter', async () => {
-			await service.readCalendars({ filter: 'dis=="sample"' })
+			await service.readAllCalendars({ filter: 'dis=="sample"' })
 			expect(fetchMock.lastUrl()).toEqual(
 				`${getUrl(
-					Schedule_Serv_EndPoints.Calendars
+					ScheduleServiceEndpoints.Calendars
 				)}?filter=${encodeURIComponent('dis=="sample"')}`
 			)
 		})
 
 		it('fetches the calendars and limits them to 1 item', async () => {
-			await service.readCalendars({ options: { limit: 1 } })
+			await service.readAllCalendars({ limit: 1 })
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Calendars)}?limit=1`
+				`${getUrl(ScheduleServiceEndpoints.Calendars)}?limit=1`
 			)
 		})
 
 		it('fetches the calendars and asks for only some columns/props specified', async () => {
-			await service.readCalendars({
-				options: { columns: ['dis', 'mod'] },
+			await service.readAllCalendars({
+				columns: ['dis', 'mod'],
 			})
 			expect(fetchMock.lastUrl()).toEqual(
 				`${getUrl(
-					Schedule_Serv_EndPoints.Calendars
+					ScheduleServiceEndpoints.Calendars
 				)}?columns=${encodeURI('dis|mod')}`
 			)
 		})
 
 		it('fetches the calendars and sorts the result by some column names', async () => {
-			await service.readCalendars({
-				options: { sort: ['dis', 'mod'] },
+			await service.readAllCalendars({
+				sort: ['dis', 'mod'],
 			})
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Calendars)}?sort=${encodeURI(
+				`${getUrl(ScheduleServiceEndpoints.Calendars)}?sort=${encodeURI(
 					'dis|mod'
 				)}`
 			)
 		})
 
 		it('fetches the calendars with all query params', async () => {
-			await service.readCalendars({
+			await service.readAllCalendars({
+				columns: ['dis', 'mod'],
+				limit: 2,
+				sort: ['dis', 'id'],
 				filter: 'area > 20',
-				options: {
-					columns: ['dis', 'mod'],
-					limit: 2,
-					sort: ['dis', 'id'],
-				},
 			})
 
 			const expected = `columns=${encodeURI(
@@ -664,42 +565,42 @@ describe('ScheduleService', () => {
 			)}`
 
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Calendars)}?${expected}`
+				`${getUrl(ScheduleServiceEndpoints.Calendars)}?${expected}`
 			)
 		})
 	})
 
 	describe('#createCalendars()', () => {
 		beforeEach(() => {
-			resp = HGrid.make(SampleCalendar())
-			prepareMock('post', Schedule_Serv_EndPoints.Calendars, resp)
+			resp = HGrid.make(mockCalendar())
+			prepareMock('POST', ScheduleServiceEndpoints.Calendars, resp)
 		})
 
 		it('creates a single calendar', async () => {
-			const payload = SampleCalendar()
+			const payload = mockCalendar()
 			payload.remove('id')
-			payload.remove('mod')
+
+			const response = HGrid.make(payload)
 
 			await service.createCalendars(payload)
 			expect(
 				fetchMock.lastCall(
-					getUrl(Schedule_Serv_EndPoints.Calendars)
+					getUrl(ScheduleServiceEndpoints.Calendars)
 				)?.[1]?.body
-			).toEqual(JSON.stringify(payload.toJSON()))
+			).toEqual(JSON.stringify(response.toJSON()))
 		})
 
 		it('creates multiple calendars', async () => {
-			const d1 = SampleCalendar()
+			const d1 = mockCalendar()
 			d1.remove('id')
-			d1.remove('mod')
 
-			const d2 = HDict.make(d1)
+			const d2 = HDict.make(d1) as Calendar
 			const payload = HGrid.make([d1, d2])
 
 			await service.createCalendars(payload)
 			expect(
 				fetchMock.lastCall(
-					getUrl(Schedule_Serv_EndPoints.Calendars)
+					getUrl(ScheduleServiceEndpoints.Calendars)
 				)?.[1]?.body
 			).toEqual(JSON.stringify(payload.toJSON()))
 		})
@@ -707,10 +608,10 @@ describe('ScheduleService', () => {
 
 	describe('#readCalendarById()', () => {
 		beforeEach(() => {
-			resp = HGrid.make(SampleCalendar())
+			resp = mockCalendar()
 			prepareMock(
-				'get',
-				Schedule_Serv_EndPoints.Calendar.replace(':id', '123'),
+				'GET',
+				`${ScheduleServiceEndpoints.Calendars}/123`,
 				resp
 			)
 		})
@@ -718,122 +619,89 @@ describe('ScheduleService', () => {
 		it('reads a particular calendar by string id', async () => {
 			await service.readCalendarById('123')
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Calendar).replace(
-					':id',
-					'123'
-				)}`
+				`${getUrl(ScheduleServiceEndpoints.Calendars)}/123`
 			)
 		})
 
-		it('reads a particular calendar by ref', async () => {
-			await service.readCalendarById(ref('123'))
+		it('reads a particular calendar by HRef', async () => {
+			await service.readCalendarById(HRef.make('123'))
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Calendar).replace(
-					':id',
-					'123'
-				)}`
+				`${getUrl(ScheduleServiceEndpoints.Calendars)}/123`
 			)
 		})
 	})
 
 	describe('#updateCalendar()', () => {
 		beforeEach(() => {
-			resp = HGrid.make(SampleCalendar())
+			resp = mockCalendar()
 			prepareMock(
-				'patch',
-				Schedule_Serv_EndPoints.Calendar.replace(':id', 'c123'),
+				'PATCH',
+				`${ScheduleServiceEndpoints.Calendars}/c123`,
 				resp
 			)
 		})
 
-		it('updates a calendar specified by an id', async () => {
-			const cal = SampleCalendar()
+		it('updates a calendar specified by id', async () => {
+			const calendar = mockCalendar()
 
-			await service.updateCalendar(cal)
+			await service.updateCalendar('c123', calendar)
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Calendar).replace(
-					':id',
-					'c123'
-				)}`
+				`${getUrl(ScheduleServiceEndpoints.Calendars)}/c123`
 			)
 			expect(
 				fetchMock.lastCall(
-					getUrl(Schedule_Serv_EndPoints.Calendar).replace(
-						':id',
-						'c123'
-					)
+					`${getUrl(ScheduleServiceEndpoints.Calendars)}/c123`
 				)?.[1]?.body
-			).toEqual(JSON.stringify(cal.toJSON()))
-		})
-
-		it('throws error if the rec does not have an id', async () => {
-			const cal = SampleCalendar()
-			cal.remove('id')
-
-			expect(service.updateCalendar(cal)).rejects.toEqual(
-				new Error(ScheduleMessages.BadRequest)
-			)
+			).toEqual(JSON.stringify(calendar.toJSON()))
 		})
 	})
 
-	describe('#deleteCalendar()', () => {
+	describe('#deleteCalendarById()', () => {
 		beforeEach(() => {
-			resp = HGrid.make(SampleCalendar())
+			resp = mockCalendar()
 			prepareMock(
-				'delete',
-				Schedule_Serv_EndPoints.Calendar.replace(':id', '123'),
+				'DELETE',
+				`${ScheduleServiceEndpoints.Calendars}/c123`,
 				resp
 			)
 		})
 
-		it('deletes a particular calendar indentified by string id', async () => {
-			await service.deleteCalendar('123')
+		it('deletes a particular calendar by string id', async () => {
+			await service.deleteCalendarById('c123')
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Calendar).replace(
-					':id',
-					'123'
-				)}`
+				`${getUrl(ScheduleServiceEndpoints.Calendars)}/c123`
 			)
 		})
 
-		it('deletes a particular calendar identified by ref id', async () => {
-			await service.deleteCalendar(ref('123'))
+		it('deletes a particular calendar identified by HRef id', async () => {
+			await service.deleteCalendarById(HRef.make('c123'))
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.Calendar).replace(
-					':id',
-					'123'
-				)}`
+				`${getUrl(ScheduleServiceEndpoints.Calendars)}/c123`
 			)
 		})
 	})
 
-	describe('#getCalendarSchedules()', () => {
+	describe('#readCalendarSchedulesById()', () => {
 		beforeEach(() => {
-			resp = HGrid.make(SampleScheduleObj())
+			resp = HGrid.make(mockSchedule())
 			prepareMock(
-				'get',
-				Schedule_Serv_EndPoints.CalendarSchedules.replace(':id', '123'),
+				'GET',
+				`${ScheduleServiceEndpoints.Calendars}/c123`,
 				resp
 			)
 		})
 
 		it('returns all the schedules for a calendar identified by string id', async () => {
-			await service.getCalendarSchedules('123')
+			await service.readCalendarSchedulesById('c123')
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.CalendarSchedules).replace(
-					':id',
-					'123'
-				)}`
+				`${getUrl(ScheduleServiceEndpoints.Calendars)}/c123/schedules`
 			)
 		})
 
-		it('returns all the schedules for a calendar identified by ref id', async () => {
-			await service.getCalendarSchedules(ref('123'))
+		it('returns all the schedules for a calendar identified by HRef id', async () => {
+			await service.readCalendarSchedulesById(HRef.make('c123'))
 			expect(fetchMock.lastUrl()).toEqual(
-				`${getUrl(Schedule_Serv_EndPoints.CalendarSchedules).replace(
-					':id',
-					'123'
-				)}`
+				`${getUrl(ScheduleServiceEndpoints.Calendars)}/c123/schedules`
 			)
 		})
 	})

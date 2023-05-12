@@ -14,6 +14,7 @@ import {
 	OptionalHVal,
 	Kind,
 } from 'haystack-core'
+import { AtLeastOne } from '../../util/types'
 
 /**
  * The entry endpoints for the Schedule Service
@@ -105,7 +106,7 @@ export interface SchedulePointUpdate {
 /**
  * Schedule object.
  */
-export interface Schedule extends HDict {
+export interface ScheduleObj extends HDict {
 	/**
 	 * id of the schedule object.
 	 */
@@ -127,14 +128,25 @@ export interface Schedule extends HDict {
 	tz: HStr
 
 	/**
+	 * The required schedule marker tag
+	 */
+	schedule: HMarker
+
+	/**
+	 * The required point marker tag
+	 */
+	point: HMarker
+
+	/**
 	 * Is the current value of the schedule.
 	 */
 	curVal?: OptionalHVal
 
 	/**
 	 * Is the schedule kind (bool, number, str).
+	 * Must be capitalized. e.g. 'Str', 'Bool'
 	 */
-	kind: Kind
+	kind: Capitalize<Kind>
 
 	/**
 	 * Is the list of calendar(s) the schedule subscribes to.
@@ -157,25 +169,35 @@ export interface Schedule extends HDict {
 	nextTime?: HDateTime
 
 	/**
-	 * Is the range of dates (if any) that the schedule is active.
+	 * Is the range of dates that the schedule is active.
 	 */
-	effectivePeriod: CalendarRange
+	effectivePeriod: { effectivePeriod: HMarker } & CalendarRange
 
 	/**
-	 * One week of schedules per day.
+	 * The list of one week of schedules.
 	 */
 	weeklySchedule?: HList<WeekDaySchedule>
 
 	/**
-	 * The scheduled exceptions.
+	 * The list of scheduled exceptions.
 	 */
-	exceptionSchedule?: ExceptionSchedule
+	exceptionSchedule: ExceptionSchedule
 }
+
+/**
+ * The Schedule object with additional rules.
+ * Must have at least one property: 'exceptionSchedule' | 'weeklySchedule'
+ */
+export type Schedule = AtLeastOne<
+	ScheduleObj,
+	'exceptionSchedule' | 'weeklySchedule'
+>
 
 /**
  * Defines the day of week and schedule for that day.
  */
 export interface WeekDaySchedule extends HDict {
+	dayToSchedule: HMarker
 	dayOfWeek: HNum
 	dailySchedule: HList<DailySchedule>
 }
@@ -189,6 +211,7 @@ export type ExceptionSchedule = HList<SpecialEvent>
  * Defines data for a special event.
  */
 export interface SpecialEvent extends HDict {
+	specialEvent: HMarker
 	calendarEntry?: CalendarEntry
 	calendarRef?: HRef
 	priority: number
@@ -196,15 +219,22 @@ export interface SpecialEvent extends HDict {
 }
 
 /**
+ * Defines data for the bacnet time object.
+ */
+export interface BacnetTime extends HDict {
+	bacnetTime: HMarker
+	hour?: number
+	minute?: number
+	second?: number
+	hundredths?: number
+}
+
+/**
  * Defines the schedule for a day.
  */
 export interface DailySchedule extends HDict {
-	bacnetTime: {
-		hour?: number
-		minute?: number
-		second?: number
-		hundredths?: number
-	}
+	timeToVal: HMarker
+	bacnetTime: BacnetTime
 	scheduledVal: OptionalHVal
 }
 
@@ -220,7 +250,7 @@ export interface Calendar extends HDict {
 	/**
 	 * Specifies the name of the calendar.
 	 */
-	dis?: HStr
+	dis: HStr
 
 	/**
 	 * Is the date-time when the calendar was last modified
@@ -240,21 +270,23 @@ export interface Calendar extends HDict {
 	/**
 	 * The calendar entries
 	 */
-	entries?: CalendarEntry[]
+	entries?: HList<CalendarEntry>
 }
 
 /**
  * A Calendar Entry.
  */
-export type CalendarEntry =
-	| ({ entryType: 'Date' } & CalendarDate)
-	| ({ entryType: 'Range' } & CalendarRange)
-	| ({ entryType: 'WeekNDay' } & CalendarWeekNDay)
+export type CalendarEntry = { calendarEntry: HMarker } & (
+	| CalendarDate
+	| CalendarRange
+	| CalendarWeekNDay
+)
 
 /**
  * A Date for a Calendar.
  */
-export interface CalendarDate {
+export interface CalendarDate extends HDict {
+	entryType: 'Date'
 	year?: number
 	month?: number
 	dayOfMonth?: number
@@ -264,7 +296,8 @@ export interface CalendarDate {
 /**
  * The Date range of a Calendar.
  */
-export interface CalendarRange {
+export interface CalendarRange extends HDict {
+	entryType: 'Range'
 	lowBound?: HDate
 	upBound?: HDate
 }
@@ -272,7 +305,8 @@ export interface CalendarRange {
 /**
  * Define the week and day of a Calendar.
  */
-export interface CalendarWeekNDay {
+export interface CalendarWeekNDay extends HDict {
+	entryType: 'WeekNDay'
 	weekOfMonth?: number
 	month?: number
 	dayOfWeek?: number

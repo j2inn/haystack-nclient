@@ -25,16 +25,91 @@ import {
 	getHaystackServiceUrl,
 } from '../../../src'
 
-const mockSchedule = (): Schedule => {
+const mockSchedule = () => {
+	// return new HDict({
+	// 	point: HMarker.make(),
+	// 	schedule: HMarker.make(),
+	// 	id: HRef.make('123'),
+	// 	dis: HStr.make('sample'),
+	// 	kind: HStr.make(Kind.Number),
+	// 	weeklySchedule: new HList(
+	// 		new HDict({
+	// 			dayToSchedule: HMarker.make(),
+	// 			dayOfWeek: 4,
+	// 			dailySchedule: new HList(
+	// 				new HDict({
+	// 					timeToVal: HMarker.make(),
+	// 					bacnetTime: new HDict({
+	// 						bacnetTime: HMarker.make(),
+	// 						hour: 2,
+	// 						minute: 28,
+	// 						second: 41,
+	// 					}),
+	// 					scheduledVal: 'boo',
+	// 				})
+	// 			),
+	// 		})
+	// 	),
+	// 	effectivePeriod: new HDict({
+	// 		effectivePeriod: HMarker.make(),
+	// 		lowBound: HDate.make(new Date()),
+	// 		upBound: HDate.make(new Date()),
+	// 	}),
+	// }) as Schedule
 	return new HDict({
 		schedule: HMarker.make(),
-		id: HRef.make('123'),
-		dis: HStr.make('sample'),
-		kind: HStr.make(Kind.Number),
+		point: HMarker.make(),
+		dis: 'Schedule record',
+		tz: 'Mexico_City',
+		// Kind name starts with uppercase as in defs.
+		kind: 'Str',
 		effectivePeriod: new HDict({
-			lowBound: HDate.make(new Date()),
-			upBound: HDate.make(new Date()),
+			effectivePeriod: HMarker.make(),
+			entryType: 'Range',
+			lowBound: HDate.make('1998-12-01'),
+			upBound: HDate.make('1998-12-15'),
 		}),
+		weeklySchedule: new HList(
+			new HDict({
+				dayToSchedule: HMarker.make(),
+				dayOfWeek: 4,
+				dailySchedule: new HList(
+					new HDict({
+						timeToVal: HMarker.make(),
+						bacnetTime: new HDict({
+							bacnetTime: HMarker.make(),
+							hour: 2,
+							minute: 28,
+							second: 41,
+						}),
+						scheduledVal: 'boo',
+					})
+				),
+			})
+		),
+		exceptionSchedule: new HList(
+			new HDict({
+				specialEvent: HMarker.make(),
+				priority: 15,
+				dailySchedule: new HList(
+					new HDict({
+						timeToVal: HMarker.make(),
+						bacnetTime: new HDict({
+							bacnetTime: HMarker.make(),
+							hour: 14,
+							second: 0,
+						}),
+						scheduledVal: 'bar',
+					})
+				),
+				calendarEntry: new HDict({
+					calendarEntry: HMarker.make(),
+					entryType: 'Date',
+					dayOfMonth: 21,
+					dayOfWeek: 4,
+				}),
+			})
+		),
 	}) as Schedule
 }
 

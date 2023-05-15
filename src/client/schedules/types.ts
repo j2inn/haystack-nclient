@@ -181,7 +181,7 @@ export interface ScheduleObj extends HDict {
 	/**
 	 * The list of scheduled exceptions.
 	 */
-	exceptionSchedule: ExceptionSchedule
+	exceptionSchedule?: ExceptionSchedule
 }
 
 /**

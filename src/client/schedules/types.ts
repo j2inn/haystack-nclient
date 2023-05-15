@@ -14,7 +14,6 @@ import {
 	OptionalHVal,
 	Kind,
 } from 'haystack-core'
-import { AtLeastOne } from '../../util/types'
 
 /**
  * The entry endpoints for the Schedule Service
@@ -105,8 +104,9 @@ export interface SchedulePointUpdate {
 
 /**
  * Schedule object.
+ * Must have at least one property: 'exceptionSchedule' | 'weeklySchedule'.
  */
-export interface ScheduleObj extends HDict {
+export interface Schedule extends HDict {
 	/**
 	 * id of the schedule object.
 	 */
@@ -183,15 +183,6 @@ export interface ScheduleObj extends HDict {
 	 */
 	exceptionSchedule?: ExceptionSchedule
 }
-
-/**
- * The Schedule object with additional rules.
- * Must have at least one property: 'exceptionSchedule' | 'weeklySchedule'
- */
-export type Schedule = AtLeastOne<
-	ScheduleObj,
-	'exceptionSchedule' | 'weeklySchedule'
->
 
 /**
  * Defines the day of week and schedule for that day.

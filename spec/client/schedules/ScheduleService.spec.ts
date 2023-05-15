@@ -26,36 +26,6 @@ import {
 } from '../../../src'
 
 const mockSchedule = () => {
-	// return new HDict({
-	// 	point: HMarker.make(),
-	// 	schedule: HMarker.make(),
-	// 	id: HRef.make('123'),
-	// 	dis: HStr.make('sample'),
-	// 	kind: HStr.make(Kind.Number),
-	// 	weeklySchedule: new HList(
-	// 		new HDict({
-	// 			dayToSchedule: HMarker.make(),
-	// 			dayOfWeek: 4,
-	// 			dailySchedule: new HList(
-	// 				new HDict({
-	// 					timeToVal: HMarker.make(),
-	// 					bacnetTime: new HDict({
-	// 						bacnetTime: HMarker.make(),
-	// 						hour: 2,
-	// 						minute: 28,
-	// 						second: 41,
-	// 					}),
-	// 					scheduledVal: 'boo',
-	// 				})
-	// 			),
-	// 		})
-	// 	),
-	// 	effectivePeriod: new HDict({
-	// 		effectivePeriod: HMarker.make(),
-	// 		lowBound: HDate.make(new Date()),
-	// 		upBound: HDate.make(new Date()),
-	// 	}),
-	// }) as Schedule
 	return new HDict({
 		schedule: HMarker.make(),
 		point: HMarker.make(),

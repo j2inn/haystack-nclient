@@ -72,6 +72,6 @@
 		"write-file-webpack-plugin": "^4.5.1"
 	},
 	"dependencies": {
-		"haystack-core": "^2.0.50"
+		"haystack-core": "^2.0.51"
 	}
 }

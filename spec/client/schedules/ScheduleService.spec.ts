@@ -17,13 +17,7 @@ import fetchMock from 'fetch-mock'
 import { clearFinCsrfTokens } from '../../../src/client/finCsrfFetch'
 import { ScheduleService } from '../../../src/client/schedules/ScheduleService'
 import { Client } from '../../../src/client/Client'
-import {
-	Calendar,
-	SchedulablePoint,
-	Schedule,
-	ScheduleServiceEndpoints,
-	getHaystackServiceUrl,
-} from '../../../src'
+import { ScheduleServiceEndpoints, getHaystackServiceUrl } from '../../../src'
 
 const mockSchedule = () => {
 	return new HDict({
@@ -80,10 +74,10 @@ const mockSchedule = () => {
 				}),
 			})
 		),
-	}) as Schedule
+	})
 }
 
-const mockPoint = (): SchedulablePoint => {
+const mockPoint = (): HDict => {
 	return new HDict({
 		id: HRef.make('p9089'),
 		dis: HStr.make('s-point'),
@@ -91,10 +85,10 @@ const mockPoint = (): SchedulablePoint => {
 		point: HMarker.make(),
 		schedulable: 12,
 		scheduleHRef: HRef.make('123'),
-	}) as SchedulablePoint
+	})
 }
 
-const mockCalendar = (): Calendar => {
+const mockCalendar = (): HDict => {
 	return new HDict({
 		id: HRef.make('c123'),
 		dis: HStr.make('Cal-01'),
@@ -106,7 +100,7 @@ const mockCalendar = (): Calendar => {
 				dayOfWeek: 2,
 			}),
 		]),
-	}) as Calendar
+	})
 }
 
 describe('ScheduleService', () => {
@@ -250,7 +244,7 @@ describe('ScheduleService', () => {
 			d1.remove('id')
 			d1.remove('schedule')
 
-			const d2 = HDict.make(d1) as Schedule
+			const d2 = HDict.make(d1)
 			const payload = HGrid.make([d1, d2])
 
 			await service.createSchedules(payload)
@@ -639,7 +633,7 @@ describe('ScheduleService', () => {
 			const d1 = mockCalendar()
 			d1.remove('id')
 
-			const d2 = HDict.make(d1) as Calendar
+			const d2 = HDict.make(d1)
 			const payload = HGrid.make([d1, d2])
 
 			await service.createCalendars(payload)

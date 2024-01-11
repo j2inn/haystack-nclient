@@ -47,7 +47,7 @@ describe('ApiSubject', function (): void {
 	const project = 'demo'
 
 	beforeEach(function (): void {
-		jest.useFakeTimers()
+		jest.useFakeTimers({ legacyFakeTimers: true })
 		jest.spyOn(global, 'setTimeout')
 
 		serviceConfig = {

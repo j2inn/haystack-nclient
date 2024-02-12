@@ -5,6 +5,7 @@
 import {
 	HAYSON_MIME_TYPE,
 	HDate,
+	HDateTime,
 	HDict,
 	HGrid,
 	HList,
@@ -100,6 +101,35 @@ const mockCalendar = (): HDict => {
 				dayOfWeek: 2,
 			}),
 		]),
+	})
+}
+
+const mockScheduleEvents = (): HDict => {
+	return new HDict({
+		events: HList.make(
+			HDict.make({
+				start: HDateTime.make(new Date('1988-02-23').toISOString()),
+				end: HDateTime.make(new Date('1988-02-24').toISOString()),
+				val: true,
+			}),
+			HDict.make({
+				start: HDateTime.make(new Date('1988-02-25').toISOString()),
+				end: HDateTime.make(new Date('1988-02-26').toISOString()),
+				val: false,
+			})
+		),
+	})
+}
+
+const mockNextScheduleEvent = (): HDict => {
+	return new HDict({
+		events: HList.make(
+			HDict.make({
+				start: HDateTime.make(new Date('1988-02-23').toISOString()),
+				end: HDateTime.make(new Date('1988-02-24').toISOString()),
+				val: true,
+			})
+		),
 	})
 }
 
@@ -741,6 +771,49 @@ describe('ScheduleService', () => {
 			await service.readCalendarSchedulesById(HRef.make('c123'))
 			expect(fetchMock.lastUrl()).toEqual(
 				`${getUrl(ScheduleServiceEndpoints.Calendars)}/c123/schedules`
+			)
+		})
+	})
+
+	describe('#readScheduleEvents', () => {
+		beforeEach(() => {
+			resp = mockScheduleEvents()
+			prepareMock(
+				'GET',
+				`${ScheduleServiceEndpoints.Schedules}/123`,
+				resp
+			)
+		})
+
+		it('return events for schedule within range', async () => {
+			const start = '2024-02-12T00:00:00.000Z'
+			const end = '2024-02-13T00:00:00.000Z'
+
+			await service.readScheduleEvents(HRef.make('123'), {
+				start,
+				end,
+			})
+
+			expect(fetchMock.lastUrl()).toEqual(
+				`${getUrl(
+					ScheduleServiceEndpoints.Schedules
+				)}/123/events?start=${encodeURIComponent(
+					start
+				)}&end=${encodeURIComponent(end)}`
+			)
+		})
+
+		it('return next event for schedule from start date', async () => {
+			const start = '2024-02-12T00:00:00.000Z'
+
+			await service.readScheduleEvents(HRef.make('123'), {
+				start,
+			})
+
+			expect(fetchMock.lastUrl()).toEqual(
+				`${getUrl(
+					ScheduleServiceEndpoints.Schedules
+				)}/123/events?start=${encodeURIComponent(start)}`
 			)
 		})
 	})

@@ -108,26 +108,14 @@ const mockScheduleEvents = (): HDict => {
 	return new HDict({
 		events: HList.make(
 			HDict.make({
-				start: HDateTime.make(new Date('1988-02-23').toISOString()),
-				end: HDateTime.make(new Date('1988-02-24').toISOString()),
+				start: HDateTime.make('2024-02-12T00:00:00.000Z'),
+				end: HDateTime.make('2024-02-13T00:00:00.000Z'),
 				val: true,
 			}),
 			HDict.make({
-				start: HDateTime.make(new Date('1988-02-25').toISOString()),
-				end: HDateTime.make(new Date('1988-02-26').toISOString()),
+				start: HDateTime.make('2024-02-14T00:00:00.000Z'),
+				end: HDateTime.make('2024-02-15T00:00:00.000Z'),
 				val: false,
-			})
-		),
-	})
-}
-
-const mockNextScheduleEvent = (): HDict => {
-	return new HDict({
-		events: HList.make(
-			HDict.make({
-				start: HDateTime.make(new Date('1988-02-23').toISOString()),
-				end: HDateTime.make(new Date('1988-02-24').toISOString()),
-				val: true,
 			})
 		),
 	})

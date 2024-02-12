@@ -5,7 +5,6 @@
 import { HDict, HGrid, HRef } from 'haystack-core'
 import {
 	ScheduleEventsReadOptions,
-	ScheduleEventsResponse,
 	SchedulePointUpdate,
 	ScheduleReadOptions,
 	ScheduleServiceEndpoints,

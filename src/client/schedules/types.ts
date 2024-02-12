@@ -50,12 +50,18 @@ export type ScheduleEventsReadOptions = {
 	end?: string
 }
 
+/**
+ * The shape of an event on a Schedule.
+ */
 interface ScheduleEvent extends HDict {
 	startDate: HDateTime
 	endDate: HDateTime
 	val: OptionalHVal
 }
 
+/**
+ * The response from the Schedule Events endpoint.
+ */
 export interface ScheduleEventsResponse extends HDict {
 	events: HList<ScheduleEvent>
 }

@@ -54,8 +54,8 @@ export type ScheduleEventsReadOptions = {
  * The shape of an event on a Schedule.
  */
 interface ScheduleEvent extends HDict {
-	startDate: HDateTime
-	endDate: HDateTime
+	startTime: HDateTime
+	endTime: HDateTime
 	val: OptionalHVal
 }
 

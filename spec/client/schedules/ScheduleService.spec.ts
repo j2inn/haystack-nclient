@@ -108,13 +108,13 @@ const mockScheduleEvents = (): HDict => {
 	return new HDict({
 		events: HList.make(
 			HDict.make({
-				start: HDateTime.make('2024-02-12T00:00:00.000Z'),
-				end: HDateTime.make('2024-02-13T00:00:00.000Z'),
+				startTime: HDateTime.make('2024-02-12T00:00:00.000Z'),
+				endTime: HDateTime.make('2024-02-13T00:00:00.000Z'),
 				val: true,
 			}),
 			HDict.make({
-				start: HDateTime.make('2024-02-14T00:00:00.000Z'),
-				end: HDateTime.make('2024-02-15T00:00:00.000Z'),
+				startTime: HDateTime.make('2024-02-14T00:00:00.000Z'),
+				endTime: HDateTime.make('2024-02-15T00:00:00.000Z'),
 				val: false,
 			})
 		),
@@ -776,11 +776,9 @@ describe('ScheduleService', () => {
 		it('return events for schedule within range', async () => {
 			const start = '2024-02-12T00:00:00.000Z'
 			const end = '2024-02-13T00:00:00.000Z'
+			const options = { start, end }
 
-			await service.readScheduleEvents(HRef.make('123'), {
-				start,
-				end,
-			})
+			await service.readScheduleEvents(HRef.make('123'), options)
 
 			expect(fetchMock.lastUrl()).toEqual(
 				`${getUrl(
@@ -793,10 +791,9 @@ describe('ScheduleService', () => {
 
 		it('return next event for schedule from start date', async () => {
 			const start = '2024-02-12T00:00:00.000Z'
+			const options = { start }
 
-			await service.readScheduleEvents(HRef.make('123'), {
-				start,
-			})
+			await service.readScheduleEvents(HRef.make('123'), options)
 
 			expect(fetchMock.lastUrl()).toEqual(
 				`${getUrl(

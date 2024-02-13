@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2020, J2 Innovations. All Rights Reserved
+ * Copyright (c) 2020-2024, J2 Innovations. All Rights Reserved
  */
 
-import { HList, HRef } from 'haystack-core'
+import { HDateTime, HDict, HList, HRef, OptionalHVal } from 'haystack-core'
 
 /**
  * The entry endpoints for the Schedule Service
@@ -40,6 +40,30 @@ export type ScheduleReadOptions = {
 	 * Omit the specified columns from the response.
 	 */
 	omit?: string[]
+}
+
+/**
+ * Options for reading a Schedules events.
+ */
+export type ScheduleEventsReadOptions = {
+	start: string
+	end?: string
+}
+
+/**
+ * The shape of an event on a Schedule.
+ */
+export interface ScheduleEvent extends HDict {
+	startTime: HDateTime
+	endTime: HDateTime
+	val: OptionalHVal
+}
+
+/**
+ * The response from the Schedule Events endpoint.
+ */
+export interface ScheduleEventsResponse extends HDict {
+	events: HList<ScheduleEvent>
 }
 
 /**

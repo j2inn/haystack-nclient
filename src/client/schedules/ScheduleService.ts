@@ -4,6 +4,7 @@
 
 import { HDict, HGrid, HRef } from 'haystack-core'
 import {
+	ScheduleEventsReadOptions,
 	SchedulePointUpdate,
 	ScheduleReadOptions,
 	ScheduleServiceEndpoints,
@@ -315,6 +316,30 @@ export class ScheduleService {
 	): Promise<HGrid<Schedule>> {
 		return fetchVal<HGrid<Schedule>>(
 			`${this.#calendarsUrl}/${HRef.make(id).value}/schedules`,
+			{
+				...this.#serviceConfig.getDefaultOptions(),
+			}
+		)
+	}
+
+	/**
+	 * Reads the events associated with a schedule.
+	 *
+	 * Returns the events within the start -> end range,
+	 * or, if no end provided, will return the next scheduled event.
+	 *
+	 * @param id The record id.
+	 * @param options The range to use for event lookup.
+	 * @returns The events for the Schedule.
+	 */
+	async readScheduleEvents<ScheduleEventsResponse extends HDict>(
+		id: string | HRef,
+		options: ScheduleEventsReadOptions
+	): Promise<ScheduleEventsResponse> {
+		return fetchVal<ScheduleEventsResponse>(
+			`${this.#schedulesUrl}/${HRef.make(id).value}/events${encodeQuery({
+				...(options ?? {}),
+			})}`,
 			{
 				...this.#serviceConfig.getDefaultOptions(),
 			}

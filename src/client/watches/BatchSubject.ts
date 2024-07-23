@@ -229,4 +229,11 @@ export class BatchSubject implements Subject {
 	public inspect(): void {
 		this.#subject.inspect()
 	}
+
+	/**
+	 * Request a watch poll.
+	 */
+	public poll(): Promise<void> {
+		return this.#subject.poll()
+	}
 }

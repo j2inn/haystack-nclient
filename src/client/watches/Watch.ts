@@ -971,4 +971,14 @@ export class Watch {
 
 		return error
 	}
+
+	/**
+	 * Request a watch poll.
+	 *
+	 * Please note, polls are normally handled automatically so manually
+	 * calling this is not normally required.
+	 */
+	public async poll(): Promise<void> {
+		return this.#subject.poll()
+	}
 }

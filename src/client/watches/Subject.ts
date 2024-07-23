@@ -80,4 +80,9 @@ export interface Subject {
 	 * Inspect the subject.
 	 */
 	inspect(): void
+
+	/**
+	 * Request a watch poll.
+	 */
+	poll(): Promise<void>
 }

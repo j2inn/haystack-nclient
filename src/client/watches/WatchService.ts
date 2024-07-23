@@ -88,4 +88,14 @@ export class WatchService {
 	): Promise<void> {
 		return this.#subject.update(dictsToGrid(dicts))
 	}
+
+	/**
+	 * Request a poll for all opened watches.
+	 *
+	 * Please note, polls are normally handled automatically so manually
+	 * calling this is not normally required.
+	 */
+	public async poll(): Promise<void> {
+		return this.#subject.poll()
+	}
 }

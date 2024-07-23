@@ -32,6 +32,7 @@ describe('Watch', function (): void {
 			get: jest.fn(),
 			update: jest.fn(),
 			inspect: jest.fn(),
+			poll: jest.fn(),
 		}
 
 		watch = new Watch('test', subject)

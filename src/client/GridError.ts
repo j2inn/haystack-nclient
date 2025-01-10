@@ -8,16 +8,16 @@ import { HGrid } from 'haystack-core'
  * An error that encapsulates a grid.
  */
 export class GridError extends Error {
-	public readonly grid: HGrid
+	readonly grid: HGrid
 
-	public readonly _isGridError = true
+	readonly _isGridError = true
 
-	public constructor(message: string, grid: HGrid) {
+	constructor(message: string, grid: HGrid) {
 		super(message)
 		this.grid = grid
 	}
 
-	public toGrid(): HGrid {
+	toGrid(): HGrid {
 		return this.grid
 	}
 }

@@ -50,7 +50,7 @@ export class ExtOpsService {
 	 *
 	 * @param serviceConfig Service configuration.
 	 */
-	public constructor(serviceConfig: ClientServiceConfig) {
+	constructor(serviceConfig: ClientServiceConfig) {
 		this.#serviceConfig = serviceConfig
 		this.#evalBatchProcessor = new BatchProcessor({
 			batcher: this.batchEval,
@@ -64,7 +64,7 @@ export class ExtOpsService {
 	 *
 	 * @returns A promise that's resolved once the defs have been loaded.
 	 */
-	public async loadDefs(): Promise<void> {
+	async loadDefs(): Promise<void> {
 		if (!this.isDefsLoaded()) {
 			try {
 				const defs = await (this.#loadDefsPromise ??
@@ -82,7 +82,7 @@ export class ExtOpsService {
 	/**
 	 * @returns True if the defs have been loaded using this service.
 	 */
-	public isDefsLoaded(): boolean {
+	isDefsLoaded(): boolean {
 		return !this.#serviceConfig.defs.grid.isEmpty()
 	}
 
@@ -110,7 +110,7 @@ export class ExtOpsService {
 	 * @param type The commit operation type (add, update or remove).
 	 * @param data The data to commit.
 	 */
-	public async commit(
+	async commit(
 		type: CommitType,
 		data: HDict | HaysonDict | HDict[] | HaysonDict[] | HGrid | HList<HDict>
 	): Promise<HGrid> {
@@ -137,7 +137,7 @@ export class ExtOpsService {
 	 * @param filter The haystack filter.
 	 * @returns The result of the filter query.
 	 */
-	public async read(filter: string): Promise<HGrid> {
+	async read(filter: string): Promise<HGrid> {
 		return this.eval(`parseFilter(${HStr.make(filter).toAxon()}).readAll()`)
 	}
 
@@ -171,7 +171,7 @@ export class ExtOpsService {
 	 * @param expr The expression to evaluate.
 	 * @returns The evaluated expression response.
 	 */
-	public async eval(expr: string): Promise<HGrid> {
+	async eval(expr: string): Promise<HGrid> {
 		return this.#evalBatchProcessor.invoke(expr)
 	}
 
@@ -204,7 +204,7 @@ export class ExtOpsService {
 	 * @returns The evalulated expression responses.
 	 * @throws Any fetch or grid responses.
 	 */
-	public async evalAll(exprs: string[]): Promise<HGrid[]> {
+	async evalAll(exprs: string[]): Promise<HGrid[]> {
 		const grids = await this.doEvalAll(exprs)
 
 		// Throw any grid errors found in the response.

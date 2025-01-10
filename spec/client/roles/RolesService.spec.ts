@@ -15,6 +15,9 @@ import { Client } from '../../../src/client/Client'
 import { RolesService, Role } from '../../../src/client/roles/RolesService'
 import fetchMock from 'fetch-mock'
 
+import '../../customMatchers'
+import '../../matchers'
+
 describe('rolesService', function (): void {
 	const base = 'http://localhost:8080'
 
@@ -65,7 +68,7 @@ describe('rolesService', function (): void {
 		})
 
 		it('returns a role found', async function (): Promise<void> {
-			expect(await role.readById('foo')).toEqual(dict)
+			expect(await role.readById('foo')).toValEqual(dict)
 		})
 	}) // #readById()
 
@@ -110,7 +113,7 @@ describe('rolesService', function (): void {
 		})
 
 		it('returns some roles', async function (): Promise<void> {
-			expect(await role.readByFilter('site')).toEqual(
+			expect(await role.readByFilter('site')).toValEqual(
 				HGrid.make({ rows: dicts })
 			)
 		})
@@ -233,7 +236,7 @@ describe('rolesService', function (): void {
 		})
 
 		it('returns a record found', async function (): Promise<void> {
-			expect(await role.update(dict)).toEqual(dict)
+			expect(await role.update(dict)).toValEqual(dict)
 		})
 	}) // #update()
 

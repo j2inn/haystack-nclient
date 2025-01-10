@@ -16,6 +16,9 @@ import { Client } from '../../src/client/Client'
 import { UserService, User } from '../../src/client/UserService'
 import fetchMock from 'fetch-mock'
 
+import '../customMatchers'
+import '../matchers'
+
 describe('UserService', function (): void {
 	const base = 'http://localhost:8080'
 
@@ -66,7 +69,7 @@ describe('UserService', function (): void {
 		})
 
 		it('returns a user found', async function (): Promise<void> {
-			expect(await user.readById('foo')).toEqual(dict)
+			expect(await user.readById('foo')).toValEqual(dict)
 		})
 	}) // #readById()
 
@@ -111,7 +114,7 @@ describe('UserService', function (): void {
 		})
 
 		it('returns some users', async function (): Promise<void> {
-			expect(await user.readByFilter('site')).toEqual(
+			expect(await user.readByFilter('site')).toValEqual(
 				HGrid.make({ rows: dicts })
 			)
 		})
@@ -158,7 +161,7 @@ describe('UserService', function (): void {
 		})
 
 		it('returns some users', async function (): Promise<void> {
-			expect(await user.readAll()).toEqual(HGrid.make({ rows: dicts }))
+			expect(await user.readAll()).toValEqual(HGrid.make({ rows: dicts }))
 		})
 	}) // #readAll()
 
@@ -232,7 +235,7 @@ describe('UserService', function (): void {
 		})
 
 		it('returns a record found', async function (): Promise<void> {
-			expect(await user.update(dict)).toEqual(dict)
+			expect(await user.update(dict)).toValEqual(dict)
 		})
 	}) // #update()
 

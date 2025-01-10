@@ -37,7 +37,7 @@ export class WatchRestApis implements WatchApis {
 	 *
 	 * @param serviceConfig service configuration.
 	 */
-	public constructor(serviceConfig: ClientServiceConfig) {
+	constructor(serviceConfig: ClientServiceConfig) {
 		this.#serviceConfig = serviceConfig
 	}
 
@@ -48,7 +48,7 @@ export class WatchRestApis implements WatchApis {
 	 * @returns The watch open response.
 	 * @throws An error if the watch can't be created.
 	 */
-	public async open(
+	async open(
 		ids: string[],
 		display?: string
 	): Promise<{ id: string; records: Record[] }> {
@@ -84,7 +84,7 @@ export class WatchRestApis implements WatchApis {
 	 * @returns The watch add response.
 	 * @throws An error if the watch can't be found.
 	 */
-	public async add(watchId: string, ids: string[]): Promise<Record[]> {
+	async add(watchId: string, ids: string[]): Promise<Record[]> {
 		const dict = HDict.make({
 			add: ids,
 		})
@@ -111,7 +111,7 @@ export class WatchRestApis implements WatchApis {
 	 * @returns The watch poll data.
 	 * @throws An error if the watch can't be found.
 	 */
-	public async poll(watchId: string): Promise<Record[]> {
+	async poll(watchId: string): Promise<Record[]> {
 		const resp = await fetchVal<HGrid<Record>>(
 			`${this.#serviceConfig.getHaystackServiceUrl(
 				`watches/${watchId}/poll${encodeQuery({ v: Date.now() })}`
@@ -132,7 +132,7 @@ export class WatchRestApis implements WatchApis {
 	 * @returns The watch poll data.
 	 * @throws An error if the watch can't be found.
 	 */
-	public async refresh(watchId: string): Promise<Record[]> {
+	async refresh(watchId: string): Promise<Record[]> {
 		const resp = await fetchVal<HGrid<Record>>(
 			`${this.#serviceConfig.getHaystackServiceUrl(
 				`watches/${watchId}/poll`
@@ -153,7 +153,7 @@ export class WatchRestApis implements WatchApis {
 	 * @param ids The record ids to remove.
 	 * @throws An error if the watch can't be found.
 	 */
-	public async remove(watchId: string, ids: string[]): Promise<void> {
+	async remove(watchId: string, ids: string[]): Promise<void> {
 		const dict = HDict.make({
 			remove: ids,
 		})
@@ -177,7 +177,7 @@ export class WatchRestApis implements WatchApis {
 	 * @param watchId The id of the watch.
 	 * @throws An error if the watch can't be found.
 	 */
-	public async close(watchId: string): Promise<void> {
+	async close(watchId: string): Promise<void> {
 		await fetchVal(
 			`${this.#serviceConfig.getHaystackServiceUrl(
 				'watches'

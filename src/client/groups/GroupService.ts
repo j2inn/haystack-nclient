@@ -41,7 +41,7 @@ export class GroupsService<GroupType extends Group = Group> {
 	 *
 	 * @param serviceConfig Service configuration.
 	 */
-	public constructor(serviceConfig: ClientServiceConfig) {
+	constructor(serviceConfig: ClientServiceConfig) {
 		this.#serviceConfig = serviceConfig
 		this.#url = serviceConfig.getHostServiceUrl('groups')
 	}
@@ -52,7 +52,7 @@ export class GroupsService<GroupType extends Group = Group> {
 	 * @param options Optional options for read operation.
 	 * @returns The result of the read operation.
 	 */
-	public async readAll(options?: GroupsReadOptions): Promise<GroupType[]> {
+	async readAll(options?: GroupsReadOptions): Promise<GroupType[]> {
 		const groups = await fetchVal<HGrid<GroupType>>(
 			`${this.#url}${encodeQuery({
 				...(options ?? {}),
@@ -77,7 +77,7 @@ export class GroupsService<GroupType extends Group = Group> {
 	 * @returns The group record.
 	 * @throws An error if the group can't be found.
 	 */
-	public async readById(id: string | HRef): Promise<GroupType> {
+	async readById(id: string | HRef): Promise<GroupType> {
 		const group = await fetchVal<GroupType>(
 			`${this.#url}/${HRef.make(id).value}`,
 			{
@@ -96,7 +96,7 @@ export class GroupsService<GroupType extends Group = Group> {
 	 * @param options Optional options for read operation.
 	 * @returns The result of the read operation.
 	 */
-	public async readByFilter(
+	async readByFilter(
 		filter: string,
 		options?: GroupsReadOptions
 	): Promise<HGrid<GroupType>> {
@@ -118,7 +118,7 @@ export class GroupsService<GroupType extends Group = Group> {
 	 * @param groups The groups to create.
 	 * @returns A grid of groups.
 	 */
-	public async create(
+	async create(
 		groups: GroupType[] | HaysonDict[] | HGrid<GroupType> | HList<GroupType>
 	): Promise<HGrid<GroupType>> {
 		return fetchVal<HGrid<GroupType>>(
@@ -138,9 +138,7 @@ export class GroupsService<GroupType extends Group = Group> {
 	 * @param group The group record to create.
 	 * @returns The created group record.
 	 */
-	public async createGroup(
-		group: GroupType | HaysonDict
-	): Promise<GroupType> {
+	async createGroup(group: GroupType | HaysonDict): Promise<GroupType> {
 		return fetchVal<GroupType>(
 			this.#url,
 			{
@@ -159,7 +157,7 @@ export class GroupsService<GroupType extends Group = Group> {
 	 * @returns A updated record. Please note, this record doesn't
 	 * have any group information just the `id` and `mod`.
 	 */
-	public async update(group: GroupType | HaysonDict): Promise<GroupType> {
+	async update(group: GroupType | HaysonDict): Promise<GroupType> {
 		const groupDict = HDict.make(group) as GroupType
 
 		return fetchVal<GroupType>(
@@ -178,7 +176,7 @@ export class GroupsService<GroupType extends Group = Group> {
 	 *
 	 * @param id The id of the record to delete.
 	 */
-	public async deleteById(id: string | HRef): Promise<void> {
+	async deleteById(id: string | HRef): Promise<void> {
 		await fetchVal<HRef>(
 			`${this.#url}/${HRef.make(id).value}`,
 			{

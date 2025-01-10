@@ -15,6 +15,9 @@ import { Client } from '../../src/client/Client'
 import { RecordService } from '../../src/client/RecordService'
 import fetchMock from 'fetch-mock'
 
+import '../customMatchers'
+import '../matchers'
+
 describe('RecordService', function (): void {
 	const base = 'http://localhost:8080'
 
@@ -67,7 +70,7 @@ describe('RecordService', function (): void {
 		})
 
 		it('returns a record found', async function (): Promise<void> {
-			expect(await record.readById('foo')).toEqual(dict)
+			expect(await record.readById('foo')).toValEqual(dict)
 		})
 	}) // #readById()
 
@@ -115,7 +118,7 @@ describe('RecordService', function (): void {
 		})
 
 		it('returns some records', async function (): Promise<void> {
-			expect(await record.readByIds(['foo', 'foo1'])).toEqual(
+			expect(await record.readByIds(['foo', 'foo1'])).toValEqual(
 				HGrid.make({ rows: dicts })
 			)
 		})
@@ -165,7 +168,7 @@ describe('RecordService', function (): void {
 		})
 
 		it('returns some records', async function (): Promise<void> {
-			expect(await record.readByFilter('site')).toEqual(
+			expect(await record.readByFilter('site')).toValEqual(
 				HGrid.make({ rows: dicts })
 			)
 		})
@@ -262,7 +265,7 @@ describe('RecordService', function (): void {
 		})
 
 		it('returns the deleted record', async function (): Promise<void> {
-			expect(await record.deleteById('foo')).toEqual(dict)
+			expect(await record.deleteById('foo')).toValEqual(dict)
 		})
 	}) // #deleteById()
 
@@ -288,7 +291,7 @@ describe('RecordService', function (): void {
 		})
 
 		it('returns the deleted records', async function (): Promise<void> {
-			expect(await record.deleteByIds(['foo', 'foo1'])).toEqual(grid)
+			expect(await record.deleteByIds(['foo', 'foo1'])).toValEqual(grid)
 		})
 	}) // #deleteByIds()
 
@@ -314,7 +317,9 @@ describe('RecordService', function (): void {
 		})
 
 		it('returns the deleted records', async function (): Promise<void> {
-			expect(await record.deleteByFilter('site and equip')).toEqual(grid)
+			expect(await record.deleteByFilter('site and equip')).toValEqual(
+				grid
+			)
 		})
 	}) // #deleteByFilter()
 
@@ -342,9 +347,9 @@ describe('RecordService', function (): void {
 		})
 
 		it('returns the deleted records', async function (): Promise<void> {
-			expect(await record.updateByFilter('site and equip', dict)).toEqual(
-				HGrid.make({ rows: [dict] })
-			)
+			expect(
+				await record.updateByFilter('site and equip', dict)
+			).toValEqual(HGrid.make({ rows: [dict] }))
 		})
 	}) // #updateByFilter()
 
@@ -374,7 +379,7 @@ describe('RecordService', function (): void {
 		})
 
 		it('returns the deleted records', async function (): Promise<void> {
-			expect(await record.update([dict])).toEqual(
+			expect(await record.update([dict])).toValEqual(
 				HGrid.make({ rows: [dict] })
 			)
 		})
@@ -416,7 +421,7 @@ describe('RecordService', function (): void {
 		})
 
 		it('returns the duplicate record ids', async function (): Promise<void> {
-			expect(await duplicate()).toEqual(list)
+			expect(await duplicate()).toValEqual(list)
 		})
 	}) // #duplicate()
 })

@@ -28,13 +28,13 @@ export class Mutex {
 	 * @param task The task to run.
 	 * @return A Promise that resolves to a result.
 	 */
-	public async runSequential<T>(task: () => Promise<T>): Promise<T> {
+	async runSequential<T>(task: () => Promise<T>): Promise<T> {
 		// Wait for the tasks to complete.
 		// This method has to be kept inline and hence duplicated from #wait().
 		while (this.#promise) {
 			try {
 				await this.#promise
-			} catch (ignore) {}
+			} catch {}
 		}
 
 		try {
@@ -47,18 +47,18 @@ export class Mutex {
 	/**
 	 * Wait for all tasks to complete.
 	 */
-	public async wait(): Promise<void> {
+	async wait(): Promise<void> {
 		while (this.#promise) {
 			try {
 				await this.#promise
-			} catch (ignore) {}
+			} catch {}
 		}
 	}
 
 	/**
 	 * @returns True if the mutex has outstanding tasks running.
 	 */
-	public isLocked(): boolean {
+	isLocked(): boolean {
 		return !!this.#promise
 	}
 }

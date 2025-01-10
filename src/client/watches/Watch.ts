@@ -53,7 +53,7 @@ export class Watch {
 	/**
 	 * The grid for the watch.
 	 */
-	public readonly grid: HGrid
+	readonly grid: HGrid
 
 	/**
 	 * The ids of records that are currently in error and are not being watched.
@@ -95,7 +95,7 @@ export class Watch {
 	 * @param subject The watch will observe this subject.
 	 * @param grid An empty grid to use for the watch.
 	 */
-	public constructor(
+	constructor(
 		watchDisplay: string,
 		subject: Subject,
 		grid: HGrid = HGrid.make({})
@@ -118,7 +118,7 @@ export class Watch {
 	 *
 	 * @returns A list of all open watches.
 	 */
-	public static get watches(): Watch[] {
+	static get watches(): Watch[] {
 		return [...watches]
 	}
 
@@ -129,7 +129,7 @@ export class Watch {
 	 * hs.Watch.inspectAll()
 	 * ```
 	 */
-	public static inspectAll(): void {
+	static inspectAll(): void {
 		this.watches.forEach((watch: Watch): void => {
 			watch.inspect()
 		})
@@ -144,7 +144,7 @@ export class Watch {
 	 *
 	 * @returns The value instance.
 	 */
-	public inspect(): this {
+	inspect(): this {
 		this.grid.inspect(this.display)
 		return this
 	}
@@ -158,7 +158,7 @@ export class Watch {
 	 *
 	 * @returns The value instance.
 	 */
-	public inspectSubject(): this {
+	inspectSubject(): this {
 		this.#subject.inspect()
 		return this
 	}
@@ -170,14 +170,14 @@ export class Watch {
 	 *
 	 * @returns The display name of the watch.
 	 */
-	public get display(): string {
+	get display(): string {
 		return `${this.#watchDisplay} @ ${this.#subject.display}`
 	}
 
 	/**
 	 * @returns A string representation of a watch.
 	 */
-	public toString(): string {
+	toString(): string {
 		return this.display
 	}
 
@@ -193,7 +193,7 @@ export class Watch {
 	 * @returns True if the watch is closed. A closed watch
 	 * can no longer be used.
 	 */
-	public isClosed(): boolean {
+	isClosed(): boolean {
 		return this.#closed
 	}
 
@@ -217,7 +217,7 @@ export class Watch {
 	 * @param options.grid Optional grid to use for the watch.
 	 * @returns An opened watch.
 	 */
-	public static async open({
+	static async open({
 		subject,
 		ids,
 		display,
@@ -242,7 +242,7 @@ export class Watch {
 	 *
 	 * @param subject The subject to close watches for.
 	 */
-	public static async close(subject: Subject): Promise<void> {
+	static async close(subject: Subject): Promise<void> {
 		await Promise.all(
 			[...watches]
 				.filter((watch) => watch.#subject === subject)
@@ -259,7 +259,7 @@ export class Watch {
 	 *
 	 * @param ids The ids to add.
 	 */
-	public async add(ids: Ids): Promise<void> {
+	async add(ids: Ids): Promise<void> {
 		this.throwErrorIfClosed()
 		watches.add(this)
 
@@ -352,7 +352,7 @@ export class Watch {
 	 *
 	 * @param ids The ids to remove.
 	 */
-	public async remove(ids: Ids): Promise<void> {
+	async remove(ids: Ids): Promise<void> {
 		this.throwErrorIfClosed()
 
 		const idArray = idsToArray(ids)
@@ -405,7 +405,7 @@ export class Watch {
 	 * await watch.refresh()
 	 * ```
 	 */
-	public async refresh(): Promise<void> {
+	async refresh(): Promise<void> {
 		this.throwErrorIfClosed()
 
 		await this.#subject.refresh()
@@ -486,7 +486,7 @@ export class Watch {
 	 * await watch.clear()
 	 * ```
 	 */
-	public async clear(): Promise<void> {
+	async clear(): Promise<void> {
 		this.remove(this.grid)
 	}
 
@@ -502,7 +502,7 @@ export class Watch {
 	 * await watch.close()
 	 * ```
 	 */
-	public async close(): Promise<void> {
+	async close(): Promise<void> {
 		try {
 			if (this.isClosed()) {
 				return
@@ -529,7 +529,7 @@ export class Watch {
 	 *
 	 * @returns The poll rate for this watch.
 	 */
-	public get pollRate(): number {
+	get pollRate(): number {
 		return this.#pollRate
 	}
 
@@ -545,7 +545,7 @@ export class Watch {
 	 *
 	 * @param pollRate The poll rate.
 	 */
-	public set pollRate(pollRate: number) {
+	set pollRate(pollRate: number) {
 		this.#pollRate = pollRate
 		this.computeSubjectPollRate()
 	}
@@ -566,7 +566,7 @@ export class Watch {
 	 * @return The emitter instance.
 	 * @throws An error if the watch is already closed.
 	 */
-	public on(eventType: WatchEventType, callback: WatchEventCallback): this {
+	on(eventType: WatchEventType, callback: WatchEventCallback): this {
 		this.throwErrorIfClosed()
 
 		let allCallbacks = this.#callbacks.get(eventType)
@@ -591,7 +591,7 @@ export class Watch {
 	 * @param callback callback to remove.
 	 * @return The emitter instance.
 	 */
-	public off(eventType: WatchEventType, callback: WatchEventCallback): this {
+	off(eventType: WatchEventType, callback: WatchEventCallback): this {
 		const allCallbacks = this.#callbacks.get(eventType)
 
 		if (allCallbacks) {
@@ -611,7 +611,7 @@ export class Watch {
 	 * @param event The event object.
 	 * @return The emitter instance.
 	 */
-	public fire(event: WatchEvent): this {
+	fire(event: WatchEvent): this {
 		this.#callbacks
 			.get(event.type)
 			?.forEach((callback: WatchEventCallback): void => {
@@ -637,7 +637,7 @@ export class Watch {
 	 * @param eventType Optional event type.
 	 * @returns The callbacks.
 	 */
-	public getCallbacks(eventType?: WatchEventType): WatchEventCallback[] {
+	getCallbacks(eventType?: WatchEventType): WatchEventCallback[] {
 		if (eventType) {
 			return [...(this.#callbacks.get(eventType) ?? [])]
 		} else {
@@ -664,7 +664,7 @@ export class Watch {
 	 *
 	 * @returns True if there are callbacks.
 	 */
-	public hasCallbacks(eventType?: WatchEventType): boolean {
+	hasCallbacks(eventType?: WatchEventType): boolean {
 		return (
 			(eventType
 				? this.#callbacks.get(eventType)?.size || 0
@@ -682,7 +682,7 @@ export class Watch {
 	 *
 	 * @return The emitter instance.
 	 */
-	public clearCallbacks(): this {
+	clearCallbacks(): this {
 		this.#callbacks.clear()
 		this.#subject.off(this.$onChanged)
 		return this
@@ -721,7 +721,7 @@ export class Watch {
 	 * @returns The built callback handler.
 	 * @throws An error if the haystack filter is invalid.
 	 */
-	public changed({
+	changed({
 		interests,
 		condition,
 		callback,
@@ -824,7 +824,7 @@ export class Watch {
 	 *
 	 * @param filter The filter to remove items by.
 	 */
-	public removeFromGrid(filter: string): void {
+	removeFromGrid(filter: string): void {
 		this.grid.remove(filter)
 	}
 
@@ -835,7 +835,7 @@ export class Watch {
 	 *
 	 * @param dicts The dicts to add to the grid.
 	 */
-	public addToGrid(dicts: HDict[]): void {
+	addToGrid(dicts: HDict[]): void {
 		this.grid.add(dicts)
 	}
 
@@ -844,7 +844,7 @@ export class Watch {
 	 *
 	 * This method can be overridden to track grid mutations.
 	 */
-	public clearGrid(): void {
+	clearGrid(): void {
 		this.grid.clear()
 	}
 
@@ -854,7 +854,7 @@ export class Watch {
 	 * @param options.dictIndexes An object with ids to indexes.
 	 * @param options.events The events to update the grid with.
 	 */
-	public updateGrid({
+	updateGrid({
 		idsToGridIndexes,
 		events,
 	}: {
@@ -871,7 +871,7 @@ export class Watch {
 	 * @param grid The grid to update.
 	 * @param events The events to update the grid with.
 	 */
-	public static updateGrid(
+	static updateGrid(
 		idsToGridIndexes: { [prop: string]: number },
 		grid: HGrid,
 		events: { [prop: string]: WatchChanged }
@@ -925,7 +925,7 @@ export class Watch {
 	 * @returns The ids of the records that are in error
 	 * and can't be watched on the server.
 	 */
-	public get errors(): string[] {
+	get errors(): string[] {
 		return [...this.#errors]
 	}
 
@@ -933,14 +933,14 @@ export class Watch {
 	 * @returns the ids as refs of the records that in error
 	 * and can't be watched on the server.
 	 */
-	public get errorRefs(): HRef[] {
+	get errorRefs(): HRef[] {
 		return this.errors.map((id) => HRef.make(id))
 	}
 
 	/**
 	 * @returns True if the watch has errors.
 	 */
-	public hasErrors(): boolean {
+	hasErrors(): boolean {
 		return this.#errors.size > 0
 	}
 
@@ -950,7 +950,7 @@ export class Watch {
 	 * @param id The id or record to test.
 	 * @returns True if the id is in error.
 	 */
-	public hasErrorForId(id: string | HRef | HDict): boolean {
+	hasErrorForId(id: string | HRef | HDict): boolean {
 		let error = false
 
 		let recordId = ''
@@ -978,7 +978,7 @@ export class Watch {
 	 * Please note, polls are normally handled automatically so manually
 	 * calling this is not normally required.
 	 */
-	public async poll(): Promise<void> {
+	async poll(): Promise<void> {
 		return this.#subject.poll()
 	}
 }

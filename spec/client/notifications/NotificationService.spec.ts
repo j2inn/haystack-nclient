@@ -18,6 +18,9 @@ import {
 } from '../../../src/client/notifications/NotificationService'
 import fetchMock from 'fetch-mock'
 
+import '../../customMatchers'
+import '../../matchers'
+
 describe('NotificationService', function (): void {
 	const base = 'http://localhost:8080'
 

@@ -8,6 +8,9 @@ import { Client } from '../../src/client/Client'
 import { Project, ProjectService } from '../../src/client/ProjectService'
 import fetchMock from 'fetch-mock'
 
+import '../customMatchers'
+import '../matchers'
+
 describe('ProjectService', function (): void {
 	const base = 'http://localhost:8080'
 
@@ -61,7 +64,7 @@ describe('ProjectService', function (): void {
 		})
 
 		it('returns a project found', async function (): Promise<void> {
-			expect(await project.readByName('foo')).toEqual(dict)
+			expect(await project.readByName('foo')).toValEqual(dict)
 		})
 	}) // #readByName()
 
@@ -96,7 +99,9 @@ describe('ProjectService', function (): void {
 		})
 
 		it('returns some projects', async function (): Promise<void> {
-			expect(await project.readAll()).toEqual(HGrid.make({ rows: dicts }))
+			expect(await project.readAll()).toValEqual(
+				HGrid.make({ rows: dicts })
+			)
 		})
 	}) // #readAll()
 
@@ -151,7 +156,7 @@ describe('ProjectService', function (): void {
 		})
 
 		it('returns a record found', async function (): Promise<void> {
-			expect(await project.update(dict)).toEqual(dict)
+			expect(await project.update(dict)).toValEqual(dict)
 		})
 	}) // #update()
 })

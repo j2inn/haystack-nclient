@@ -55,7 +55,7 @@ export class RecordService {
 	 *
 	 * @param serviceConfig Service configuration.
 	 */
-	public constructor(serviceConfig: ClientServiceConfig) {
+	constructor(serviceConfig: ClientServiceConfig) {
 		this.#serviceConfig = serviceConfig
 		this.#url = serviceConfig.getHaystackServiceUrl('records')
 	}
@@ -67,7 +67,7 @@ export class RecordService {
 	 * @returns The record.
 	 * @throws An error if the record can't be found.
 	 */
-	public async readById(id: string | HRef): Promise<Record> {
+	async readById(id: string | HRef): Promise<Record> {
 		const record = await fetchVal<Record>(
 			`${this.#url}/${HRef.make(id).value}`,
 			{
@@ -86,7 +86,7 @@ export class RecordService {
 	 * @param options Optional options for read operation.
 	 * @returns The result of the read operation.
 	 */
-	public async readByIds(
+	async readByIds(
 		ids: string[] | HRef[] | HList<HRef>,
 		options?: ReadOptions
 	): Promise<HGrid<Record>> {
@@ -109,7 +109,7 @@ export class RecordService {
 	 * @param options Optional options for read operation.
 	 * @returns The result of the read operation.
 	 */
-	public async readByFilter(
+	async readByFilter(
 		filter: string,
 		options?: ReadOptions
 	): Promise<HGrid<Record>> {
@@ -131,7 +131,7 @@ export class RecordService {
 	 * @param filter The haystack filter to query by.
 	 * @returns The number of records counted.
 	 */
-	public async readCount(filter: string): Promise<number> {
+	async readCount(filter: string): Promise<number> {
 		const grid = await fetchVal<HGrid>(
 			`${this.#url}${encodeQuery({
 				count: filter,
@@ -153,7 +153,7 @@ export class RecordService {
 	 * @returns The resultant grid of the create operation. The grid contains a
 	 * 'created' number property for the number of records created in the meta.
 	 */
-	public async create(
+	async create(
 		dicts: HDict[] | HaysonDict[] | HGrid | HList<HDict>
 	): Promise<HGrid<Record>> {
 		return fetchVal<HGrid<Record>>(
@@ -173,7 +173,7 @@ export class RecordService {
 	 * @param dict The record to create.
 	 * @returns The resultant dict of the create operation.
 	 */
-	public async createRecord(dict: HDict | HaysonDict): Promise<Record> {
+	async createRecord(dict: HDict | HaysonDict): Promise<Record> {
 		return fetchVal<Record>(
 			this.#url,
 			{
@@ -191,7 +191,7 @@ export class RecordService {
 	 * @param id The id of the record to delete.
 	 * @returns If the record
 	 */
-	public async deleteById(id: string | HRef): Promise<Record> {
+	async deleteById(id: string | HRef): Promise<Record> {
 		const record = await fetchVal<Record>(
 			`${this.#url}/${HRef.make(id).value}`,
 			{
@@ -212,7 +212,7 @@ export class RecordService {
 	 * contains the `id` and `mod` properties. The grid meta contains an
 	 * `deleted` number property for the total number of records deleted.
 	 */
-	public async deleteByIds(
+	async deleteByIds(
 		ids: string[] | HRef[] | HList<HRef>
 	): Promise<HGrid<Record>> {
 		return fetchVal<HGrid<Record>>(
@@ -238,7 +238,7 @@ export class RecordService {
 	 * contains the `id` and `mod` properties. The grid meta contains an
 	 * `deleted` number property for the total number of records deleted.
 	 */
-	public async deleteByFilter(filter: string): Promise<HGrid<Record>> {
+	async deleteByFilter(filter: string): Promise<HGrid<Record>> {
 		return fetchVal<HGrid<Record>>(
 			`${this.#url}${encodeQuery({
 				filter,
@@ -263,7 +263,7 @@ export class RecordService {
 	 * contains the `id` and `mod` properties. The grid meta contains an
 	 * `updated` number property for the total number of records updated.
 	 */
-	public async updateByFilter(
+	async updateByFilter(
 		filter: string,
 		dict: HDict | HaysonDict
 	): Promise<HGrid<Record>> {
@@ -288,7 +288,7 @@ export class RecordService {
 	 * contains the `id` and `mod` properties. The grid meta contains an
 	 * `updated` number property for the total number of records updated.
 	 */
-	public async update(
+	async update(
 		dicts:
 			| HDict
 			| HaysonDict
@@ -318,7 +318,7 @@ export class RecordService {
 	 * @returns A list of top level record ids that were duplicated. This does not include
 	 * any child record ids that were duplicated.
 	 */
-	public async duplicate({
+	async duplicate({
 		id,
 		count,
 		includeChildren,

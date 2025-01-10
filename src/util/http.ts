@@ -216,7 +216,7 @@ export const ZINC_MIME_TYPE = 'text/zinc'
 export function getOrigin(resource: string): string {
 	try {
 		return new URL(resource).origin
-	} catch (err) {
+	} catch {
 		return ''
 	}
 }

@@ -26,10 +26,7 @@ export class WatchService {
 	 * @param serviceConfig Service configuration.
 	 * @param watchApis Watch network APIs implementation.
 	 */
-	public constructor(
-		serviceConfig: ClientServiceConfig,
-		watchApis: WatchApis
-	) {
+	constructor(serviceConfig: ClientServiceConfig, watchApis: WatchApis) {
 		const apiSubject = new ApiSubject(
 			watchApis,
 			serviceConfig,
@@ -51,7 +48,7 @@ export class WatchService {
 	 * @param grid An optional empty grid to use for the watch.
 	 * @returns An opened watch.
 	 */
-	public async make(display: string, ids: Ids, grid?: HGrid): Promise<Watch> {
+	async make(display: string, ids: Ids, grid?: HGrid): Promise<Watch> {
 		return Watch.open({
 			subject: this.#subject,
 			ids,
@@ -63,7 +60,7 @@ export class WatchService {
 	/**
 	 * Closes any open watches for this watch service.
 	 */
-	public async close(): Promise<void> {
+	async close(): Promise<void> {
 		await Watch.close(this.#subject)
 	}
 
@@ -77,7 +74,7 @@ export class WatchService {
 	 *
 	 * @param dicts The dicts to update.
 	 */
-	public async update(
+	async update(
 		dicts:
 			| HDict
 			| HaysonDict
@@ -95,7 +92,7 @@ export class WatchService {
 	 * Please note, polls are normally handled automatically so manually
 	 * calling this is not normally required.
 	 */
-	public async poll(): Promise<void> {
+	async poll(): Promise<void> {
 		return this.#subject.poll()
 	}
 }

@@ -39,7 +39,7 @@ export class Client implements ClientServiceConfig {
 	/**
 	 * The origin of the client.
 	 */
-	public readonly origin: string
+	readonly origin: string
 
 	/**
 	 * Fetches the API url
@@ -65,77 +65,77 @@ export class Client implements ClientServiceConfig {
 	/**
 	 * The project associated with this client.
 	 */
-	public readonly project: string
+	readonly project: string
 
 	/**
 	 * Is the optional path that is appended to the client origin url
 	 */
-	public readonly pathPrefix: string
+	readonly pathPrefix: string
 
 	/**
 	 * The defs associated with the client.
 	 */
-	public defs = new HNamespace(HGrid.make({}))
+	defs = new HNamespace(HGrid.make({}))
 
 	/**
 	 * The ops service.
 	 */
-	public readonly ops: OpsService
+	readonly ops: OpsService
 
 	/**
 	 * The extended ops service.
 	 */
-	public readonly ext: ExtOpsService
+	readonly ext: ExtOpsService
 
 	/**
 	 * The record service.
 	 */
-	public readonly record: RecordService
+	readonly record: RecordService
 
 	/**
 	 * The schedule service.
 	 */
-	public readonly schedule: ScheduleService
+	readonly schedule: ScheduleService
 
 	/**
 	 * The watch service.
 	 */
-	public readonly watch: WatchService
+	readonly watch: WatchService
 
 	/**
 	 * The user service.
 	 */
-	public readonly user: UserService
+	readonly user: UserService
 
 	/**
 	 * The user groups service
 	 */
-	public readonly groups: GroupsService
+	readonly groups: GroupsService
 
 	/**
 	 * The user roles service
 	 */
-	public readonly roles: RolesService
+	readonly roles: RolesService
 
 	/**
 	 * The project service.
 	 */
-	public readonly proj: ProjectService
+	readonly proj: ProjectService
 
 	/**
 	 * The notifications service.
 	 */
-	public readonly notifications: NotificationService
+	readonly notifications: NotificationService
 
 	/**
 	 * The notifications settings service.
 	 */
-	public readonly notificationsSettings: NotificationSettingsService
+	readonly notificationsSettings: NotificationSettingsService
 
 	/**
 	 * The functions service
 	 */
-	public readonly functions: FunctionService
+	readonly functions: FunctionService
 
 	/**
 	 * The `fetch` options.
@@ -145,7 +145,7 @@ export class Client implements ClientServiceConfig {
 	/**
 	 * The `fetch` function to use for network communication.
 	 */
-	public readonly fetch: FetchMethod
+	readonly fetch: FetchMethod
 
 	/**
 	 * Internal cached load defs promise.
@@ -171,7 +171,7 @@ export class Client implements ClientServiceConfig {
 	 * @param options.getHaystackServiceUrl Optional function that returns the haystack service URL to use.
 	 * @param options.getHostServiceUrl Optional function that returns the host service URL to use.
 	 */
-	public constructor({
+	constructor({
 		base,
 		project,
 		defs,
@@ -268,7 +268,7 @@ export class Client implements ClientServiceConfig {
 	 * @param path Name of the API
 	 * @returns A URL.
 	 */
-	public getServiceUrl(path: string) {
+	getServiceUrl(path: string) {
 		return this.#getServiceUrl({
 			origin: this.origin,
 			path,
@@ -281,7 +281,7 @@ export class Client implements ClientServiceConfig {
 	 * @param op The op to create the URL for.
 	 * @returns A URL.
 	 */
-	public getOpUrl(op: string): string {
+	getOpUrl(op: string): string {
 		return this.#getOpUrl({
 			origin: this.origin,
 			pathPrefix: this.pathPrefix,
@@ -296,7 +296,7 @@ export class Client implements ClientServiceConfig {
 	 * @param path The path of the service.
 	 * @returns A URL.
 	 */
-	public getHaystackServiceUrl(service: string): string {
+	getHaystackServiceUrl(service: string): string {
 		return this.#getHaystackServiceUrl({
 			origin: this.origin,
 			pathPrefix: this.pathPrefix,
@@ -311,7 +311,7 @@ export class Client implements ClientServiceConfig {
 	 * @param path The path of the service.
 	 * @returns A URL.
 	 */
-	public getHostServiceUrl(path: string): string {
+	getHostServiceUrl(path: string): string {
 		return this.#getHostServiceUrl({
 			origin: this.origin,
 			pathPrefix: this.pathPrefix,
@@ -322,7 +322,7 @@ export class Client implements ClientServiceConfig {
 	/**
 	 * @returns The default options to used with a fetch operation.
 	 */
-	public getDefaultOptions(): RequestInit {
+	getDefaultOptions(): RequestInit {
 		return this.#options
 	}
 
@@ -333,7 +333,7 @@ export class Client implements ClientServiceConfig {
 	 *
 	 * @returns A promise that's resolved once the defs have been loaded.
 	 */
-	public async loadDefs(): Promise<void> {
+	async loadDefs(): Promise<void> {
 		if (!this.isDefsLoaded()) {
 			try {
 				this.defs = await (this.#loadDefsPromise ??
@@ -349,7 +349,7 @@ export class Client implements ClientServiceConfig {
 	/**
 	 * @returns True if the defs have been loaded using this service.
 	 */
-	public isDefsLoaded(): boolean {
+	isDefsLoaded(): boolean {
 		return !this.defs.grid.isEmpty()
 	}
 
@@ -374,7 +374,7 @@ export class Client implements ClientServiceConfig {
 	/**
 	 * @returns A JSON object of the Client that uniquely identifies it.
 	 */
-	public toJSON(): {
+	toJSON(): {
 		opUrl: string
 		haystackServiceUrl: string
 		hostServiceUrl: string
@@ -399,7 +399,7 @@ export class Client implements ClientServiceConfig {
 	 * @returns A promise that resolves to a value.
 	 * @throws A fetch or grid error.
 	 */
-	public async fetchVal<T extends HVal>(
+	async fetchVal<T extends HVal>(
 		resource: RequestInfo,
 		body?: HVal | HaysonVal,
 		options?: RequestInit
@@ -423,7 +423,7 @@ export class Client implements ClientServiceConfig {
 	 * Warning: this will close any watches associated with this client. Any
 	 * watches may throw an error if they are used after being closed.
 	 */
-	public async close(): Promise<void> {
+	async close(): Promise<void> {
 		await Promise.all([this.watch.close(), this.ops.watch.close()])
 	}
 }

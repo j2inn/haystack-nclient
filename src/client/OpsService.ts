@@ -47,14 +47,14 @@ export class OpsService {
 	/**
 	 * The watch ops service.
 	 */
-	public readonly watch: WatchService
+	readonly watch: WatchService
 
 	/**
 	 * Constructs a new record service object.
 	 *
 	 * @param serviceConfig Ops configuration.
 	 */
-	public constructor(serviceConfig: ClientServiceConfig) {
+	constructor(serviceConfig: ClientServiceConfig) {
 		this.#serviceConfig = serviceConfig
 
 		this.watch = new WatchService(
@@ -68,7 +68,7 @@ export class OpsService {
 	 *
 	 * @returns Server about information.
 	 */
-	public async about(): Promise<HGrid> {
+	async about(): Promise<HGrid> {
 		return fetchVal<HGrid>(
 			this.#serviceConfig.getOpUrl('about'),
 			{
@@ -83,7 +83,7 @@ export class OpsService {
 	 *
 	 * @returns Available ops that can be invoked.
 	 */
-	public async ops(): Promise<HGrid> {
+	async ops(): Promise<HGrid> {
 		return fetchVal<HGrid>(
 			this.#serviceConfig.getOpUrl('ops'),
 			{
@@ -98,7 +98,7 @@ export class OpsService {
 	 *
 	 * @returns Available formats supported by the server.
 	 */
-	public async formats(): Promise<HGrid> {
+	async formats(): Promise<HGrid> {
 		return fetchVal<HGrid>(
 			this.#serviceConfig.getOpUrl('formats'),
 			{
@@ -115,7 +115,7 @@ export class OpsService {
 	 * @param grid An optional grid argument that is encoded with the op call.
 	 * @returns The response grid.
 	 */
-	public async invokeOp(op: string, grid?: HGrid): Promise<HGrid> {
+	async invokeOp(op: string, grid?: HGrid): Promise<HGrid> {
 		const options = {
 			...this.#serviceConfig.getDefaultOptions(),
 			method: 'POST',
@@ -144,7 +144,7 @@ export class OpsService {
 	 * @param ids list of ids as HRef or string
 	 * @returns A grid with the resolved query.
 	 */
-	public async read(ids: string[] | HRef[]): Promise<HGrid>
+	async read(ids: string[] | HRef[]): Promise<HGrid>
 
 	/**
 	 * @returns Reads a set of records from the server by filter.
@@ -168,10 +168,10 @@ export class OpsService {
 	 * @param limit Optional limit on the number of records sent back.
 	 * @returns A grid with the resolved query.
 	 */
-	public async read(filter: string, limit?: number): Promise<HGrid>
+	async read(filter: string, limit?: number): Promise<HGrid>
 
 	// Read Implementation
-	public async read(params: ReadParams, limit?: number): Promise<HGrid> {
+	async read(params: ReadParams, limit?: number): Promise<HGrid> {
 		let requestGrid: HGrid | undefined
 
 		if (Array.isArray(params)) {
@@ -205,7 +205,7 @@ export class OpsService {
 	 * @param id The id of the point to read.
 	 * @returns The writable point's priority array.
 	 */
-	public async pointRead(id: string | HRef): Promise<HGrid> {
+	async pointRead(id: string | HRef): Promise<HGrid> {
 		// Note: pointWrite is being intentionally used here.
 		return this.invokeOp(
 			'pointWrite',
@@ -225,7 +225,7 @@ export class OpsService {
 	 * @param option.duration Optional number with duration unit if setting level 8.
 	 * @returns The writable point's priority array.
 	 */
-	public async pointWrite({
+	async pointWrite({
 		id,
 		level,
 		val,
@@ -267,7 +267,7 @@ export class OpsService {
 	 * @param range The date range.
 	 * @returns The time series data.
 	 */
-	public async hisRead(
+	async hisRead(
 		id: string | HRef,
 		range:
 			| string
@@ -307,7 +307,7 @@ export class OpsService {
 	 * @param data The data to write to the history.
 	 * @returns The history data to write.
 	 */
-	public async hisWrite(
+	async hisWrite(
 		id: string | HRef,
 		data: HDict | HaysonDict | HDict[] | HaysonDict[] | HGrid | HList<HDict>
 	): Promise<HGrid> {
@@ -327,7 +327,7 @@ export class OpsService {
 	 * @param args Optional arguments for the action.
 	 * @returns The result of the action.
 	 */
-	public async invokeAction(
+	async invokeAction(
 		id: string | HRef,
 		action: string,
 		args?: HDict | HaysonDict
@@ -354,7 +354,7 @@ export class OpsService {
 	 * must be specified via a navId property.
 	 * @returns The navigation.
 	 */
-	public async nav(
+	async nav(
 		navId?: string | HStr | HRef | HaysonDict | HDict | HGrid
 	): Promise<HGrid> {
 		let grid: HGrid

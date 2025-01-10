@@ -13,6 +13,9 @@ import fetchMock from 'fetch-mock'
 import { HGrid, HDict, HAYSON_MIME_TYPE } from 'haystack-core'
 import { HS_ACCEPT_HEADER_VALUE } from '../../src/client/fetchVal'
 
+import '../customMatchers'
+import '../matchers'
+
 describe('fetchVal', function (): void {
 	const READ = '/read'
 	const ABS_URL = 'https://www.foobar.com'
@@ -175,7 +178,7 @@ describe('fetchVal', function (): void {
 			it('returns a grid', async function (): Promise<void> {
 				const grid = await fetchVal(READ)
 
-				expect(grid.toJSON()).toEqual(respGrid.toJSON())
+				expect(grid).toValEqual(respGrid)
 			})
 		}) // Hayson
 	}) // fetchVal()

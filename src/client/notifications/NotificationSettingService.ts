@@ -42,7 +42,7 @@ export class NotificationSettingsService {
 	 *
 	 * @param serviceConfig Service configuration.
 	 */
-	public constructor(serviceConfig: ClientServiceConfig) {
+	constructor(serviceConfig: ClientServiceConfig) {
 		this.#serviceConfig = serviceConfig
 		this.#url = serviceConfig.getServiceUrl('notifications/settings')
 	}
@@ -52,7 +52,7 @@ export class NotificationSettingsService {
 	 *
 	 * @returns The result of the read operation.
 	 */
-	public async readTopics(): Promise<TopicSetting[]> {
+	async readTopics(): Promise<TopicSetting[]> {
 		const topics = await fetchVal<HList<TopicSetting>>(
 			`${this.#url}/topics`,
 			{
@@ -72,7 +72,7 @@ export class NotificationSettingsService {
 	 * @param topicDescription The topic description object
 	 * @returns Returns the id of the topic description that was either created or updated.
 	 */
-	public async setTopicSetting(topicSetting: TopicSetting): Promise<HRef> {
+	async setTopicSetting(topicSetting: TopicSetting): Promise<HRef> {
 		const updatedTopicId = await fetchVal<HRef>(
 			`${this.#url}/topics`,
 			{
@@ -91,7 +91,7 @@ export class NotificationSettingsService {
 	 *
 	 * @returns Returns the view settings for the current users.
 	 */
-	public async readUserViews(): Promise<UserViewSetting[]> {
+	async readUserViews(): Promise<UserViewSetting[]> {
 		const views = await fetchVal<HList<UserViewSetting>>(
 			`${this.#url}/view`,
 			{
@@ -109,9 +109,7 @@ export class NotificationSettingsService {
 	 * @param viewSetting The setting object
 	 * @returns Returns the id of the setting that was either created or updated.
 	 */
-	public async setUserViewSetting(
-		userViewSetting: UserViewSetting
-	): Promise<HRef> {
+	async setUserViewSetting(userViewSetting: UserViewSetting): Promise<HRef> {
 		const updatedViewSetting = await fetchVal<HRef>(
 			`${this.#url}/view`,
 			{
@@ -130,7 +128,7 @@ export class NotificationSettingsService {
 	 *
 	 * @returns Returns the system purge settings.
 	 */
-	public async readPurgeSettings(): Promise<SystemPurgeSetting[]> {
+	async readPurgeSettings(): Promise<SystemPurgeSetting[]> {
 		const purgeSettings = await fetchVal<HList<SystemPurgeSetting>>(
 			`${this.#url}/purge`,
 			{
@@ -148,7 +146,7 @@ export class NotificationSettingsService {
 	 * @param purgeSetting The setting object
 	 * @returns Returns the id of the setting that was either created or updated.
 	 */
-	public async setPurgeSettings(
+	async setPurgeSettings(
 		systemPurgeSetting: SystemPurgeSetting
 	): Promise<HRef> {
 		const updatedPurgeSetting = await fetchVal<HRef>(

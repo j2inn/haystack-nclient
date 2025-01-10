@@ -15,6 +15,9 @@ import { Client } from '../../../src/client/Client'
 import { GroupsService, Group } from '../../../src/client/groups/GroupService'
 import fetchMock from 'fetch-mock'
 
+import '../../customMatchers'
+import '../../matchers'
+
 describe('GroupsService', function (): void {
 	const base = 'http://localhost:8080'
 
@@ -65,7 +68,7 @@ describe('GroupsService', function (): void {
 		})
 
 		it('returns a group found', async function (): Promise<void> {
-			expect(await group.readById('foo')).toEqual(dict)
+			expect(await group.readById('foo')).toValEqual(dict)
 		})
 	}) // #readById()
 
@@ -110,7 +113,7 @@ describe('GroupsService', function (): void {
 		})
 
 		it('returns some groups', async function (): Promise<void> {
-			expect(await group.readByFilter('site')).toEqual(
+			expect(await group.readByFilter('site')).toValEqual(
 				HGrid.make({ rows: dicts })
 			)
 		})

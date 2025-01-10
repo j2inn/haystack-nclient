@@ -34,7 +34,7 @@ export class ProjectService<ProjectType extends Project = Project> {
 	 *
 	 * @param serviceConfig Service configuration.
 	 */
-	public constructor(serviceConfig: ClientServiceConfig) {
+	constructor(serviceConfig: ClientServiceConfig) {
 		this.#serviceConfig = serviceConfig
 		this.#url = serviceConfig.getHostServiceUrl('projects')
 	}
@@ -46,7 +46,7 @@ export class ProjectService<ProjectType extends Project = Project> {
 	 * @returns The project record.
 	 * @throws An error if the project can't be found.
 	 */
-	public async readByName(name: string): Promise<ProjectType> {
+	async readByName(name: string): Promise<ProjectType> {
 		const project = await fetchVal<ProjectType>(
 			`${this.#url}/${name}`,
 			{
@@ -63,7 +63,7 @@ export class ProjectService<ProjectType extends Project = Project> {
 	 *
 	 * @returns The result of the read operation.
 	 */
-	public async readAll(): Promise<HGrid<ProjectType>> {
+	async readAll(): Promise<HGrid<ProjectType>> {
 		return fetchVal<HGrid<ProjectType>>(
 			this.#url,
 			{
@@ -79,7 +79,7 @@ export class ProjectService<ProjectType extends Project = Project> {
 	 * @params project The project to create.
 	 * @returns The created project. Please note, the record only contains the name.
 	 */
-	public async createProject(
+	async createProject(
 		project: ProjectType | HaysonDict
 	): Promise<ProjectType> {
 		return await fetchVal<ProjectType>(
@@ -99,9 +99,7 @@ export class ProjectService<ProjectType extends Project = Project> {
 	 * @param project The project record to update.
 	 * @returns A updated project record.
 	 */
-	public async update(
-		project: ProjectType | HaysonDict
-	): Promise<ProjectType> {
+	async update(project: ProjectType | HaysonDict): Promise<ProjectType> {
 		const projectDict = HDict.make(project) as ProjectType
 
 		return fetchVal<ProjectType>(

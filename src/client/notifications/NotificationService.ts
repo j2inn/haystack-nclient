@@ -62,12 +62,12 @@ export class NotificationService<
 	 *
 	 * @param serviceConfig Service configuration.
 	 */
-	public constructor(serviceConfig: ClientServiceConfig) {
+	constructor(serviceConfig: ClientServiceConfig) {
 		this.#serviceConfig = serviceConfig
 		this.#url = serviceConfig.getServiceUrl('notifications')
 	}
 
-	public async make(
+	async make(
 		callbacks: NotificationEventHandler[]
 	): Promise<NotificationsHandler> {
 		const notificationHandler = new NotificationsHandler({
@@ -84,7 +84,7 @@ export class NotificationService<
 	 *
 	 * @returns The result of the read operation.
 	 */
-	public async readAll(): Promise<NotificationType[]> {
+	async readAll(): Promise<NotificationType[]> {
 		const notifications = await fetchVal<HList<NotificationType>>(
 			`${this.#url}`,
 			{
@@ -102,7 +102,7 @@ export class NotificationService<
 	 *
 	 * @returns The result of the read operation.
 	 */
-	public async readAllTopics(): Promise<HStr[]> {
+	async readAllTopics(): Promise<HStr[]> {
 		const topics = await fetchVal<HList<HStr>>(
 			`${this.#url}/topics`,
 			{
@@ -122,9 +122,7 @@ export class NotificationService<
 	 * @param filter A haystack filter
 	 * @returns The result of the read operation.
 	 */
-	public async readAllCurrentFiltered(
-		filter?: string
-	): Promise<NotificationType[]> {
+	async readAllCurrentFiltered(filter?: string): Promise<NotificationType[]> {
 		const currentFilter = filter ?? ''
 
 		const notifications = await fetchVal<HList<NotificationType>>(
@@ -146,7 +144,7 @@ export class NotificationService<
 	 * @param filter A haystack filter
 	 * @returns The filtered notifications.
 	 */
-	public async readByTopicFilter(filter?: string): Promise<NotificationType> {
+	async readByTopicFilter(filter?: string): Promise<NotificationType> {
 		const topicFilter = filter ?? ''
 
 		const topicFilteredNotifications = await fetchVal<NotificationType>(
@@ -169,7 +167,7 @@ export class NotificationService<
 	 * @param notification The notification object
 	 * @returns The filtered notifications.
 	 */
-	public async create(notification: NotificationType): Promise<HRef> {
+	async create(notification: NotificationType): Promise<HRef> {
 		const createdNotificationId = await fetchVal<HRef>(
 			`${this.#url}`,
 			{
@@ -189,7 +187,7 @@ export class NotificationService<
 	 * @param timeOfLastMod Time of the last modification.
 	 * @returns New notifications since timeOfLastMod
 	 */
-	public async poll(timeOfLastMod: HDateTime): Promise<NotificationType[]> {
+	async poll(timeOfLastMod: HDateTime): Promise<NotificationType[]> {
 		const notifications = await fetchVal<HList<NotificationType>>(
 			`${this.#url}/poll`,
 			{
@@ -209,7 +207,7 @@ export class NotificationService<
 	 * @param id The notification ID to resolve
 	 * @returns The notification object
 	 */
-	public async resolve(id: string | HRef): Promise<NotificationType> {
+	async resolve(id: string | HRef): Promise<NotificationType> {
 		const resolvedNotification = await fetchVal<NotificationType>(
 			`${this.#url}/resolve/${HRef.make(id).value}`,
 			{
@@ -229,7 +227,7 @@ export class NotificationService<
 	 * @param id The notification ID to dismiss
 	 * @returns The notification object
 	 */
-	public async dismiss(id: string | HRef): Promise<NotificationType> {
+	async dismiss(id: string | HRef): Promise<NotificationType> {
 		const dismissedNotification = await fetchVal<NotificationType>(
 			`${this.#url}/dismiss/${HRef.make(id).value}`,
 			{

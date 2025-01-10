@@ -45,21 +45,21 @@ export class BatchSubject implements Subject {
 	 *
 	 * @param subject The subject to wrap.
 	 */
-	public constructor(subject: Subject) {
+	constructor(subject: Subject) {
 		this.#subject = subject
 	}
 
 	/**
 	 * @returns The display name of the subject.
 	 */
-	public get display(): string {
+	get display(): string {
 		return this.#subject.display
 	}
 
 	/**
 	 * @returns The subject's poll rate.
 	 */
-	public get pollRate(): number {
+	get pollRate(): number {
 		return this.#subject.pollRate
 	}
 
@@ -68,14 +68,14 @@ export class BatchSubject implements Subject {
 	 *
 	 * @param pollRate
 	 */
-	public set pollRate(pollRate: number) {
+	set pollRate(pollRate: number) {
 		this.#subject.pollRate = pollRate
 	}
 
 	/**
 	 * Refresh the subject's data.
 	 */
-	public async refresh(): Promise<void> {
+	async refresh(): Promise<void> {
 		await this.#subject.refresh()
 	}
 
@@ -84,7 +84,7 @@ export class BatchSubject implements Subject {
 	 *
 	 * @param ids The ids to add.
 	 */
-	public async add(ids: string[]): Promise<void> {
+	async add(ids: string[]): Promise<void> {
 		return this.batchInvoke(OpType.add, ids)
 	}
 
@@ -95,7 +95,7 @@ export class BatchSubject implements Subject {
 	 *
 	 * @param ids The ids to remove.
 	 */
-	public async remove(ids: string[]): Promise<void> {
+	async remove(ids: string[]): Promise<void> {
 		return this.batchInvoke(OpType.remove, ids)
 	}
 
@@ -191,7 +191,7 @@ export class BatchSubject implements Subject {
 	 *
 	 * @param callback The callback used for changed events.
 	 */
-	public on(callback: SubjectChangedEventHandler): void {
+	on(callback: SubjectChangedEventHandler): void {
 		this.#subject.on(callback)
 	}
 
@@ -200,7 +200,7 @@ export class BatchSubject implements Subject {
 	 *
 	 * @param callback The callback used for changed events.
 	 */
-	public off(callback: SubjectChangedEventHandler): void {
+	off(callback: SubjectChangedEventHandler): void {
 		this.#subject.off(callback)
 	}
 
@@ -210,7 +210,7 @@ export class BatchSubject implements Subject {
 	 * @param id The id to record to get.
 	 * @returns The dict or undefined if it can't be found.
 	 */
-	public get(id: string | HRef): HDict | undefined {
+	get(id: string | HRef): HDict | undefined {
 		return this.#subject.get(id)
 	}
 
@@ -219,21 +219,21 @@ export class BatchSubject implements Subject {
 	 *
 	 * @param grid A grid of dicts to update.
 	 */
-	public async update(grid: HGrid): Promise<void> {
+	async update(grid: HGrid): Promise<void> {
 		return this.#subject.update(grid)
 	}
 
 	/**
 	 * Inspect the subject.
 	 */
-	public inspect(): void {
+	inspect(): void {
 		this.#subject.inspect()
 	}
 
 	/**
 	 * Request a watch poll.
 	 */
-	public poll(): Promise<void> {
+	poll(): Promise<void> {
 		return this.#subject.poll()
 	}
 }

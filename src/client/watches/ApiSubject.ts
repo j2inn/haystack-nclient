@@ -103,7 +103,7 @@ export class ApiSubject implements Subject {
 	 * @param serviceConfig The service configuration.
 	 * @param pollRate The poll rate.
 	 */
-	public constructor(
+	constructor(
 		apis: WatchApis,
 		serviceConfig: ClientServiceConfig,
 		pollRate: number
@@ -116,7 +116,7 @@ export class ApiSubject implements Subject {
 	/**
 	 * @returns The watch's grid instance.
 	 */
-	public get grid(): HGrid {
+	get grid(): HGrid {
 		if (!this.#grid) {
 			this.#grid = HGrid.make({})
 		}
@@ -126,7 +126,7 @@ export class ApiSubject implements Subject {
 	/**
 	 * @returns The display name for the subject.
 	 */
-	public get display(): string {
+	get display(): string {
 		const watchId = this.watchId ?? '-'
 		return `${watchId} @ ${this.#serviceConfig.getOpUrl('')}`
 	}
@@ -134,14 +134,14 @@ export class ApiSubject implements Subject {
 	/**
 	 * @returns The watch id.
 	 */
-	public get watchId(): string {
+	get watchId(): string {
 		return this.#id
 	}
 
 	/**
 	 * @returns True if the watch is currently open.
 	 */
-	public isOpen(): boolean {
+	isOpen(): boolean {
 		return this.#open
 	}
 
@@ -150,7 +150,7 @@ export class ApiSubject implements Subject {
 	 *
 	 * @param ids The ids to add.
 	 */
-	public async add(ids: string[]): Promise<void> {
+	async add(ids: string[]): Promise<void> {
 		await this.#mutex.wait()
 		await (this.isOpen() ? this.addIds(ids) : this.open(ids))
 	}
@@ -300,7 +300,7 @@ export class ApiSubject implements Subject {
 		// Attempt a close first and ignore any errors.
 		try {
 			await this.close()
-		} catch (ignore) {}
+		} catch {}
 
 		if (open && ids) {
 			// Open with original arguments.
@@ -315,7 +315,7 @@ export class ApiSubject implements Subject {
 	 *
 	 * @param ids The ids to remove.
 	 */
-	public async remove(ids: string[]): Promise<void> {
+	async remove(ids: string[]): Promise<void> {
 		await this.#mutex.runSequential(async (): Promise<void> => {
 			try {
 				if (!this.isOpen()) {
@@ -364,7 +364,7 @@ export class ApiSubject implements Subject {
 	 *
 	 * @param callback The callback used for changed events.
 	 */
-	public on(callback: SubjectChangedEventHandler): void {
+	on(callback: SubjectChangedEventHandler): void {
 		this.#callbacks.add(callback)
 	}
 
@@ -373,14 +373,14 @@ export class ApiSubject implements Subject {
 	 *
 	 * @param callback The callback used for changed events.
 	 */
-	public off(callback: SubjectChangedEventHandler): void {
+	off(callback: SubjectChangedEventHandler): void {
 		this.#callbacks.delete(callback)
 	}
 
 	/**
 	 * Poll the watch and update the watch's grid.
 	 */
-	public async poll(): Promise<void> {
+	async poll(): Promise<void> {
 		try {
 			return await this.doUpdate(async (watchId) =>
 				this.#apis.poll(watchId)
@@ -404,7 +404,7 @@ export class ApiSubject implements Subject {
 	 *
 	 * @param grid A grid of dicts to update.
 	 */
-	public async update(grid: HGrid): Promise<void> {
+	async update(grid: HGrid): Promise<void> {
 		await this.doUpdate(async () => grid.getRows())
 	}
 
@@ -469,7 +469,7 @@ export class ApiSubject implements Subject {
 	 * @param newDict The new dict.
 	 * @returns True if an update can be triggered.
 	 */
-	public static canUpdate(curDict: HDict, newDict: HDict): boolean {
+	static canUpdate(curDict: HDict, newDict: HDict): boolean {
 		const curMod = curDict.get<HDateTime>('mod')
 		const newMod = newDict.get<HDateTime>('mod')
 
@@ -567,7 +567,7 @@ export class ApiSubject implements Subject {
 	/**
 	 * Completely refresh the watch.
 	 */
-	public async refresh(): Promise<void> {
+	async refresh(): Promise<void> {
 		try {
 			this.stopLingerTimer()
 
@@ -638,7 +638,7 @@ export class ApiSubject implements Subject {
 	/**
 	 * Close the server side watch if nothing is being observed.
 	 */
-	public checkClose = async (): Promise<void> => {
+	checkClose = async (): Promise<void> => {
 		try {
 			await this.#mutex.wait()
 
@@ -656,14 +656,14 @@ export class ApiSubject implements Subject {
 	 * @param id The id to record to get.
 	 * @returns The dict or undefined if it can't be found.
 	 */
-	public get(id: string | HRef): HDict | undefined {
+	get(id: string | HRef): HDict | undefined {
 		return this.#dictCache[HRef.make(id).value]?.dict
 	}
 
 	/**
 	 * @returns The subject's poll rate.
 	 */
-	public get pollRate(): number {
+	get pollRate(): number {
 		return this.#pollRate
 	}
 
@@ -672,7 +672,7 @@ export class ApiSubject implements Subject {
 	 *
 	 * @param pollRate The new poll rate.
 	 */
-	public set pollRate(pollRate: number) {
+	set pollRate(pollRate: number) {
 		const oldPollRate = this.#pollRate
 		this.#pollRate = pollRate
 
@@ -685,7 +685,7 @@ export class ApiSubject implements Subject {
 	/**
 	 * Inspect the subject.
 	 */
-	public inspect(): void {
+	inspect(): void {
 		this.grid.inspect(`Subject ${this.watchId}`)
 	}
 

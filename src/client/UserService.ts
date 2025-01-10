@@ -39,7 +39,7 @@ export class UserService<UserType extends User = User> {
 	 *
 	 * @param serviceConfig Service configuration.
 	 */
-	public constructor(serviceConfig: ClientServiceConfig) {
+	constructor(serviceConfig: ClientServiceConfig) {
 		this.#serviceConfig = serviceConfig
 		this.#url = serviceConfig.getHostServiceUrl('users')
 	}
@@ -51,7 +51,7 @@ export class UserService<UserType extends User = User> {
 	 * @returns The user record.
 	 * @throws An error if the user can't be found.
 	 */
-	public async readById(id: string | HRef): Promise<UserType> {
+	async readById(id: string | HRef): Promise<UserType> {
 		const user = await fetchVal<UserType>(
 			`${this.#url}/${HRef.make(id).value}`,
 			{
@@ -70,7 +70,7 @@ export class UserService<UserType extends User = User> {
 	 * @param options Optional options for read operation.
 	 * @returns The result of the read operation.
 	 */
-	public async readByFilter(
+	async readByFilter(
 		filter: string,
 		options?: UserReadOptions
 	): Promise<HGrid<UserType>> {
@@ -92,7 +92,7 @@ export class UserService<UserType extends User = User> {
 	 * @param options Optional options for read operation.
 	 * @returns The result of the read operation.
 	 */
-	public async readAll(options?: UserReadOptions): Promise<HGrid<UserType>> {
+	async readAll(options?: UserReadOptions): Promise<HGrid<UserType>> {
 		return fetchVal<HGrid<UserType>>(
 			`${this.#url}${encodeQuery({
 				...(options ?? {}),
@@ -110,7 +110,7 @@ export class UserService<UserType extends User = User> {
 	 * @param users The users to create.
 	 * @returns A grid of users.
 	 */
-	public async create(
+	async create(
 		users: UserType[] | HaysonDict[] | HGrid<UserType> | HList<UserType>
 	): Promise<HGrid<UserType>> {
 		return fetchVal<HGrid<UserType>>(
@@ -130,7 +130,7 @@ export class UserService<UserType extends User = User> {
 	 * @param user The user record to create.
 	 * @returns The created user record.
 	 */
-	public async createUser(user: UserType | HaysonDict): Promise<UserType> {
+	async createUser(user: UserType | HaysonDict): Promise<UserType> {
 		return fetchVal<UserType>(
 			this.#url,
 			{
@@ -149,7 +149,7 @@ export class UserService<UserType extends User = User> {
 	 * @returns A updated record. Please note, this record doesn't
 	 * have any user information just the `id` and `mod`.
 	 */
-	public async update(user: UserType | HaysonDict): Promise<UserType> {
+	async update(user: UserType | HaysonDict): Promise<UserType> {
 		const userDict = HDict.make(user) as UserType
 
 		return fetchVal<UserType>(
@@ -168,7 +168,7 @@ export class UserService<UserType extends User = User> {
 	 *
 	 * @param id The id of the record to delete.
 	 */
-	public async deleteById(id: string | HRef): Promise<void> {
+	async deleteById(id: string | HRef): Promise<void> {
 		await fetchVal<Record>(
 			`${this.#url}/${HRef.make(id).value}`,
 			{

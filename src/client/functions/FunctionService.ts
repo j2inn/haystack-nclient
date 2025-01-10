@@ -66,7 +66,7 @@ export class FunctionService<FunctionType extends FinFunction = FinFunction> {
 	 *
 	 * @param serviceConfig Service configuration.
 	 */
-	public constructor(serviceConfig: ClientServiceConfig) {
+	constructor(serviceConfig: ClientServiceConfig) {
 		this.#serviceConfig = serviceConfig
 		this.#url = serviceConfig.getHaystackServiceUrl('funcs')
 	}
@@ -77,7 +77,7 @@ export class FunctionService<FunctionType extends FinFunction = FinFunction> {
 	 * @param options Optional options for read operation.
 	 * @returns The result of the read operation.
 	 */
-	public async readAll(options?: ReadOptions): Promise<FunctionType[]> {
+	async readAll(options?: ReadOptions): Promise<FunctionType[]> {
 		const functions = await fetchVal<HGrid<FunctionType>>(
 			`${this.#url}${encodeQuery({
 				...(options ?? {}),
@@ -98,7 +98,7 @@ export class FunctionService<FunctionType extends FinFunction = FinFunction> {
 	 * @returns The function record.
 	 * @throws An error if the function can't be found.
 	 */
-	public async readById(id: string | HRef): Promise<FunctionType> {
+	async readById(id: string | HRef): Promise<FunctionType> {
 		return await fetchVal<FunctionType>(
 			`${this.#url}/${HRef.make(id).value}`,
 			{
@@ -114,7 +114,7 @@ export class FunctionService<FunctionType extends FinFunction = FinFunction> {
 	 * @param functions HGrid<FunctionType> The functions to create.
 	 * @returns A grid of functions.
 	 */
-	public async create(
+	async create(
 		functions: FunctionType[] | HaysonDict[] | HGrid<FunctionType>
 	): Promise<HGrid<FunctionType>> {
 		return fetchVal<HGrid<FunctionType>>(
@@ -134,7 +134,7 @@ export class FunctionService<FunctionType extends FinFunction = FinFunction> {
 	 * @param function The function record to update.
 	 * @returns The updated record.
 	 */
-	public async update(
+	async update(
 		finFunction: FunctionType | HaysonDict
 	): Promise<FunctionType> {
 		const functionDict = HDict.make(finFunction) as FunctionType
@@ -155,7 +155,7 @@ export class FunctionService<FunctionType extends FinFunction = FinFunction> {
 	 *
 	 * @param id The id of the record to delete.
 	 */
-	public async deleteById(id: string | HRef): Promise<void> {
+	async deleteById(id: string | HRef): Promise<void> {
 		await fetchVal<FunctionType>(
 			`${this.#url}/${HRef.make(id).value}`,
 			{

@@ -20,6 +20,9 @@ import { ScheduleService } from '../../../src/client/schedules/ScheduleService'
 import { Client } from '../../../src/client/Client'
 import { ScheduleServiceEndpoints, getHaystackServiceUrl } from '../../../src'
 
+import '../../customMatchers'
+import '../../matchers'
+
 const mockSchedule = () => {
 	return new HDict({
 		schedule: HMarker.make(),
@@ -34,11 +37,11 @@ const mockSchedule = () => {
 			lowBound: HDate.make('1998-12-01'),
 			upBound: HDate.make('1998-12-15'),
 		}),
-		weeklySchedule: new HList(
+		weeklySchedule: HList.make(
 			new HDict({
 				dayToSchedule: HMarker.make(),
 				dayOfWeek: 4,
-				dailySchedule: new HList(
+				dailySchedule: new HList([
 					new HDict({
 						timeToVal: HMarker.make(),
 						bacnetTime: new HDict({
@@ -48,15 +51,15 @@ const mockSchedule = () => {
 							second: 41,
 						}),
 						scheduledVal: 'boo',
-					})
-				),
+					}),
+				]),
 			})
 		),
-		exceptionSchedule: new HList(
+		exceptionSchedule: HList.make(
 			new HDict({
 				specialEvent: HMarker.make(),
 				priority: 15,
-				dailySchedule: new HList(
+				dailySchedule: HList.make(
 					new HDict({
 						timeToVal: HMarker.make(),
 						bacnetTime: new HDict({

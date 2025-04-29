@@ -10,7 +10,7 @@
 	"license": "BSD-3-Clause",
 	"author": "Gareth Johnson",
 	"homepage": "https://github.com/j2inn/haystack-nclient",
-	"version": "4.0.1",
+	"version": "4.0.2",
 	"module": "dist/index.es.js",
 	"main": "dist/index.js",
 	"scripts": {

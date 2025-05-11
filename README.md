@@ -30,7 +30,7 @@ Note how haystack-core must be installed as a peer dependency.
 
 ## APIs
 
-Please click [here](http://j2-docs.s3-website-us-east-1.amazonaws.com/j2inn/haystack-nclient/index.html) for the API documentation.
+Please click [here](https://tu1lu98z65.execute-api.us-east-1.amazonaws.com/default/j2docs/j2inn/haystack-nclient/index.html) for the API documentation.
 
 ## Servers
 

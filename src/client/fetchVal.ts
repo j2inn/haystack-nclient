@@ -77,6 +77,21 @@ function validateValue<Value extends HVal>(
 	return val as Value
 }
 
+function extendRecord(
+	recordCollection: HVal | undefined | null
+): HVal | undefined | null {
+	const isAnEquip = (recordCollection as HGrid)
+		.getColumns()
+		.some((record) => record.name === 'equip')
+	const rows = (recordCollection as HGrid).getRows()
+	if (isAnEquip && rows.length > 0) {
+		rows.forEach((recordRow) => {
+			recordRow.set('icon', 'EquipIcon')
+		})
+	}
+	return recordCollection
+}
+
 async function parseResponse(resp: Response): Promise<HVal | undefined | null> {
 	const contentType = resp.headers.get(CONTENT_TYPE_HEADER)
 
@@ -96,7 +111,7 @@ async function parseResponse(resp: Response): Promise<HVal | undefined | null> {
  * @returns The read grid.
  */
 async function readVal<Value extends HVal>(resp: Response): Promise<Value> {
-	const val = (await parseResponse(resp)) as Value
+	const val = extendRecord(await parseResponse(resp)) as Value
 	return validateValue<Value>(val as Value | null | undefined, resp)
 }
 

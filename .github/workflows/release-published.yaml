@@ -27,7 +27,7 @@ jobs:
             - run: git config --global user.name "GitHub CD bot"
             - run: git config --global user.email "github-cd-bot@j2inn.com"
 
-            - run: npm ci --no-optional
+            - run: npm ci
 
             # Version the module using the release tag name
             - run: npm version ${{ github.event.release.tag_name }}

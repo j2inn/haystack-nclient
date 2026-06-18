@@ -45,7 +45,7 @@ export interface NotificationEventHandler {
  * An implementation of the FIN Notification service.
  */
 export class NotificationService<
-	NotificationType extends Notification = Notification
+	NotificationType extends Notification = Notification,
 > {
 	/**
 	 * The client service configuration.

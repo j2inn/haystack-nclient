@@ -97,11 +97,11 @@ async function requestFinAttestKey(
 	}
 
 	const attestRequestUri = isCsrfRequestInit(options)
-		? options.attestRequestUri ?? FIN_AUTH_PATH
+		? (options.attestRequestUri ?? FIN_AUTH_PATH)
 		: FIN_AUTH_PATH
 
 	const attestResponseHeaderName = isCsrfRequestInit(options)
-		? options.attestResponseHeaderName ?? FIN_AUTH_KEY
+		? (options.attestResponseHeaderName ?? FIN_AUTH_KEY)
 		: FIN_AUTH_KEY
 
 	const resp = await fetchFunc(`${origin}${attestRequestUri}`, opt)
@@ -179,7 +179,7 @@ export async function finCsrfFetch(
 ): Promise<Response> {
 	const hsOptions: RequestInit = options ?? {}
 	const attestHeaderName = isCsrfRequestInit(options)
-		? options.attestHeaderName ?? SKYARC_ATTEST_KEY
+		? (options.attestHeaderName ?? SKYARC_ATTEST_KEY)
 		: SKYARC_ATTEST_KEY
 
 	const fetchImpl = fetchFunc ?? fetch

@@ -151,12 +151,8 @@ export class ApiSubject implements Subject {
 	 * @param ids The ids to add.
 	 */
 	async add(ids: string[]): Promise<void> {
-		const release = await this.#mutex.acquire()
-		try {
-			await (this.isOpen() ? this.addIds(ids) : this.open(ids))
-		} finally {
-			release()
-		}
+		using _release = await this.#mutex.acquire()
+		await (this.isOpen() ? this.addIds(ids) : this.open(ids))
 	}
 
 	/**
@@ -321,7 +317,7 @@ export class ApiSubject implements Subject {
 	 * @param ids The ids to remove.
 	 */
 	async remove(ids: string[]): Promise<void> {
-		const release = await this.#mutex.acquire()
+		using _release = await this.#mutex.acquire()
 		try {
 			if (!this.isOpen()) {
 				return
@@ -343,7 +339,6 @@ export class ApiSubject implements Subject {
 			if (this.grid.isEmpty()) {
 				this.restartLingerTimer()
 			}
-			release()
 		}
 	}
 
@@ -392,23 +387,15 @@ export class ApiSubject implements Subject {
 			)
 		} catch (err) {
 			if (isGridError(err)) {
-				const release = await this.#mutex.acquire()
-				try {
-					await this.reopen()
-				} finally {
-					release()
-				}
+				using _release = await this.#mutex.acquire()
+				await this.reopen()
 			} else {
 				throw err
 			}
 		} finally {
-			const release = await this.#mutex.acquire()
-			try {
-				if (this.isOpen()) {
-					this.restartPollTimer()
-				}
-			} finally {
-				release()
+			using _release = await this.#mutex.acquire()
+			if (this.isOpen()) {
+				this.restartPollTimer()
 			}
 		}
 	}
@@ -582,7 +569,7 @@ export class ApiSubject implements Subject {
 	 * Completely refresh the watch.
 	 */
 	async refresh(): Promise<void> {
-		const release = await this.#mutex.acquire()
+		using _release = await this.#mutex.acquire()
 		try {
 			this.stopLingerTimer()
 
@@ -619,12 +606,8 @@ export class ApiSubject implements Subject {
 				}
 			}
 		} finally {
-			try {
-				if (this.grid.isEmpty()) {
-					this.restartLingerTimer()
-				}
-			} finally {
-				release()
+			if (this.grid.isEmpty()) {
+				this.restartLingerTimer()
 			}
 		}
 	}
@@ -656,15 +639,13 @@ export class ApiSubject implements Subject {
 	 * Close the server side watch if nothing is being observed.
 	 */
 	checkClose = async (): Promise<void> => {
-		const release = await this.#mutex.acquire()
+		using _release = await this.#mutex.acquire()
 		try {
 			if (this.grid.isEmpty()) {
 				await this.close()
 			}
 		} catch (error) {
 			console.error(error)
-		} finally {
-			release()
 		}
 	}
 

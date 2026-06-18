@@ -30,7 +30,7 @@ describe('fetchGrid', function (): void {
 					errType: 'error',
 					errTrace: 'trace',
 					dis: 'Error',
-			  })
+				})
 			: HDict.make({})
 
 		respGrid = HGrid.make({

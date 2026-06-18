@@ -38,7 +38,7 @@ describe('finAuthFetch', function (): void {
 						errTrace: 'trace',
 						errDis: 'Error',
 					},
-			  })
+				})
 			: HDict.make({})
 
 		respGrid = HGrid.make({

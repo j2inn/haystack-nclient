@@ -914,7 +914,7 @@ export class Watch {
 					(acc: number, watch: Watch): number =>
 						acc < watch.pollRate ? acc : watch.pollRate,
 					Number.MAX_SAFE_INTEGER
-			  )
+				)
 			: DEFAULT_POLL_RATE_SECS
 
 		this.#subject.pollRate =

@@ -111,7 +111,7 @@ export function toIdsList(ids: string[] | HRef[] | HList<HRef>): HList<HRef> {
 				(ids as string[]).map(
 					(val: HRef | string): HRef => HRef.make(val)
 				)
-		  )
+			)
 }
 
 /**

@@ -795,4 +795,108 @@ describe('ApiSubject', function (): void {
 			).toBe(true)
 		})
 	}) // #canUpdate()
+
+	describe('concurrent operations', function (): void {
+		it('does not open the watch twice for two concurrent add calls', async function (): Promise<void> {
+			mockOpen()
+			asMock(apis.add).mockResolvedValue([secondDict])
+
+			// Both started concurrently before either has resolved. Only the
+			// first should open; the second must call addIds once the first
+			// releases the lock.
+			await Promise.all([subject.add(['foo']), subject.add(['bar'])])
+
+			expect(apis.open).toHaveBeenCalledTimes(1)
+			expect(apis.add).toHaveBeenCalledTimes(1)
+			expect(apis.add).toHaveBeenCalledWith('watchId', ['bar'])
+		})
+
+		it('processes concurrent add and remove in strict sequential order', async function (): Promise<void> {
+			mockOpen()
+			await subject.add(['foo'])
+
+			const callOrder: string[] = []
+
+			asMock(apis.add).mockImplementation(
+				async (): Promise<(typeof secondDict)[]> => {
+					callOrder.push('add')
+					return [secondDict]
+				}
+			)
+			asMock(apis.remove).mockImplementation(async (): Promise<void> => {
+				callOrder.push('remove')
+			})
+
+			// add and remove started without awaiting — must not interleave.
+			await Promise.all([subject.add(['bar']), subject.remove(['foo'])])
+
+			expect(callOrder).toEqual(['add', 'remove'])
+		})
+
+		it('releases the mutex when the network open call throws', async function (): Promise<void> {
+			const openResponse = {
+				id: firstGrid.meta.get<HStr>('watchId')?.value,
+				records: firstGrid.getRows(),
+			}
+
+			asMock(apis.open)
+				.mockRejectedValueOnce(new Error('network error'))
+				.mockResolvedValue(openResponse)
+
+			await expect(subject.add(['foo'])).rejects.toThrow('network error')
+
+			// The mutex must be released — a subsequent call should complete
+			// without hanging.
+			await subject.add(['foo'])
+			expect(apis.open).toHaveBeenCalledTimes(2)
+		})
+
+		it('releases the mutex when the network add call throws', async function (): Promise<void> {
+			mockOpen()
+			await subject.add(['foo'])
+
+			asMock(apis.add)
+				.mockRejectedValueOnce(new Error('network error'))
+				.mockResolvedValue([secondDict])
+
+			await expect(subject.add(['bar'])).rejects.toThrow('network error')
+
+			// The mutex must be released — a subsequent call should complete
+			// without hanging.
+			await subject.add(['bar'])
+			expect(apis.add).toHaveBeenCalledTimes(2)
+		})
+
+		it('releases the mutex when the network remove call throws', async function (): Promise<void> {
+			mockOpen()
+			await subject.add(['foo'])
+
+			asMock(apis.remove)
+				.mockRejectedValueOnce(new Error('network error'))
+				.mockResolvedValue(undefined)
+
+			await expect(subject.remove(['foo'])).rejects.toThrow(
+				'network error'
+			)
+
+			// Subsequent operations should still be able to run.
+			asMock(apis.add).mockResolvedValue([secondDict])
+			await subject.add(['bar'])
+			expect(apis.add).toHaveBeenCalledWith('watchId', ['bar'])
+		})
+
+		it('only adds ids to the server that are not already being watched', async function (): Promise<void> {
+			mockOpen()
+			asMock(apis.add).mockResolvedValue([secondDict])
+
+			// 'foo' is opened by the first call. The second call should only
+			// send 'bar' to the server, not 'foo' again.
+			await Promise.all([
+				subject.add(['foo']),
+				subject.add(['foo', 'bar']),
+			])
+
+			expect(apis.add).toHaveBeenCalledWith('watchId', ['bar'])
+		})
+	}) // concurrent operations
 })

@@ -35,7 +35,7 @@ describe('fetchVal', function (): void {
 						errTrace: 'trace',
 						errDis: 'Error',
 					},
-			  })
+				})
 			: HDict.make({})
 
 		respGrid = HGrid.make({

@@ -72,7 +72,7 @@
 		"write-file-webpack-plugin": "^4.5.1"
 	},
 	"dependencies": {
-		"haystack-core": "^3.0.12"
+		"haystack-core": "^3.0.13"
 	},
 	"optionalDependencies": {
 		"@rollup/rollup-linux-arm64": "npm:null@*",

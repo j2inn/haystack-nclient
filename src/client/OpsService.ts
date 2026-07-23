@@ -339,7 +339,7 @@ export class OpsService {
 					id: HRef.make(id),
 					action: HStr.make(action),
 				}),
-				rows: [args ? (makeValue(args) as HDict) : HDict.make()],
+				rows: args ? [makeValue(args) as HDict] : [],
 			})
 		)
 	}

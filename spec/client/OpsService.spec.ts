@@ -408,6 +408,24 @@ describe('OpsService', function (): void {
 				fetchMock.lastCall(getOpUrl('invokeAction'))?.[1]?.body
 			).toBe(argsZinc)
 		})
+
+		it('encodes an empty rows array when no arguments are passed', async function (): Promise<void> {
+			preparePostOp('invokeAction')
+
+			await ops.invokeAction('123', 'foo')
+
+			const emptyArgsZinc = HGrid.make({
+				meta: HDict.make({
+					id: HRef.make('123'),
+					action: HStr.make('foo'),
+				}),
+				rows: [],
+			}).toZinc()
+
+			expect(
+				fetchMock.lastCall(getOpUrl('invokeAction'))?.[1]?.body
+			).toBe(emptyArgsZinc)
+		})
 	}) // #invokeAction()
 
 	describe('#nav()', function (): void {

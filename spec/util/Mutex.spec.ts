@@ -160,6 +160,60 @@ describe('Mutex', function (): void {
 			second()
 			expect(mutex.isLocked()).toBe(false)
 		})
+
+		it('returns a handle that releases the lock via Symbol.dispose', async function (): Promise<void> {
+			const release = await mutex.acquire()
+			expect(typeof release[Symbol.dispose]).toBe('function')
+			expect(mutex.isLocked()).toBe(true)
+
+			release[Symbol.dispose]()
+			expect(mutex.isLocked()).toBe(false)
+		})
+
+		it('treats disposing after releasing as a no-op', async function (): Promise<void> {
+			const release = await mutex.acquire()
+			release()
+
+			const second = await mutex.acquire()
+			release[Symbol.dispose]()
+			expect(mutex.isLocked()).toBe(true)
+
+			second()
+			expect(mutex.isLocked()).toBe(false)
+		})
+
+		it('still returns a working release handle when Symbol.dispose is not defined', async function (): Promise<void> {
+			// Simulate an older runtime without Symbol.dispose. The real
+			// Symbol.dispose is non-configurable so swap out the global Symbol
+			// for a stand in that has everything except `dispose`.
+			const originalSymbol = globalThis.Symbol
+			const fakeSymbol = (description?: string): symbol =>
+				originalSymbol(description)
+			for (const name of Object.getOwnPropertyNames(originalSymbol)) {
+				if (name !== 'dispose' && !Object.hasOwn(fakeSymbol, name)) {
+					Object.defineProperty(
+						fakeSymbol,
+						name,
+						Object.getOwnPropertyDescriptor(originalSymbol, name)!
+					)
+				}
+			}
+			globalThis.Symbol = fakeSymbol as unknown as SymbolConstructor
+
+			let release: () => void
+			try {
+				release = await mutex.acquire()
+			} finally {
+				globalThis.Symbol = originalSymbol
+			}
+
+			expect(Object.getOwnPropertySymbols(release)).toEqual([])
+			expect(Object.keys(release)).toEqual([])
+			expect(mutex.isLocked()).toBe(true)
+
+			release()
+			expect(mutex.isLocked()).toBe(false)
+		})
 	}) // #acquire()
 
 	describe('#wait()', function (): void {

@@ -20,15 +20,23 @@
  * })
  * ```
  *
- * For a critical section that spans multiple awaited steps, use the `using`
- * keyword so the lock is released automatically when the block exits:
+ * For a critical section that spans multiple awaited steps, acquire the lock
+ * and release it in a `finally` block:
  *
  * ```typescript
- * using release = await mutex.acquire()
- * if (someState) {
- *   await longRunningNetworkCall()
+ * const release = await mutex.acquire()
+ * try {
+ *   if (someState) {
+ *     await longRunningNetworkCall()
+ *   }
+ * } finally {
+ *   release()
  * }
  * ```
+ *
+ * The release handle also supports the `using` keyword, but at the time of
+ * writing this isn't recommended as `using` lacks support in popular
+ * mainstream browsers.
  */
 export class Mutex {
 	/**
@@ -48,8 +56,18 @@ export class Mutex {
 	 * must invoke `release` exactly once to free the lock. Calling `release`
 	 * more than once is a no-op.
 	 *
+	 * ```typescript
+	 * const release = await mutex.acquire()
+	 * try {
+	 *   // critical section
+	 * } finally {
+	 *   release()
+	 * }
+	 * ```
+	 *
 	 * The returned handle also implements `Disposable` so it can be used with
-	 * the `using` keyword:
+	 * the `using` keyword. At the time of writing this isn't recommended as
+	 * `using` lacks support in popular mainstream browsers:
 	 *
 	 * ```typescript
 	 * using release = await mutex.acquire()
@@ -99,9 +117,12 @@ export class Mutex {
 			}
 		}
 
-		release[Symbol.dispose] = release
+		// Older browsers may not define `Symbol.dispose`.
+		if (typeof Symbol.dispose === 'symbol') {
+			release[Symbol.dispose] = release
+		}
 
-		return release
+		return release as (() => void) & Disposable
 	}
 
 	/**
@@ -111,8 +132,12 @@ export class Mutex {
 	 * @return A Promise that resolves to a result.
 	 */
 	async runSequential<T>(task: () => Promise<T>): Promise<T> {
-		using _release = await this.acquire()
-		return await task()
+		const release = await this.acquire()
+		try {
+			return await task()
+		} finally {
+			release()
+		}
 	}
 
 	/**
@@ -122,7 +147,8 @@ export class Mutex {
 		// Queue behind all outstanding work then release immediately. Since the
 		// lock is acquired in FIFO order, this resolves only once every task
 		// queued beforehand has completed.
-		using _release = await this.acquire()
+		const release = await this.acquire()
+		release()
 	}
 
 	/**
